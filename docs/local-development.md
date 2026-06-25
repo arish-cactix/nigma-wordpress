@@ -53,6 +53,18 @@ The Docker environment should provide:
 
 Additional developer tools may be added if they improve productivity without complicating the setup.
 
+## Current Docker Services
+
+The local Docker environment currently defines:
+
+- `db` using MariaDB 10.6 with a named volume for database state.
+- `wordpress` using the official WordPress PHP 8.0 FPM image.
+- `web` using nginx as the local browser-accessible HTTP service.
+
+Local HTTP access defaults to `http://localhost:8080` through `LOCAL_HTTP_PORT`.
+
+WordPress core is stored in a Docker named volume. The repository-owned `wp-content/index.php`, `wp-content/plugins/`, `wp-content/themes/`, and `wp-content/mu-plugins/` paths are mounted individually so the official WordPress image does not copy bundled default plugins or themes into the repository.
+
 ## WordPress Core
 
 WordPress core is **not** version controlled.
@@ -70,16 +82,25 @@ Local development should use:
 
 Database dumps are intentionally excluded from version control. Local SQL exports/imports may be kept in the root-level `database/` directory, which is ignored by Git and must not be deployed.
 
+To import a local dump into the Docker MariaDB service, place a `.sql` or `.sql.gz` file in `database/` and run:
+
+```bash
+./docker/db/import-db.sh
+```
+
+The script imports the newest dump by default and resets the local database named by `MARIADB_DATABASE`. A specific dump can be passed as an argument.
+
 ## Media Strategy
 
 The `uploads/` directory is excluded from Git.
 
-Preferred approaches:
+Two mechanisms work together to keep the local environment fully functional without a copy of the uploads directory:
 
-1. Proxy media requests to the production website.
-2. Synchronize uploads manually when required.
+1. **URL replacement** — `import-db.sh` runs a WP-CLI search-replace after every import, rewriting all production URLs (`https://www.nigma.ae`) to the local URL (`http://localhost:8080`). This ensures WordPress generates local URLs for all media references.
 
-The local environment should remain functional even when uploads are unavailable.
+2. **nginx proxy** — the local nginx configuration intercepts all `/wp-content/uploads/` requests. Local files take precedence; any file not present locally is transparently proxied from the production website (`www.nigma.ae`).
+
+If a local file copy is needed, uploads can be synchronised manually into `wp-content/uploads/`, which is gitignored.
 
 ## Environment Configuration
 
@@ -96,18 +117,33 @@ Local configuration should be supplied using environment variables.
 
 ## Development Workflow
 
-Recommended workflow:
+### First-time setup on a new machine
+
+```bash
+git clone <repo-url>
+cd nigma-wordpress
+cp .env.example .env
+# Edit .env and set real passwords
+# Place a .sql or .sql.gz dump in database/
+docker compose up -d
+./docker/db/import-db.sh
+```
+
+Then open `http://localhost:8080`.
+
+The import script handles URL replacement, Avada cache clearing, and deactivating production-only plugins (LiteSpeed Cache, PWA, WP Defender, Gravity Forms reCAPTCHA). It requires an internet connection on first run to download WP-CLI.
+
+### Ongoing workflow
 
 1. Clone repository.
 2. Configure `.env`.
-3. Start Docker.
-4. Import development database.
-5. Develop locally.
-6. Commit changes.
-7. Push feature branch.
-8. Open Pull Request.
-9. Merge into `main`.
-10. CI/CD deploys application code.
+3. Start Docker and import database (see above).
+4. Develop locally.
+5. Commit changes.
+6. Push feature branch.
+7. Open Pull Request.
+8. Merge into `main`.
+9. CI/CD deploys application code.
 
 ## Git Policy
 

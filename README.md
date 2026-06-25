@@ -70,8 +70,6 @@ Workflow:
 
 Additional documentation is located under the `docs/` directory.
 
-Future documents include:
-
 - Project Overview
 - Production Environment
 - Repository Architecture

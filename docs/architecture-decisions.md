@@ -191,13 +191,46 @@ Prioritize production safety in all engineering work.
 
 ---
 
+# ADR-011 — Local Docker Uses nginx and WordPress PHP-FPM
+
+## Context
+
+Production runs on AWS EC2 with LiteSpeed, PHP 8.0.17, MariaDB 10.6.7, and WordPress 6.7.1. Local development needs a browser-accessible WordPress environment without changing production infrastructure or committing WordPress core.
+
+The official WordPress image copies bundled default plugins and themes into `wp-content` during first-run initialization if the whole repository `wp-content/` directory is bind-mounted.
+
+## Decision
+
+Use Docker Compose for local development with:
+
+- MariaDB 10.6 for the local database.
+- The official WordPress PHP 8.0 FPM image for WordPress/PHP execution.
+- nginx as the local HTTP server, exposed on a configurable local port defaulting to `8080`.
+
+Mount repository-owned `wp-content` files and subdirectories individually instead of mounting all of `wp-content/`. Use a local WordPress entrypoint wrapper to initialize WordPress core while excluding bundled default plugins and themes.
+
+## Rationale
+
+- Keeps Docker local-only.
+- Keeps WordPress core out of Git.
+- Preserves `wp-content/` as the application and deployment boundary.
+- Avoids repository pollution from bundled WordPress defaults.
+- Uses a simple, reliable local browser-accessible architecture.
+
+## Consequences
+
+- Local nginx does not exactly match production LiteSpeed behavior.
+- LiteSpeed-specific cache behavior still requires separate validation.
+- The Docker setup is suitable for local development, not production deployment.
+
+---
+
 ## Future ADRs
 
 Examples:
 
 - Environment variable strategy.
 - CI/CD implementation.
-- Docker architecture.
 - Testing framework.
 - PHP upgrades.
 - Major WordPress upgrades.
