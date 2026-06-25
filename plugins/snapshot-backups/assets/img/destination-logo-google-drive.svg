@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="30px" height="30px" viewBox="0 0 30 30" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>90DA3DA0-E16C-420D-BB13-0F444789C0C3</title>
+    <g id="Destinations" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Destinations-/-Drive-connected" transform="translate(-220.000000, -651.000000)">
+            <g id="Destination-/-Amazon-S3" transform="translate(190.000000, 636.000000)">
+                <g id="Icon_GDrive" transform="translate(30.000000, 15.000000)">
+                    <path d="M4,0 L26,0 C28.209139,-4.05812251e-16 30,1.790861 30,4 L30,26 C30,28.209139 28.209139,30 26,30 L4,30 C1.790861,30 2.705415e-16,28.209139 0,26 L0,4 C-2.705415e-16,1.790861 1.790861,4.05812251e-16 4,0 Z" id="Rectangle-2" fill="#1FA463"></path>
+                    <path d="M6,16.4423923 L11.6055046,7 L14.6666667,12.2242744 L9.06116208,21.6666667 L6,16.4423923 Z M12.4791086,17 L24,17 L20.8133705,22.3333333 L9.33333333,22.3333333 L12.4791086,17 Z M12.1739095,7 L18.3030303,7 L24,16.3333333 L17.9112832,16.3333333 L12.1739095,7 Z" id="Shape" fill="#FFFFFF" fill-rule="nonzero"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

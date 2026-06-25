@@ -1,0 +1,143 @@
+/*
+Theme Name: Avada Child
+Description: Child theme for Avada theme
+Author: ThemeFusion
+Author URI: https://theme-fusion.com
+Template: Avada
+Version: 1.0.0
+Text Domain:  Avada
+*/
+
+/*Add Style by:ASM =========*/
+.fusion-alignleft .fusion-contact-info a:hover {
+    color: #c7a877;
+}
+.fusion-testimonials.clean .testimonial-thumbnail {
+    margin: 0;
+    width: 50%;
+    height: 400px;
+    float: left;
+}
+.fusion-testimonials.clean .testimonial-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.reviews blockquote,
+.review .author {
+    width: 50%;
+    float: right;
+}
+
+/*HOME*/
+#main.clearfix.width-100 {
+padding: 0px !important;
+margin: 0px !important;
+}
+.width-100 .fusion-fullwidth {
+margin: 0px !important;
+}
+.gallery-area .row .col-xl-4.col-lg-4.col-md-6 {
+padding: 0px !important;
+text-align: center;
+}
+.caph5 a {
+    color: #0d3b70;
+    font-size: 24px !important;
+    font-weight: 600;
+    margin-bottom: 21px;
+    display: block;
+    -webkit-transition: 0.2s;
+    -moz-transition: 0.2s;
+    -o-transition: 0.2s;
+    transition: 0.2s;
+    text-transform: uppercase;
+}
+.caph5 a:hover {
+    color: #c7a877;
+}
+.no-padding {padding:0px !important;}
+
+/*Testimonials CSS*/
+.testimonial-pagination {
+	margin: -30px 30px 0px 0 !important;
+    float: right;
+    position: relative;
+    z-index: 100;
+}
+.review.avatar-image blockquote p {
+	font-size: 24px;
+	font-style: normal;
+	margin-top: 50px;
+}
+
+
+/*Form*/
+.form_img_wrap {
+	display: inline-grid;
+    min-height: 650px;
+    text-align: left;
+}
+form input[type="submit"],
+.wpcf7-form input[type=submit] {
+    width: 100% !important;
+} 
+form input, form select {
+    height: 40px !important;
+}
+
+
+/*Footer*/
+.fusion-footer {
+    position: relative;
+    display: block;
+    border-top: 2px solid #cbaa78;
+    border-bottom: 8px solid #cbaa78;
+}
+.fusion-footer-widget-area.fusion-widget-area {
+	border-top: none;
+	background: #0d3b70;
+}
+.fusion-footer-copyright-area {
+	background: #0d3b70 !important;
+}
+.footer-area .container {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+.footer-copy-right p {
+    color: #fff;
+}
+.footer-area .footer-tittle ul li a {
+    font-size: 16px;
+}
+.footer-number li a {
+	font-size: 16px;
+	color: #fff;
+}
+.footer-number li a:hover,
+.footer-copy-right a:hover {
+	color:#c7a877 !important;
+}
+
+@media only screen and (max-width: 767px) {
+	.fusion-column-wrapper {
+		padding: 0 10px !important;
+	}
+	.solution_teaser .fusion-column-wrapper {padding:0 !important;}
+	.solution_teaser .thumb-content-box {padding:20px;}
+	.gallery-area .single-gallery .thumb-content-box .thumb-content h3 {
+		padding-left: 20px;
+		padding-right: 20px;
+	}
+	#main .fusion-portfolio h2, #main .post h2, #wrapper #main .post h2, #wrapper #main .post-content .fusion-title h2, #wrapper #main .post-content .title h2, #wrapper .fusion-title h2, #wrapper .post-content h2, #wrapper .title h2, .fusion-modal h2, .fusion-widget-area h2, h2.entry-title {
+    	font-size: 22pt !important;
+	}
+	.section-tittle {margin-bottom: 15px !important;}
+	.fusion-fullwidth.about-low-area.section-padding40 {
+		padding-top: 0 !important;
+		padding-bottom: 0 !important;
+	}
+	.fusion-fullwidth.about-low-area.section-padding40 .fusion-layout-column {margin-bottom: 0 !important;}
+	.solutionbg {padding-left: 30px !important;}
+}

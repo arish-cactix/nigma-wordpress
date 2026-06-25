@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="27px" height="25px" viewBox="0 0 27 25" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>A4D78A00-DC6B-4858-AD8F-44DE385C9D77@3x</title>
+    <defs>
+        <radialGradient cx="170.56885%" cy="14.5893004%" fx="170.56885%" fy="14.5893004%" r="647.928532%" gradientTransform="translate(1.705688,0.145893),scale(0.364964,1.000000),rotate(30.000468),translate(-1.705688,-0.145893)" id="radialGradient-1">
+            <stop stop-color="#4387FD" offset="0%"></stop>
+            <stop stop-color="#3078F0" offset="65%"></stop>
+            <stop stop-color="#2B72EA" offset="90.99%"></stop>
+            <stop stop-color="#286EE6" offset="100%"></stop>
+        </radialGradient>
+        <radialGradient cx="186.325483%" cy="107.77149%" fx="186.325483%" fy="107.77149%" r="344.622%" gradientTransform="translate(1.863255,1.077715),scale(0.839286,1.000000),rotate(30.000468),translate(-1.863255,-1.077715)" id="radialGradient-2">
+            <stop stop-color="#FFD24D" offset="0%"></stop>
+            <stop stop-color="#F6C338" offset="100%"></stop>
+        </radialGradient>
+    </defs>
+    <g id="Destinations" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Destinations----Connect-with-Drive-Step-3" transform="translate(-489.000000, -1247.000000)" fill-rule="nonzero">
+            <g id="Account-information" transform="translate(459.000000, 1229.000000)">
+                <g id="Name/Mail" transform="translate(30.000000, 18.000000)">
+                    <g id="Google-Drive" transform="translate(0.000000, 1.562500)">
+                        <polygon id="Path" fill="#0DA960" points="4.6875 23.125 0.15625 15.3125 8.59375 0.625 13.125 8.4375"></polygon>
+                        <polygon id="Path" fill="url(#radialGradient-1)" points="4.6875 23.125 9.21875 15.3125 26.09375 15.3125 21.5625 23.125"></polygon>
+                        <polygon id="Path" fill="url(#radialGradient-2)" points="26.09375 15.3125 17.03125 15.3125 8.59375 0.625 17.65625 0.625"></polygon>
+                        <polygon id="Path" fill="#2D6FDD" points="13.125 15.3125 9.21875 15.3125 11.25 11.875 4.6875 23.125"></polygon>
+                        <polygon id="Path" fill="#E5B93C" points="17.03125 15.3125 26.09375 15.3125 15.15625 11.875"></polygon>
+                        <polygon id="Path" fill="#0C9B57" points="11.09375 11.875 13.125 8.4375 8.59375 0.625"></polygon>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

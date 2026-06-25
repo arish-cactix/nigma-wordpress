@@ -1,0 +1,18 @@
+{
+    "name": "wpmudev/zipstream-deflate-chunk",
+    "type": "library",
+    "require": {
+        "maennchen/zipstream-php": "2.2.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Wpmudev\\ZipstreamDeflateChunk\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Rajendra Wagle",
+            "email": "raajen73@gmail.com"
+        }
+    ]
+}

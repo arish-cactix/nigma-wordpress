@@ -1,0 +1,554 @@
+Plugin Name: Snapshot
+Author: WPMU DEV
+Tested up to: 6.7
+
+Change Log:
+----------------------------------------------------------------------
+= 4.30.0 ( 2024-11-27 ) =
+- New: Azure destination - Send your backup to Azure with ease
+- Improvement: Some UI improvements
+- Improvement: Translations improvements
+- Improvement: API Key is now hidden from Snapshot settings page for unauthorized users
+- Improvement: Updated display of notification after restoring the subsite
+- Improvement: Better validation when adding new destinations
+- Improvement: Compatibility with WP 6.7
+- Fix: Fatal error when uninstalling the plugin
+
+= 4.29.0 ( 2024-10-14 ) =
+
+- New: Restore individual Subsite
+- Improvement: Minor UI improvements
+- Improvement: Whitelabel support
+- Improvement: Third-party destinations support
+- Improvement: Overall backup process and stability
+
+= 4.28.0 ( 2024-08-27 ) =
+
+- Improvement: Ability to selectively restore backups (Database or Files Only)
+- Improvement: Add FTP Destination modal's Next button is inactive
+- Improvement: Update design for hosting backups when there are no backups
+- Fix: Translations issues
+- Fix: Send to mail options are missing in the Export Backup modal
+- Fix: Third Party Destination's directory folder path is not correctly triggered when we fill a folder name
+- Fix: Align the titles of the steps in the Backup and Restore progress bar
+- Fix: Block restore cancellation after Download Backup phase
+- Fix: Fatal error in class-str.php file
+- Fix: Delete Button on a failed backup overlaps with the View logs button
+- Fix: Clear Database Exclusions with the Reset Settings option
+- Fix: View Directory option on FTP Destination has no functionality
+- Fix: Add Destination Modal header image mispositioned
+
+= 4.27.0564 ( 2024-07-16 ) =
+
+- New: Pre-Backup inspection for server resources and large files
+- New: Download and Restore database and files separately
+- Improvement: Add Export Files Started and Export DB Started statuses in the Export process
+- Improvement: Compatibility with WordPress 6.6
+- Improvement: Remove Database Build Type option for WPMU Hosting
+- Fix: Issue with Bucket Names of destinations compatible with Amazon S3
+- Fix: Destination CloudFlare R2 (S3 Compatible) connection doesn't work
+- Fix: Backup fails when cancelled on the Database phase
+- Fix: Duplicate ID "modal-snapshot-edit-schedule-title"
+
+= 4.26.0 ( 2024-05-28 ) =
+
+- Improvement: Option to modify the destination email address for backup downloads
+- Improvement: Option to download backup files from the WP admin dashboard
+- Fix: Delete button is missing from Password Protection settings on SiteGround sites
+- Fix: Typos and grammatical errors
+- Fix: Deprecated FILTER_SANITIZE_STRING constant when Snapshot is installed on WPEngine sites
+- Fix: Snapshot Installer not picking the backup file correctly
+
+= 4.25.0 ( 2024-04-16 ) =
+
+- Improvement: Add support for constant defined for chunking tables backup into specific number of rows
+- Improvement: Compatibility with WordPress 6.5
+- Fix: 50-day auto-deletion failure
+- Fix: Password protection notice appears with a delay after starting a backup
+- Fix: Change plugin config icons to reflect the ones from the HUB
+- Fix: Include Dom Purify for file explorer not entering exclusion with pressing enter
+- Fix: File exclusion should have full path in the root directory
+- Fix: File Exclusion not working when switching WP Dashboard to RTL
+
+= 4.24.0 ( 2024-03-04 ) =
+
+- Improvement: Display notice to re-connect Google Drive on Export failure
+- Improvement: Add a field for Amazon S3 bucket name
+- Improvement: Rendering large files in File Exclusion failing on average internet speed and server connection
+- Fix: Amazon S3-compatible destinations are not working when adding the credentials
+- Fix: Issue with Elementor pages disappears after restoration
+- Fix: UI adjustments for Add and Cancel buttons in RTL language
+- Fix: Copy improvements in text strings
+
+= 4.23.0 ( 2024-01-24 ) =
+
+- Improvement: Compatibility with PHP 8.3
+- Improvement: Clear broken backups for existing backup chains
+- Fix: Broken integration with WP Hide plugin
+- Fix: Resolve backup schedule conflict caused by timezone settings and half-hourly slots
+- Fix: The Hub link on the Configs page redirects to the 404 page
+- Fix: Issue when pressing the Enter key after setting the storage limit
+- Fix: SFTP restore failing on table restoration phase
+
+= 4.22.0 ( 2023-12-25 ) =
+
+- Improvement: Whitelist IP addresses
+- Improvement: Add support for resuming restoration
+- Improvement: Disable deletion function on failed FTP restore
+- Improvement: Update the Twitter name and logo
+- Improvement: Improve error notification when users with Email & Password login method try to log in with Google Authentication
+- Fix: Reduce SFTP restore issues
+- Fix: Backups fail to execute when ALTERNATE_WP_CRON is set
+- Fix: Reset URL params if Google Authentication fails when trying to delete a backup
+
+= 4.21.1 ( 2023-11-21 ) =
+
+- Fix: Google Drive destination issue
+
+= 4.21.0 ( 2023-11-13 ) =
+
+- Improvement: Support for extracting backups from zip files in chunks for plugin-side restoring
+- Improvement: Compatibility with WordPress 6.4
+- Improvement: Adjust the size of the summary box logo
+- Fix: Unable to delete disconnected site backups from the Hub
+- Fix: Remove subdirectory/file on File Exclusions if it is under excluded main folder
+- Fix: Error filter icon is missing in Logs when there are no error logs
+- Fix: Backblaze App Key issue with selected bucket
+- Fix: Snapshot comment adds a backslash when the user uses an apostrophe
+
+= 4.20.0 ( 2023-10-03 ) =
+
+- Fix: Fixed "Save Changes" button resetting Database Exclusions on Notifications page
+- Fix: Corrected wrong redirect after Google Authentication on network sites
+- Fix: Adjusted disorder of logged actions on Snapshot Backups > Settings page
+- Fix: Resolved multiple logs triggered during restoration process
+- Fix: Fixed Backup Rotation inconsistencies
+- Fix: Resolved minor issues with Scheduled Backups
+- Improvement: Resolved Snapshot Pro not following symlinked folder
+
+= 4.19.1 ( 2023-09-05 ) =
+
+- Fix: Resolved restoration issues on some servers
+
+= 4.19.0 ( 2023-08-23 ) =
+
+- Fix: Resolved file backup issues on certain servers
+- Fix: Fixed base backup size problem during rotation
+- Fix: Eliminated duplicate appearance of "log does not exit" notice
+- Fix: Ensured compatibility with PHP version 8.2
+- Fix: Snapshot Installer now detects the database password correctly
+- Fix: Snapshot Installer is now compatible with PHP version 8.2
+- Improvement: Enhanced consistency in applying configurations
+- Improvement: Refined minor UI elements for an improved user experience
+
+= 4.18.0 ( 2023-07-18 ) =
+
+- Fix: PHP Deprecated Warnings
+- Fix: Authentication issues with the Account
+- Fix: Display of "Couldn't return info for the running backup" error
+- Fix: Backup retention issues
+- Fix: Compatibility issues with WP Hide Security Enhancer plugin
+- Improvement: Minor UI improvements on Backup Restoration
+
+= 4.17.3 ( 2023-06-27 ) =
+
+- Fix: Minor improvements in code and copy
+- Improvement: Replaced hero image with new product logo
+
+= 4.17.2 ( 2023-06-06 ) =
+
+- Fix: Resolved an issue with region being not set correctly
+- Improvement: Minor user interface enhancements
+
+= 4.17.1 ( 2023-05-30 ) =
+
+- Fix: Resolved an issue with updates
+- Improvement: Enhanced logging mechanism during site restoration
+
+= 4.17.0 ( 2023-05-30 ) =
+
+- Fix: Resolved backup size issue for smaller backups
+- Fix: Resolved backup deletion issue
+- Fix: Resolved backup restoration issue initiated from the plugin
+- Improvement: Reduced delays in exporting backups in specific cases
+- Improvement: Enhanced code quality
+- Improvement: User interface enhancements
+
+= 4.16.0 ( 2023-04-11 ) =
+
+- Fix: OneDrive authentication issue
+- Fix: Issue with missing database files on some sites
+- Improvement: Enhanced incremental backup engine robustness
+- Improvement: Minor UI tweaks
+- Improvement: Security enhancements
+- Improvement: Improved white-label support
+
+= 4.15.0 ( 2023-03-01 ) =
+
+- Fix: Security enhancement
+- Improvement: Fix issue with Backup failing on some servers
+- Improvement: UTF-8 character support for table names
+- Improvement: Better handling of backup upload to Google Drive
+- Improvement: Minor UI changes
+- Improvement: Code quality improvement
+
+= 4.14.0 ( 2023-01-17 ) =
+
+- New: File explorer UI for Files/Folders exclusion
+- Fix: Issues with exporting backups to Google Drive
+- Improvement: Enhanced table search functionality
+- Improvement: Integrated "Branda" plugin with Snapshot
+- Improvement: Better handling of the overall backup process
+- Improvement: Display excluded database tables under each backup
+- Improvement: Display excluded files and folders under each backup
+- Improvement: Better handling of "MySQLDUMP" detection
+- Improvement: Compatibility check with PHP version 8.2
+- Improvement: Updated email design
+
+= 4.13.0 ( 2022-11-22 ) =
+
+- New: Option to use "MySQLDUMP" to build the database
+- Fix: Issue with database file exclusion
+- Fix: Snapshot Installer issues with database tables
+- Fix: OneDrive creates a new directory when the directory path is empty
+- Fix: Code quality improvement
+- Improvement: Validation message for FTP/SFTP destination
+- Improvement: Better handling of file names while creating the zip file
+- Improvement: Handling database backup more efficiently
+
+= 4.12.1 ( 2022-11-03 ) =
+
+- Fix: Compatibility check with WordPress version 6.1
+- Improvement: Backups running for a longer period of time
+
+= 4.12.0 ( 2022-10-18 ) =
+
+- Fix: Backing up the root directory regardless of having multiple sites in the directory
+- Fix: Issue with database tables exclusion
+- Improvement: Whitelabel support
+- Improvement: Correctly parsing the php.ini file for Snapshot installer
+- Improvement: Checking on the Snapshot installer backup archive integrity
+- Improvement: Minor UI enhancement
+
+= 4.11.2 ( 2022-09-22 ) =
+
+- Fix: Minor code enhancement
+- Improvement: Replaced Google fonts with Bunny fonts for GDPR compliance
+- Improvement: Membership detection
+
+= 4.11.1 ( 2022-09-15 ) =
+
+- Fix: File exclusion UI
+- Fix: Fonts not loading
+- Improvement: Minor UI enhancement
+
+= 4.11.0 ( 2022-09-13 ) =
+
+- New: OneDrive destination business account support
+- New: Database table exclusions in UI
+- Fix: Files are better handled during the restoration
+- Fix: Wrong number of backup count for hosted sites in the dashboard page
+- Fix: Code quality improvement
+- Improvement: Site name and backup date are displayed for backup export file
+- Improvement: Handling of large files during upload
+- Improvement: Backup name and date are shown in backup export email
+- Improvement: Snapshot Installer - better detection of backup file
+- Improvement: Minor UI enhancements
+
+= 4.10.0 ( 2022-08-08 ) =
+
+- New: OneDrive Destination
+- Fix: Restoration process
+- Fix: Config file upload
+- Fix: Some UI fixes
+- Fix: Backups not uploaded to Google Cloud
+- Improvement: Pagination on hourly backups
+
+= 4.9.1 ( 2022-07-12 ) =
+
+- Fix: SSL issues on some host while creating the backup
+
+= 4.9.0 ( 2022-07-07 ) =
+
+- Fix: Issues while applying config with schedule disabled
+- Fix: Minor UI fixes
+- Fix: Snapshot Installer was not recognizing the database credentials
+- Fix: Dropbox connection issues for some users
+- Improvement: Code quality
+- Improvement: Google drive shared directory backup support
+- Improvement: Added support for longer domain names in Snapshot Installer
+- Improvement: Support for direct download link in backup email
+- Improvement: Improved the backup zip files getting corrupted with undesired output
+- Improvement: Configs applied from the Hub wasn't behaving correctly
+- Improvement: Made Installer restoration process more smooth and consistent
+
+= 4.8.2 ( 2022-06-01 ) =
+
+- Improvement: Compatibility with Siteground's Ultrafast PHP
+- Improvement: Backup failing on random database tables
+- Improvement: Snapshot Installer now identifies external database host
+- Fix: FTP now supports plain mode
+- Fix: Code quality improvement
+- Fix: Minor UI fixes
+
+= 4.8.1 ( 2022-05-24 ) =
+
+- Fix: HTTP Authentication form not displayed correctly
+
+= 4.8.0 ( 2022-05-23 ) =
+
+- New: HTTP Authentication for password protected sites
+- Improvement: Snapshot Installer now identifies the host name correctly
+- Improvement: Global exclusions are applied by default
+- Improvement: Site time is displayed on when scheduling the backup
+- Improvement: Snapshot settings and docs link are displayed on Plugins page
+- Fix: Minor code quality issues
+
+= 4.7.4 ( 2022-04-13 ) =
+
+- Fix: Snapshot Installer now handles open_basedir restriction more strictly
+- Fix: Minor UI fixes
+- Fix: FTP destination doesn't work in Sv4 - ftplib update
+- Improvement: Odd/Even rotation process
+- Improvement: Changed the description for backups deletion
+- Improvement: Endpoint to force force manual retention
+
+= 4.7.3 ( 2022-04-07 ) =
+
+- Fix: Improved handling of zip file during backup
+- Fix: Email is not sent after export
+
+= 4.7.2 ( 2022-04-04 ) =
+
+- New: Added "Google Login" support
+
+= 4.7.1 ( 2022-03-07 ) =
+
+- Improvement: Export failed email
+- Improvement: Removal of Defender logs table from database backup
+- Improvement: FTP/SFTP directory information added
+- Improvement: Snapshot Installer database prefix field validation
+- Improvement: Snapshot Installer now shows the correct failed page when the disk space is full during the restoration
+- Fix: FTP/SFTP link text
+- Fix: Snapshot Installer now shows lists of files that are failed to restore
+- Fix: Google drive destination modal issue
+- Fix: Settings saved messaged displayed on Settings page
+- Fix: Schedule from Config wasn't applied to the Hub
+
+= 4.7.0 ( 2022-02-02 ) =
+
+- Improvement: Snapshot Installer 2.0
+- Improvement: New email design
+- Improvement: Link to download Snapshot Installer and restoration guide in email
+- Improvement: Backup download request notification
+
+= 4.6.0 ( 2021-12-13 ) =
+
+- New: FTP/SFTP backup destination
+- New: WP-CLI support for backups
+- Improvement: Apply Your Own Config
+- Improvement: Button to delete all logs
+
+= 4.5.2 ( 2021-11-03 ) =
+
+- Improvement: Minor tweaks and adjustments
+
+= 4.5.1 ( 2021-11-01 ) =
+
+- Improvement: Code stability and removal of debug notices
+
+= 4.5.0 ( 2021-10-27 ) =
+
+- New: Configs
+- Improvement: Ability to go to previous step after authorizing Google Drive
+- Improvement: Academy links removed
+- Improvement: Global Exclusions shortcut links
+- Fix: IP check before running a backup temporarily disabled
+
+= 4.4.0 ( 2021-09-15 ) =
+
+- New: Dropbox Destination
+- Improvement: Check if IPs are whitelisted before running a backup
+- Improvement: "Test Connection" button on destination edit modals
+
+= 4.3.5 ( 2021-08-12 ) =
+
+- New: Backup comments
+- Improvement: DB level dynamic scaling
+- Improvement: Increase file listing success rate
+- Improvement: Compatibility with the WP Hide & Security Enhancer plugin
+- Improvement: Option to clear all global file exclusions at once
+- Improvement: "Load more" button for large log files
+- Improvement: Troubleshooting message with IPs to be whitelisted when backup can't start
+- Fix: Save Changes button doesn't save storage limit
+- Fix: Only one destination is displayed under "Last backup destination"
+- Fix: Pressing Esc doesn't close modals
+
+= 4.3.4 ( 2021-07-05 ) =
+
+- New: Snapshot Tutorials
+- Improvement: Schedule now stored on the API side only
+- Improvement: Include recommendations in error notifications
+- Improvement: New Global file exclusion UI
+- Improvement: Storage Space widget on Backups page
+- Improvement: Fallback to default time format when WP's time format doesn't include time
+- Improvement: Send email when backup export fails
+- Improvement: Skip What's New modal for fresh installs
+- Improvement: Modal for members with inactive membership
+- Fix: Error when adding Google Drive destination
+- Fix: Changing Google Drive Directory ID has no effect
+- Fix: Validation error when editing a destination
+- Fix: Backup fails in filelist stage when multiple steps are required
+
+= 4.3.3 ( 2021-06-03 ) =
+
+- New: FTP restoration
+- New: Send email upon backup creation
+- Improvement: Warnings when restoring with advanced-cache.php
+- Improvement: Warnings when restoring from Jetpack
+- Improvement: Update hub links
+- Improvement: Icon indicating last backup failure in Hub
+- Improvement: Re-enable the Backup Now button automatically
+- Improvement: Use wpmudev.com in the Google Drive app
+- Improvement: Reset storage limit when resetting settings
+- Improvement: Exclude Defender's log from backup
+- Fix: Backup size appears bigger due to manifest duplicates
+- Fix: Backup export issues due to manifest duplicates
+- Fix: Space issues above Destinations widget on WPMU DEV hosted sites
+- Fix: Translations issues
+
+= 4.3.2 ( 2021-04-08 ) =
+
+- Improvement: Restore button is not clear for the user
+- Fix: Issues when DB results need an alias
+- Fix: Issues with DB backup when dblist needs multiple iterations
+
+= 4.3.1 ( 2021-03-29 ) =
+
+- New: Make backup rotation configurable
+- New: Add support for DB views
+- Improvement: Enhance settings text to specify which backups are being removed
+- Improvement: Remove Hosting Settings subpage
+- Improvement: Resume restore after manually extracting the backup zip
+- Improvement: Schedule Module showing up twice when initially set up from the Hub
+- Improvement: jQuery Migrate warnings
+- Improvement: Add Destination in logs
+- Improvement: Inform better about the 50 days expiry policy
+- Improvement: Migration of all links to wpmudev.com
+- Fix: Re-enable backup retention
+- Fix: Conflict with W3 Total Cache
+- Fix: Connected destinations persist after settings reset
+- Fix: Rotation issues
+- Fix: Failed backups can occupy storage space
+- Fix: Reset settings potentially failing altogether
+- Fix: Frontend issue with long destination names
+- Fix: Mobile navigation issues
+- Fix: Exclude Large-Size folders issues
+
+= 4.3.0 ( 2021-01-14 ) =
+
+- New: Whitelabel WPMU DEV's brand
+- Improvement: Flush output buffer after zipstream writes - To help with underpowered hosts
+- Fix: Wrong icon colors in Schedule modal
+- Fix: Design inconsistencies in onboarding modals
+
+= 4.2.1 ( 2020-12-17 ) =
+
+- Fix: Inconsistencies with password protection of backup deletion
+
+= 4.2.0 ( 2020-12-16 ) =
+
+- New: Integrate Google Drive as a backup destination
+- New: Integrate all S3-compatible providers as backup destinations
+- New: Password-protected backup deletion
+- Improvement: Security for enabled directory listing
+- Improvement: Add 3rd party destinations in the Dashboard widget
+- Improvement: Show confirmation modal before deleting a backup
+- Improvement: Prevent adding the same destination twice
+- Improvement: Apply delete restriction on non-last snapshot at API side
+- Improvement: Export error message related to missing backups issue
+- Fix: Issues with files that contain 'manifest' in their filename
+- Fix: The optional Directory Path field is shown as required when editing S3 destinations
+
+= 4.1.2 ( 2020-12-01 ) =
+
+- New: Show tooltip of deactivated destinations
+- New: Hotlink for logs
+- Improvement: Compatibility with WordPress's jQuery update
+- Improvement: Exclude non-essential folders from the backup
+- Improvement: Instructions for S3 compatible providers
+- Improvement: Schedule edit button on Destination page
+- Improvement: Content of export email
+- Fix: Deprecated entry after creating a backup with PHP 8.0
+- Fix: Issue with wp_localize_script() when on PHP 8.0
+- Fix: Array to string conversion when listing backup export destinations on PHP 8.0
+- Fix: Instructions for Google Cloud provider
+- Fix: Text for editing destinations
+- Fix: Export destination tooltip for destinations with long names or a large number of destinations
+
+= 4.1.1 ( 2020-09-14 ) =
+
+- Fix: Copy and image of the What's New modal
+
+= 4.1.0 ( 2020-09-14 ) =
+
+- New: Integrate Amazon S3 as a backup destination
+- New: Integration with S3 compatible providers - Backblaze, Wasabi, Google Cloud, and DigitalOcean Spaces
+- Improvement: Backup restore of staging sites hosted with WPMU DEV
+- Fix: Inconsistencies with weekly scheduled backups
+
+= 4.0.3 ( 2020-09-01 ) =
+
+- New: Add hosting backups in the UI
+- New: Email user when a backup fails
+- New: Email exported backup from now-unavailable sites
+- Improvement: Explaining incremental backup size with tooltip
+- Improvement: Add coming soon tag to the upcoming destinations
+- Improvement: Show all backups of each user's sites
+- Improvement: Fix slight delay in showing proper progress when reloading the backups page
+- Improvement: Improve UX of Storage Limit
+- Fix: Export failing with special character in filename
+- Fix: Backup failing if it detects an unsanitized filename
+- Fix: Issue with Saving Region on Firefox
+- Fix: Modal typo
+- Fix: Slight frontend issue with WP v5.5
+- Fix: Backup Now button disappears upon page reload when backup is underway
+- Fix: Wrong copy at the Uninstall settings
+- Fix: Notifications and Uninstall settings not being reset
+- Fix: Issue with showing the Snapshot hero on the destinations page
+
+= 4.0.2 ( 2020-07-27 ) =
+
+- New: Make Hub work with v4
+- Improvement: Enhance handling of large files in backups
+- Improvement: Prevent backup delays when large sites are being processed
+- Improvement: Enhance UX while a backup is being triggered
+- Improvement: Enhance UX while a schedule is being saved
+- Improvement: Remove unused info from API responses
+- Fix: Issues with restoring backups when there are tables with the wrong db prefix
+- Fix: Issues with masking login area when restoring backups
+- Fix: Issues with deleting failed backups
+- Fix: PHP v5.6 issues
+
+= 4.0.1 ( 2020-07-13 ) =
+
+- New: Make Automate work with v4
+- Improvement: Add Divi's cache folder in permanent exclusions
+- Improvement: Add log entry for failed backup exports in Snapshot's log
+- Improvement: Prevent backups getting stuck when files have been moved between filelist and zipstream stages
+- Improvement: More detailed logging for fetch-filelist stage
+- Improvement: More detailed logging for file-zipstream stage
+- Fix: Dynamic scaling at fetch-filelist stage
+- Fix: Can't delete all backups in one go
+- Fix: Issues with deleting failed backups
+- Fix: Previously deleted db table appears in subsequent export
+- Fix: Issues with deleting backups on sites in subfolders
+- Fix: Frontend inconsistencies with backup cancellations
+- Fix: Backup exports stall when admin and public site have a http/https mismatch
+
+= 4.0.0 ( 2020-06-15 ) =
+
+- New: Incremental backups
+
+
+396685-1733990529-au

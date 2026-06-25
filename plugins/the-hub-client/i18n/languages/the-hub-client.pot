@@ -1,0 +1,2034 @@
+# Copyright (C) 2024 the-hub-client
+# This file is distributed under the same license as the the-hub-client package.
+msgid ""
+msgstr ""
+"Project-Id-Version: the-hub-client\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-KeywordsList: __;_e;_ex:1,2c;_n:1,2;_n_noop:1,2;_nx:1,2,4c;_nx_noop:1,2,3c;_x:1,2c;esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: admin/abstract.php:143
+msgid "Docs"
+msgstr ""
+
+#: admin/abstract.php:154, admin/settings.php:9
+msgid "Settings"
+msgstr ""
+
+#: admin/abstract.php:272, admin/abstract.php:273
+msgid "Client Portal"
+msgstr ""
+
+#: admin/abstract.php:345, admin/abstract.php:329, admin/abstract.php:314
+msgid "Configure WPMU DEV Dash Plugin"
+msgstr ""
+
+#: admin/abstract.php:349, admin/abstract.php:318
+msgid "The Hub Client requires WPMU DEV Dashboard plugin to be working. Please make sure you have installed, activated and logged into the Dashboard."
+msgstr ""
+
+#: admin/abstract.php:353
+msgid "Log In"
+msgstr ""
+
+#: admin/abstract.php:333
+msgid "Just one more step to enable updates and support for The Hub Client!."
+msgstr ""
+
+#: admin/abstract.php:337
+msgid "Activate WPMU DEV Dashboard"
+msgstr ""
+
+#: admin/abstract.php:322
+msgid "Install Plugin"
+msgstr ""
+
+#: admin/admin.php:9, front/front.php:340
+msgid "The Hub Client"
+msgstr ""
+
+#: admin/reseller.php:9, admin/reseller.php:13
+msgid "Reseller"
+msgstr ""
+
+#: admin/reseller.php:9
+msgid "NEW"
+msgstr ""
+
+#. translators: %s: Settings URL in wp-admin.
+#: front/front.php:73
+msgid "Something went wrong on Whitelabel Hub configuration, please review %1$shere%2$s."
+msgstr ""
+
+#: front/front.php:79
+msgid "Hub not available at the moment please comeback later."
+msgstr ""
+
+#: front/front.php:86
+msgid "Hub manifest not available at the moment. Please come back later."
+msgstr ""
+
+#: front/front.php:380, i18n/languages/admin.js.php:726, i18n/languages/blocks.js.php:68
+msgid "Hosting Reseller"
+msgstr ""
+
+#: front/front.php:381
+msgid "Resell WPMU DEV hosting to your clients using this Hosting Reseller pricing table block."
+msgstr ""
+
+#: front/front.php:452
+msgid "Domains Reseller"
+msgstr ""
+
+#: front/front.php:453
+msgid "Resell WPMU DEV domains to your clients using this Domain Reseller block."
+msgstr ""
+
+#: i18n/languages/admin.js.php:5
+msgid "User %s's avatar"
+msgstr ""
+
+#: i18n/languages/admin.js.php:8
+msgid "You can't delete yourself"
+msgstr ""
+
+#: i18n/languages/admin.js.php:11
+msgid "Remove user"
+msgstr ""
+
+#: i18n/languages/admin.js.php:14
+msgid "Add user"
+msgstr ""
+
+#: i18n/languages/admin.js.php:17
+msgid "You"
+msgstr ""
+
+#: i18n/languages/admin.js.php:21
+msgid "Select"
+msgstr ""
+
+#: i18n/languages/admin.js.php:24
+msgid "Product Roadmap"
+msgstr ""
+
+#: i18n/languages/admin.js.php:27
+msgid "Documentation"
+msgstr ""
+
+#: i18n/languages/admin.js.php:30
+msgid "The Hub"
+msgstr ""
+
+#: i18n/languages/admin.js.php:33
+msgid "Plugins"
+msgstr ""
+
+#: i18n/languages/admin.js.php:36
+msgid "Roadmap"
+msgstr ""
+
+#: i18n/languages/admin.js.php:39
+msgid "Support"
+msgstr ""
+
+#: i18n/languages/admin.js.php:42
+msgid "Community"
+msgstr ""
+
+#: i18n/languages/admin.js.php:45
+msgid "Terms of Service"
+msgstr ""
+
+#: i18n/languages/admin.js.php:48
+msgid "Privacy Policy"
+msgstr ""
+
+#: i18n/languages/admin.js.php:52
+msgid "Branding"
+msgstr ""
+
+#: i18n/languages/admin.js.php:55
+msgid "Navigation"
+msgstr ""
+
+#: i18n/languages/admin.js.php:58
+msgid "Login & Signup "
+msgstr ""
+
+#: i18n/languages/admin.js.php:61
+msgid "Client Support"
+msgstr ""
+
+#: i18n/languages/admin.js.php:65
+msgid "Translations"
+msgstr ""
+
+#: i18n/languages/admin.js.php:73
+msgid "Save"
+msgstr ""
+
+#: i18n/languages/admin.js.php:76
+msgid "Client portal page updated successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:79
+msgid "Client portal page has been reset successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:83
+msgid "Client portal page"
+msgstr ""
+
+#: i18n/languages/admin.js.php:87
+msgid "Choose the page on your site on which you want to run the client portal."
+msgstr ""
+
+#: i18n/languages/admin.js.php:90
+msgid "Select Page"
+msgstr ""
+
+#: i18n/languages/admin.js.php:99
+msgid "Reset"
+msgstr ""
+
+#: i18n/languages/admin.js.php:115
+msgid "Cancel"
+msgstr ""
+
+#: i18n/languages/admin.js.php:118
+msgid "No menu available"
+msgstr ""
+
+#: i18n/languages/admin.js.php:121
+msgid "Select menu"
+msgstr ""
+
+#: i18n/languages/admin.js.php:124
+msgid "Remove"
+msgstr ""
+
+#: i18n/languages/admin.js.php:127
+msgid "Add menu"
+msgstr ""
+
+#: i18n/languages/admin.js.php:130
+msgid "Custom navigation saved successfully!"
+msgstr ""
+
+#: i18n/languages/admin.js.php:133
+msgid "Custom navigation has been removed successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:137
+msgid "Custom navigation"
+msgstr ""
+
+#: i18n/languages/admin.js.php:141
+msgid "Choose a custom menu to display in your client portal's navigation, in addition to the default 'Hub' menu."
+msgstr ""
+
+#: i18n/languages/admin.js.php:144
+msgid "Menu"
+msgstr ""
+
+#: i18n/languages/admin.js.php:147
+msgid "Create or edit menus at <menu/>"
+msgstr ""
+
+#: i18n/languages/admin.js.php:150
+msgid "Appearance > Menus."
+msgstr ""
+
+#: i18n/languages/admin.js.php:154
+msgid "Choose a custom URL that will be used for the back button on the login page."
+msgstr ""
+
+#: i18n/languages/admin.js.php:157
+msgid "Title"
+msgstr ""
+
+#: i18n/languages/admin.js.php:160
+msgid "Customize title field"
+msgstr ""
+
+#: i18n/languages/admin.js.php:163
+msgid "Url"
+msgstr ""
+
+#: i18n/languages/admin.js.php:169
+msgid "Ex. https://wpmudev.com"
+msgstr ""
+
+#: i18n/languages/admin.js.php:172
+msgid "Open in new tab"
+msgstr ""
+
+#: i18n/languages/admin.js.php:175
+msgid "Add URL"
+msgstr ""
+
+#: i18n/languages/admin.js.php:183
+msgid "This field is required"
+msgstr ""
+
+#: i18n/languages/admin.js.php:190
+msgid "Please enter a valid URL."
+msgstr ""
+
+#: i18n/languages/admin.js.php:193
+msgid "Custom home URL added successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:196
+msgid "Custom home URL has been reset successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:200
+msgid "Customize home URL"
+msgstr ""
+
+#: i18n/languages/admin.js.php:203
+msgid "Add help button"
+msgstr ""
+
+#: i18n/languages/admin.js.php:206
+msgid "Help button updated successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:209
+msgid "Help button has been reset successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:213
+msgid "Help button"
+msgstr ""
+
+#: i18n/languages/admin.js.php:217
+msgid "Add a 'Help' button in your client portal for easy access to your support resources."
+msgstr ""
+
+#: i18n/languages/admin.js.php:220
+msgid "URL"
+msgstr ""
+
+#: i18n/languages/admin.js.php:223
+msgid "Grab the license id from the tracking code provided in your LiveChat account."
+msgstr ""
+
+#: i18n/languages/admin.js.php:226
+msgid "License Id"
+msgstr ""
+
+#: i18n/languages/admin.js.php:229
+msgid "Learn how to integrate LiveChat"
+msgstr ""
+
+#: i18n/languages/admin.js.php:232
+msgid "Tracking Code"
+msgstr ""
+
+#: i18n/languages/admin.js.php:235
+msgid "Create a Chatflow in your HubSpot account and add your tracking code below."
+msgstr ""
+
+#: i18n/languages/admin.js.php:238
+msgid "Tracking code"
+msgstr ""
+
+#: i18n/languages/admin.js.php:241
+msgid "Learn how to integrate HubSpot"
+msgstr ""
+
+#: i18n/languages/admin.js.php:244
+msgid "Create a chat widget in your tawk.to account and grab the <src/> URL from the provided widget code"
+msgstr ""
+
+#: i18n/languages/admin.js.php:247
+msgid "s1.src URL"
+msgstr ""
+
+#: i18n/languages/admin.js.php:250
+msgid "Learn how to integrate Tawk.to"
+msgstr ""
+
+#: i18n/languages/admin.js.php:254
+msgid "Live chat integration"
+msgstr ""
+
+#: i18n/languages/admin.js.php:257
+msgid "Offer live chat support to your clients through integration with Livechat, tawk.to, or Hubspot widgets in your client portal."
+msgstr ""
+
+#: i18n/languages/admin.js.php:261
+msgid "Select integration"
+msgstr ""
+
+#: i18n/languages/admin.js.php:264
+msgid "Add integration"
+msgstr ""
+
+#: i18n/languages/admin.js.php:267
+msgid "Live chat integration added successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:270
+msgid "Live chat integration has been reset successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:274
+msgid "Privacy policy"
+msgstr ""
+
+#: i18n/languages/admin.js.php:278
+msgid "Require users to accept your privacy policy by checking a box on the signup form."
+msgstr ""
+
+#: i18n/languages/admin.js.php:282
+msgid "Page Type"
+msgstr ""
+
+#: i18n/languages/admin.js.php:286
+msgid "Existing page"
+msgstr ""
+
+#: i18n/languages/admin.js.php:290
+msgid "Page"
+msgstr ""
+
+#: i18n/languages/admin.js.php:294
+msgid "Custom URL"
+msgstr ""
+
+#: i18n/languages/admin.js.php:298
+msgid "Update"
+msgstr ""
+
+#: i18n/languages/admin.js.php:305
+msgid "Add"
+msgstr ""
+
+#: i18n/languages/admin.js.php:308
+msgid "Privacy policy page updated successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:311
+msgid "Privacy policy checkbox has been reset successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:314
+msgid "Subsite saved successfully!"
+msgstr ""
+
+#: i18n/languages/admin.js.php:318
+msgid "Subsite"
+msgstr ""
+
+#: i18n/languages/admin.js.php:322
+msgid "Terms of service"
+msgstr ""
+
+#: i18n/languages/admin.js.php:326
+msgid "Require users to accept your terms of service by checking a box on the signup form."
+msgstr ""
+
+#: i18n/languages/admin.js.php:329
+msgid "Terms of service checkbox has updated successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:332
+msgid "Terms of service checkbox has been reset successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:335
+msgid "Customize the branding of your client portal with options such as a brand name, logo, and color scheme to create a cohesive experience for your clients."
+msgstr ""
+
+#: i18n/languages/admin.js.php:341
+msgid "Save Settings"
+msgstr ""
+
+#: i18n/languages/admin.js.php:345
+msgid "Preview"
+msgstr ""
+
+#: i18n/languages/admin.js.php:348
+msgid "Site profile"
+msgstr ""
+
+#: i18n/languages/admin.js.php:351
+msgid "Replace the 'WPMU DEV' branding with your own brand name and logo on your client portal."
+msgstr ""
+
+#: i18n/languages/admin.js.php:354
+msgid "Brand Name"
+msgstr ""
+
+#: i18n/languages/admin.js.php:357
+msgid "Logo"
+msgstr ""
+
+#: i18n/languages/admin.js.php:360
+msgid "Logo size should not exceed 1MB."
+msgstr ""
+
+#: i18n/languages/admin.js.php:363
+msgid "Upload Image"
+msgstr ""
+
+#: i18n/languages/admin.js.php:366
+msgid "File size is too large, please pick a smaller file"
+msgstr ""
+
+#: i18n/languages/admin.js.php:369
+msgid "Colors"
+msgstr ""
+
+#: i18n/languages/admin.js.php:372
+msgid "Personalize the color scheme of your client portal's navigation menu to match your brand's style."
+msgstr ""
+
+#: i18n/languages/admin.js.php:375
+msgid "Please enter a valid brand name."
+msgstr ""
+
+#: i18n/languages/admin.js.php:378
+msgid "Branding is updated successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:381
+msgid "Navigation background"
+msgstr ""
+
+#: i18n/languages/admin.js.php:384
+msgid "Navigation color"
+msgstr ""
+
+#: i18n/languages/admin.js.php:387
+msgid "Hover and active color"
+msgstr ""
+
+#: i18n/languages/admin.js.php:390
+msgid "Client support"
+msgstr ""
+
+#: i18n/languages/admin.js.php:393
+msgid "Add a help button or integrate with one of the live chat services to provide support to your clients."
+msgstr ""
+
+#: i18n/languages/admin.js.php:396
+msgid "Help button URL"
+msgstr ""
+
+#: i18n/languages/admin.js.php:399
+msgid "Offer live chat support to your clients through integration with LiveChat, tawk.to, or HubSpot widgets in your client portal."
+msgstr ""
+
+#: i18n/languages/admin.js.php:402
+msgid "Active integration"
+msgstr ""
+
+#: i18n/languages/admin.js.php:407
+msgid "Edit"
+msgstr ""
+
+#: i18n/languages/admin.js.php:410
+msgid "Login and signup"
+msgstr ""
+
+#: i18n/languages/admin.js.php:413
+msgid "Configure options related to your login and signup pages."
+msgstr ""
+
+#: i18n/languages/admin.js.php:416
+msgid "Terms of service page"
+msgstr ""
+
+#: i18n/languages/admin.js.php:419
+msgid "Privacy policy page"
+msgstr ""
+
+#: i18n/languages/admin.js.php:422
+msgid "Sites"
+msgstr ""
+
+#: i18n/languages/admin.js.php:425
+msgid "Brand logo"
+msgstr ""
+
+#: i18n/languages/admin.js.php:428
+msgid "User avatar"
+msgstr ""
+
+#: i18n/languages/admin.js.php:431
+msgid "Navigation settings"
+msgstr ""
+
+#: i18n/languages/admin.js.php:434
+msgid "Customize the navigation menu of your client portal to create a seamless user experience for your clients."
+msgstr ""
+
+#: i18n/languages/admin.js.php:437
+msgid "Select subsite"
+msgstr ""
+
+#: i18n/languages/admin.js.php:440
+msgid "Go to <a><strong>WPMU DEV > Settings > Translations</strong></a> and select the language you want to translate the widgets to."
+msgstr ""
+
+#: i18n/languages/admin.js.php:443
+msgid "Update the translations for The Hub Client plugin. This will automatically download the latest translation file for the selected language."
+msgstr ""
+
+#: i18n/languages/admin.js.php:446
+msgid "Translations are updated successfully."
+msgstr ""
+
+#: i18n/languages/admin.js.php:449
+msgid "Select the default language for your client portal pages and any Hub Client widgets you've added to your site."
+msgstr ""
+
+#: i18n/languages/admin.js.php:452
+msgid "Client Portal Default Language"
+msgstr ""
+
+#: i18n/languages/admin.js.php:455
+msgid "Select the default language to be used for your client portal."
+msgstr ""
+
+#: i18n/languages/admin.js.php:458
+msgid "Select default language"
+msgstr ""
+
+#: i18n/languages/admin.js.php:461
+msgid "Select language"
+msgstr ""
+
+#: i18n/languages/admin.js.php:464
+msgid "This is the default language that will be used for your client portal. Clients can change their preferred logged-in language in their Preferences menu."
+msgstr ""
+
+#: i18n/languages/admin.js.php:467
+msgid "Translate The Hub Client Widgets"
+msgstr ""
+
+#: i18n/languages/admin.js.php:470
+msgid "To translate the widgets that can be added to the site, such as a hosting pricing table, follow the guide on the right or refer to <a><strong>our docs</strong></a>."
+msgstr ""
+
+#: i18n/languages/admin.js.php:473
+msgid "Translation guide"
+msgstr ""
+
+#: i18n/languages/admin.js.php:476
+msgid "Go to <a><strong>Settings > General</strong></a> and set the Site Language to the same as the Client Portal Default Language above."
+msgstr ""
+
+#: i18n/languages/admin.js.php:479
+msgid "Customization saved successfully!"
+msgstr ""
+
+#: i18n/languages/admin.js.php:483
+msgid "Label color"
+msgstr ""
+
+#: i18n/languages/admin.js.php:487
+msgid "Background color"
+msgstr ""
+
+#: i18n/languages/admin.js.php:490
+msgid "Matches & Suggestions"
+msgstr ""
+
+#: i18n/languages/admin.js.php:494, i18n/languages/blocks.js.php:8
+msgid "Matches"
+msgstr ""
+
+#: i18n/languages/admin.js.php:497
+msgid "Search Field"
+msgstr ""
+
+#: i18n/languages/admin.js.php:500
+msgid "Placeholder"
+msgstr ""
+
+#: i18n/languages/admin.js.php:503
+msgid "Choose the placeholder text that appears on the domain search form."
+msgstr ""
+
+#: i18n/languages/admin.js.php:506
+msgid "Placeholder color"
+msgstr ""
+
+#: i18n/languages/admin.js.php:509
+msgid "Input background"
+msgstr ""
+
+#: i18n/languages/admin.js.php:512
+msgid "Input color"
+msgstr ""
+
+#: i18n/languages/admin.js.php:515
+msgid "Search Button"
+msgstr ""
+
+#: i18n/languages/admin.js.php:518, i18n/languages/blocks.js.php:55
+msgid "Search Result"
+msgstr ""
+
+#: i18n/languages/admin.js.php:521
+msgid "Result options"
+msgstr ""
+
+#: i18n/languages/admin.js.php:524
+msgid "Choose what to include in the domain search results."
+msgstr ""
+
+#: i18n/languages/admin.js.php:527
+msgid "Buy Domain Button"
+msgstr ""
+
+#: i18n/languages/admin.js.php:531
+msgid "Label"
+msgstr ""
+
+#: i18n/languages/admin.js.php:534
+msgid "No Items found"
+msgstr ""
+
+#: i18n/languages/admin.js.php:537
+msgid "TLD"
+msgstr ""
+
+#: i18n/languages/admin.js.php:540
+msgid "Yearly price (%s)"
+msgstr ""
+
+#: i18n/languages/admin.js.php:543
+msgid "Yearly price (USD)"
+msgstr ""
+
+#: i18n/languages/admin.js.php:549
+msgid "Embed on site"
+msgstr ""
+
+#: i18n/languages/admin.js.php:552
+msgid "Save changes"
+msgstr ""
+
+#: i18n/languages/admin.js.php:556
+msgid "Customize domain widget"
+msgstr ""
+
+#: i18n/languages/admin.js.php:560
+msgid "Customize pricing table"
+msgstr ""
+
+#: i18n/languages/admin.js.php:563
+msgid "Desktop"
+msgstr ""
+
+#: i18n/languages/admin.js.php:566
+msgid "Mobile"
+msgstr ""
+
+#: i18n/languages/admin.js.php:569
+msgid "Container"
+msgstr ""
+
+#: i18n/languages/admin.js.php:572
+msgid "Product Fields"
+msgstr ""
+
+#: i18n/languages/admin.js.php:575
+msgid "Product image"
+msgstr ""
+
+#: i18n/languages/admin.js.php:578
+msgid "Product Name"
+msgstr ""
+
+#: i18n/languages/admin.js.php:581
+msgid "Product description"
+msgstr ""
+
+#: i18n/languages/admin.js.php:584
+msgid "Feature list"
+msgstr ""
+
+#: i18n/languages/admin.js.php:587
+msgid "Layout"
+msgstr ""
+
+#: i18n/languages/admin.js.php:590
+msgid "Grid"
+msgstr ""
+
+#: i18n/languages/admin.js.php:593
+msgid "Stack"
+msgstr ""
+
+#: i18n/languages/admin.js.php:596
+msgid "Button"
+msgstr ""
+
+#: i18n/languages/admin.js.php:599
+msgid "Edit Product"
+msgstr ""
+
+#: i18n/languages/admin.js.php:602
+msgid "Add product"
+msgstr ""
+
+#: i18n/languages/admin.js.php:605
+msgid "Select the Hosting Reseller product and its price variations that you want to add to the pricing table."
+msgstr ""
+
+#: i18n/languages/admin.js.php:608
+msgid "Hosting Reseller Product"
+msgstr ""
+
+#: i18n/languages/admin.js.php:611
+msgid "No Products found"
+msgstr ""
+
+#: i18n/languages/admin.js.php:615
+msgid "Pricing Plans"
+msgstr ""
+
+#: i18n/languages/admin.js.php:618
+msgid "No plans found!"
+msgstr ""
+
+#: i18n/languages/admin.js.php:621
+msgid "Select Pricing Plans"
+msgstr ""
+
+#: i18n/languages/admin.js.php:624
+msgid "Search Pricing Plans"
+msgstr ""
+
+#: i18n/languages/admin.js.php:629
+msgid "Visibility"
+msgstr ""
+
+#: i18n/languages/admin.js.php:632
+msgid "Visible on the pricing table widget"
+msgstr ""
+
+#: i18n/languages/admin.js.php:635
+msgid "Visible inside the white labeled Hub"
+msgstr ""
+
+#: i18n/languages/admin.js.php:638
+msgid "Added new product."
+msgstr ""
+
+#: i18n/languages/admin.js.php:641
+msgid "Updated product."
+msgstr ""
+
+#: i18n/languages/admin.js.php:644
+msgid "Deactivated Hosting Reseller."
+msgstr ""
+
+#: i18n/languages/admin.js.php:647
+msgid "Deactivated Domain Reseller."
+msgstr ""
+
+#: i18n/languages/admin.js.php:652
+msgid "Deactivate"
+msgstr ""
+
+#: i18n/languages/admin.js.php:655
+msgid "Deleted %s."
+msgstr ""
+
+#: i18n/languages/admin.js.php:658
+msgid "Delete product"
+msgstr ""
+
+#. translators: %s product name
+#: i18n/languages/admin.js.php:662
+msgid "Are you sure you want to delete <strong>%s</strong>? It’ll remove the product from appearing in your hosting pricing tables on the site and within the client Hub."
+msgstr ""
+
+#: i18n/languages/admin.js.php:665
+msgid "Delete"
+msgstr ""
+
+#: i18n/languages/admin.js.php:668
+msgid "You can embed the Hosting Reseller pricing table on any page using either the shortcode provided below or the Hosting Reseller Gutenberg block."
+msgstr ""
+
+#: i18n/languages/admin.js.php:671
+msgid "You can embed the Domain Reseller widget on any page using either the shortcode provided below or the Domain Reseller Gutenberg block."
+msgstr ""
+
+#: i18n/languages/admin.js.php:674
+msgid "Embed method"
+msgstr ""
+
+#: i18n/languages/admin.js.php:677
+msgid "Gutenberg Block"
+msgstr ""
+
+#: i18n/languages/admin.js.php:680
+msgid "Shortcode"
+msgstr ""
+
+#: i18n/languages/admin.js.php:683
+msgid "Copy and paste this shortcode on any page"
+msgstr ""
+
+#: i18n/languages/admin.js.php:686
+msgid "Copied shortcode"
+msgstr ""
+
+#: i18n/languages/admin.js.php:689
+msgid "Copy"
+msgstr ""
+
+#: i18n/languages/admin.js.php:692
+msgid "Steps to follow"
+msgstr ""
+
+#: i18n/languages/admin.js.php:695
+msgid "Go to the page where you want to add the Hosting Reseller pricing table."
+msgstr ""
+
+#: i18n/languages/admin.js.php:698
+msgid "Go to the page where you want to add the Domain Reseller widget."
+msgstr ""
+
+#: i18n/languages/admin.js.php:701
+msgid "Click on the (+) icon and search for the Hosting Reseller block to embed the pricing table in your desired section."
+msgstr ""
+
+#: i18n/languages/admin.js.php:704
+msgid "Click on the (+) icon and search for the Domain Reseller block to embed the widget in your desired section."
+msgstr ""
+
+#: i18n/languages/admin.js.php:708
+msgid "Import all products"
+msgstr ""
+
+#: i18n/languages/admin.js.php:711
+msgid "Import all the Hosting Reseller products from Hub. Note that archived products and prices will be skipped."
+msgstr ""
+
+#: i18n/languages/admin.js.php:715
+msgid "Product LOGO"
+msgstr ""
+
+#: i18n/languages/admin.js.php:718
+msgid "Done"
+msgstr ""
+
+#: i18n/languages/admin.js.php:721
+msgid "Import all"
+msgstr ""
+
+#: i18n/languages/admin.js.php:730, i18n/languages/blocks.js.php:52
+msgid "Domain Reseller"
+msgstr ""
+
+#: i18n/languages/admin.js.php:733
+msgid "Deactivate Domain Reseller"
+msgstr ""
+
+#: i18n/languages/admin.js.php:736
+msgid "Are you sure you want to deactivate Domain Reseller? Then, your clients will no longer be able to buy domains from your site or your client Hub."
+msgstr ""
+
+#: i18n/languages/admin.js.php:739
+msgid "Allow your clients to buy domains from your site and your client Hub. We’ll create a widget you can embed on any page and be visible inside your client Hub."
+msgstr ""
+
+#: i18n/languages/admin.js.php:742
+msgid "TLDs"
+msgstr ""
+
+#: i18n/languages/admin.js.php:745
+msgid "Below are the TLDs set up in your Hub account. You can add more TLDs or update pricing from the <a/>."
+msgstr ""
+
+#: i18n/languages/admin.js.php:748
+msgid "Hub"
+msgstr ""
+
+#: i18n/languages/admin.js.php:751
+msgid "Customize domains widget"
+msgstr ""
+
+#: i18n/languages/admin.js.php:754
+msgid "Adjust the domain widget as per your requirements. You can use the preview option to view your changes."
+msgstr ""
+
+#: i18n/languages/admin.js.php:758
+msgid "If you no longer want to use this feature you can deactivate it."
+msgstr ""
+
+#: i18n/languages/admin.js.php:761
+msgid "Domain Reseller activated"
+msgstr ""
+
+#: i18n/languages/admin.js.php:765
+msgid "You can now configure the module as needed."
+msgstr ""
+
+#: i18n/languages/admin.js.php:768
+msgid "To activate the Domain Reseller on The Hub Client, complete the setup guide checklist provided in The Hub. Once done, revisit this page to activate the Domain Reseller."
+msgstr ""
+
+#: i18n/languages/admin.js.php:772
+msgid "Go to the Hub"
+msgstr ""
+
+#: i18n/languages/admin.js.php:776
+msgid "Activate"
+msgstr ""
+
+#: i18n/languages/admin.js.php:779
+msgid "Upgrade your membership to the Agency plan to resell domains."
+msgstr ""
+
+#: i18n/languages/admin.js.php:783
+msgid "Upgrade membership"
+msgstr ""
+
+#: i18n/languages/admin.js.php:787
+msgid "Agency Only"
+msgstr ""
+
+#: i18n/languages/admin.js.php:790
+msgid "Deactivate Hosting Reseller"
+msgstr ""
+
+#: i18n/languages/admin.js.php:793
+msgid "Are you sure you want to deactivate Hosting Reseller? If so, your clients will no longer be able to buy hosting products from your site or your client Hub but their existing subscriptions will remain active."
+msgstr ""
+
+#: i18n/languages/admin.js.php:796
+msgid "Allow your clients to buy hosting plans from your site and your client Hub. We’ll create a pricing table that you can embed on any page and be visible inside your client Hub."
+msgstr ""
+
+#: i18n/languages/admin.js.php:799
+msgid "Hosting Products"
+msgstr ""
+
+#: i18n/languages/admin.js.php:802
+msgid "Select the Hosting Reseller products that you want to offer to your clients. You can <create/> or update the existing products in the Hub."
+msgstr ""
+
+#: i18n/languages/admin.js.php:805
+msgid "create new"
+msgstr ""
+
+#: i18n/languages/admin.js.php:808
+msgid "Hosting Reseller activated"
+msgstr ""
+
+#: i18n/languages/admin.js.php:811
+msgid "To activate the Hosting Reseller on The Hub Client, complete the setup guide checklist provided in The Hub. Once done, revisit this page to activate the Hosting Reseller."
+msgstr ""
+
+#: i18n/languages/admin.js.php:814
+msgid "Upgrade your membership to the Agency plan to resell hosting."
+msgstr ""
+
+#: i18n/languages/admin.js.php:817
+msgid "Copy Link"
+msgstr ""
+
+#: i18n/languages/admin.js.php:820
+msgid "Copied checkout link!"
+msgstr ""
+
+#: i18n/languages/admin.js.php:823
+msgid "Copy checkout link"
+msgstr ""
+
+#: i18n/languages/admin.js.php:826
+msgid "No products found."
+msgstr ""
+
+#: i18n/languages/admin.js.php:829
+msgid "You must first go to your Hub and create the products & associated pricing plans that you want to include in your pricing table. <a><strong>Create Hosting Reseller products now</strong></a>."
+msgstr ""
+
+#: i18n/languages/admin.js.php:832
+msgid "If you are creating your own pricing table, use the checkout links to trigger the product checkout."
+msgstr ""
+
+#: i18n/languages/admin.js.php:835
+msgid "Add Product"
+msgstr ""
+
+#: i18n/languages/admin.js.php:838
+msgid "Pricing table widget"
+msgstr ""
+
+#: i18n/languages/admin.js.php:841
+msgid "White label Hub"
+msgstr ""
+
+#: i18n/languages/admin.js.php:844
+msgid "None"
+msgstr ""
+
+#: i18n/languages/admin.js.php:847
+msgid "Product"
+msgstr ""
+
+#: i18n/languages/admin.js.php:850
+msgid "Plan Name"
+msgstr ""
+
+#: i18n/languages/admin.js.php:853
+msgid "Price"
+msgstr ""
+
+#: i18n/languages/admin.js.php:856
+msgid "Billing Period"
+msgstr ""
+
+#: i18n/languages/admin.js.php:859
+msgid "Checkout Link"
+msgstr ""
+
+#: i18n/languages/admin.js.php:862
+msgid "Added users"
+msgstr ""
+
+#: i18n/languages/admin.js.php:865
+msgid "Available users"
+msgstr ""
+
+#: i18n/languages/admin.js.php:869
+msgid "No users found!"
+msgstr ""
+
+#: i18n/languages/admin.js.php:872
+msgid "Add the admin users who should be able to access The Hub Client plugin."
+msgstr ""
+
+#: i18n/languages/admin.js.php:875
+msgid "Add users"
+msgstr ""
+
+#: i18n/languages/admin.js.php:878
+msgid "Settings have been reset successfully!"
+msgstr ""
+
+#: i18n/languages/admin.js.php:881
+msgid "Reset settings"
+msgstr ""
+
+#: i18n/languages/admin.js.php:884
+msgid "This will clear all the plugin configurations and restore the plugin settings to their default values."
+msgstr ""
+
+#: i18n/languages/admin.js.php:888
+msgid "Reset now"
+msgstr ""
+
+#: i18n/languages/admin.js.php:892
+msgid "Permissions"
+msgstr ""
+
+#: i18n/languages/admin.js.php:896
+msgid "Reset Settings"
+msgstr ""
+
+#: i18n/languages/admin.js.php:899
+msgid "This setting allows you to grant access to The Hub Client plugin for specific admin users or all admins."
+msgstr ""
+
+#: i18n/languages/admin.js.php:902
+msgid "Allow all admins"
+msgstr ""
+
+#: i18n/languages/admin.js.php:905
+msgid "Allow selected admins"
+msgstr ""
+
+#: i18n/languages/admin.js.php:908
+msgid "Add Users"
+msgstr ""
+
+#: i18n/languages/admin.js.php:912
+msgid "Visibility settings updated successfully"
+msgstr ""
+
+#: i18n/languages/admin.js.php:915
+msgid "Manage the visibility of The Hub Client plugin for admin users."
+msgstr ""
+
+#: i18n/languages/admin.js.php:918
+msgid "Uninstallation behavior updated successfully"
+msgstr ""
+
+#: i18n/languages/admin.js.php:921
+msgid "Control uninstall behavior and reset plugin to default state."
+msgstr ""
+
+#: i18n/languages/admin.js.php:924
+msgid "Uninstallation behavior"
+msgstr ""
+
+#: i18n/languages/admin.js.php:927
+msgid "Choose whether you want to preserve the plugin settings or reset them to their default values when this plugin is uninstalled."
+msgstr ""
+
+#: i18n/languages/admin.js.php:930
+msgid "Preserve"
+msgstr ""
+
+#: i18n/languages/admin.js.php:933
+msgid "Needing to start fresh? Use this button to roll back to the default plugin settings."
+msgstr ""
+
+#: i18n/languages/admin.js.php:936, i18n/languages/blocks.js.php:5
+msgid "Domain reseller is not activated."
+msgstr ""
+
+#: i18n/languages/admin.js.php:939, i18n/languages/blocks.js.php:11
+msgid "Suggestions"
+msgstr ""
+
+#: i18n/languages/admin.js.php:942, i18n/languages/blocks.js.php:14
+msgid "Something went wrong while searching for domains. Please try again or contact the site administrator if the issue persists."
+msgstr ""
+
+#: i18n/languages/admin.js.php:945, i18n/languages/blocks.js.php:17
+msgid "Domain Block Preview"
+msgstr ""
+
+#: i18n/languages/admin.js.php:948, i18n/languages/blocks.js.php:20
+msgid "No matches found."
+msgstr ""
+
+#: i18n/languages/admin.js.php:951, i18n/languages/blocks.js.php:23
+msgid "No suggestions found"
+msgstr ""
+
+#: i18n/languages/admin.js.php:954, i18n/languages/blocks.js.php:26
+msgid "Unavailable"
+msgstr ""
+
+#: i18n/languages/admin.js.php:957, i18n/languages/blocks.js.php:29
+msgid "(Exact Match)"
+msgstr ""
+
+#: i18n/languages/admin.js.php:960, i18n/languages/blocks.js.php:32
+msgid "Load more"
+msgstr ""
+
+#: i18n/languages/admin.js.php:963, i18n/languages/blocks.js.php:35
+msgid "You can select one of the other popular matches or suggestions listed below."
+msgstr ""
+
+#. translators: %s searched tld
+#: i18n/languages/admin.js.php:967, i18n/languages/blocks.js.php:39
+msgid "We don’t currently offer “.%s” domains."
+msgstr ""
+
+#: i18n/languages/admin.js.php:970, i18n/languages/blocks.js.php:42
+msgid "Invalid TLD."
+msgstr ""
+
+#. translators: %s is replaced domain query
+#: i18n/languages/admin.js.php:974, i18n/languages/blocks.js.php:46
+msgid "No results found for %s."
+msgstr ""
+
+#: i18n/languages/admin.js.php:977, i18n/languages/blocks.js.php:49
+msgid "Please try again with another search term."
+msgstr ""
+
+#: i18n/languages/admin.js.php:980, i18n/languages/blocks.js.php:61
+msgid "To offer Hosting Reseller products to your clients, first add them on the Hosting Reseller page in The Hub Client plugin settings. Once added, your products will appear here based on their visibility setting."
+msgstr ""
+
+#: i18n/languages/admin.js.php:983, i18n/languages/blocks.js.php:64
+msgid "View Hosting Reseller Page"
+msgstr ""
+
+#: i18n/languages/admin.js.php:986, i18n/languages/blocks.js.php:71
+msgid "Product logo"
+msgstr ""
+
+#: i18n/languages/admin.js.php:989, i18n/languages/blocks.js.php:74
+msgid "View features"
+msgstr ""
+
+#: i18n/languages/admin.js.php:992, i18n/languages/blocks.js.php:77
+msgid "Pricing Block Preview"
+msgstr ""
+
+#: i18n/languages/admin.js.php:995, i18n/languages/blocks.js.php:80
+msgid "Hosting reseller is not activated."
+msgstr ""
+
+#. translators: %s plan amount
+#: i18n/languages/admin.js.php:999, i18n/languages/blocks.js.php:84
+msgid "One time (%s)"
+msgstr ""
+
+#: i18n/languages/admin.js.php:1002
+msgid "Splash image"
+msgstr ""
+
+#: i18n/languages/admin.js.php:1005, i18n/languages/blocks.js.php:87
+msgid "Something went wrong, please try again or contact support if the problem persists."
+msgstr ""
+
+#: i18n/languages/admin.js.php:1008, i18n/languages/blocks.js.php:90
+msgid "One time"
+msgstr ""
+
+#. translators: %d is the recurring days
+#: i18n/languages/admin.js.php:1012, i18n/languages/blocks.js.php:94
+msgid "%d Day"
+msgid_plural "%d Days"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d is the recurring weeks
+#: i18n/languages/admin.js.php:1016, i18n/languages/blocks.js.php:98
+msgid "%d Week"
+msgid_plural "%d Weeks"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d is the recurring months
+#: i18n/languages/admin.js.php:1020, i18n/languages/blocks.js.php:102
+msgid "%d Month"
+msgid_plural "%d Months"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d is the recurring years
+#: i18n/languages/admin.js.php:1024, i18n/languages/blocks.js.php:106
+msgid "%d Year"
+msgid_plural "%d Years"
+msgstr[0] ""
+msgstr[1] ""
+
+#: i18n/languages/admin.js.php:1027, i18n/languages/blocks.js.php:109
+msgctxt "Plan interval"
+msgid "day"
+msgid_plural "%d days"
+msgstr[0] ""
+msgstr[1] ""
+
+#: i18n/languages/admin.js.php:1030, i18n/languages/blocks.js.php:112
+msgctxt "Plan interval"
+msgid "week"
+msgid_plural "%d weeks"
+msgstr[0] ""
+msgstr[1] ""
+
+#: i18n/languages/admin.js.php:1033, i18n/languages/blocks.js.php:115
+msgctxt "Plan interval"
+msgid "month"
+msgid_plural "%d months"
+msgstr[0] ""
+msgstr[1] ""
+
+#: i18n/languages/admin.js.php:1036, i18n/languages/blocks.js.php:118
+msgctxt "Plan interval"
+msgid "year"
+msgid_plural "%d years"
+msgstr[0] ""
+msgstr[1] ""
+
+#: i18n/languages/blocks.js.php:58
+msgid "View Results"
+msgstr ""
+
+#: includes/domain-reseller.php:85
+msgid "Eg: businessname.com"
+msgstr ""
+
+#: includes/domain-reseller.php:95
+msgid "Search Domain"
+msgstr ""
+
+#: includes/domain-reseller.php:103
+msgid "Buy Now"
+msgstr ""
+
+#: includes/hosting-reseller.php:363
+msgid "Unable to add product, please try again."
+msgstr ""
+
+#. translators: %s: Hosting reseller product ID.
+#: includes/hosting-reseller.php:388
+msgid "Hub product ID not found."
+msgstr ""
+
+#. translators: %s: Product name / ID.
+#: includes/hosting-reseller.php:452
+msgid "Product %s can not be added, as it's archived."
+msgstr ""
+
+#: includes/hosting-reseller.php:483
+msgid "Please provide plans to add."
+msgstr ""
+
+#. translators: %s: Plan ID.
+#: includes/hosting-reseller.php:493
+msgid "Plan %d not found or already archived."
+msgstr ""
+
+#. translators: %s: Hosting reseller product ID.
+#: includes/hosting-reseller.php:526
+msgid "Hosting reseller product with ID %s not found."
+msgstr ""
+
+#. translators: %d: User ID.
+#: includes/permissions.php:153
+msgid "User with id %d not found."
+msgstr ""
+
+#. translators: 1: User ID, 2: Role id/name.
+#: includes/permissions.php:166
+msgid "User with id %1$d does not have %2$s role."
+msgstr ""
+
+#. translators: 1: User ID, 2: Capability id/name.
+#: includes/permissions.php:176
+msgid "User with id %1$d does not have %2$s capability."
+msgstr ""
+
+#. translators: 1: User ID, 2: Capability id/name.
+#: includes/permissions.php:187
+msgid "User with id %1$d is not Super Admin. Multisite only allow Super Admin to be added."
+msgstr ""
+
+#: init.php:268
+msgid "The Hub Client Navigation"
+msgstr ""
+
+#. translators: %s: Error message from API.
+#: init.php:425
+msgid "Unable to get Hub Manifest: %s"
+msgstr ""
+
+#: init.php:657
+msgid "Invalid image file."
+msgstr ""
+
+#. translators: %s: Detected File Type.
+#: init.php:666
+msgid "Invalid image type : %s"
+msgstr ""
+
+#. translators: %s: Detected File Size.
+#: init.php:672
+msgid "Invalid file size : %s MB"
+msgstr ""
+
+#. translators: %s: Error message from upload failure.
+#: init.php:701
+msgid "Failed to upload image : %s"
+msgstr ""
+
+#: rest-api/v1/admins.php:52
+msgid "Avatar URL with image size of 48 pixels."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:15
+msgid "Get Client Portal settings."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:21
+msgid "Update Client Portal settings."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:38
+msgid "Site ID where the Hub will be located / displayed. Only available for multisite setup."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:43
+msgid "Site Title where the Hub will be located / displayed. Only available for multisite setup."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:48
+msgid "Page ID where the Hub will be located / displayed."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:53
+msgid "Page Title where the Hub will be located / displayed."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:58
+msgid "Brand name."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:65
+msgid "Brand logo URL."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:71
+msgid "Brand logo URLs. In various sizes."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:80
+msgid "Hex color for navigation background."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:86
+msgid "Hex color for navigation text."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:92
+msgid "Hex color for navigation selected & hover."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:98
+msgid "Hex color for content hyperlink."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:104
+msgid "Page ID where the Terms of Service page will be located / displayed."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:110
+msgid "Page Title where the Terms of Service page will be located / displayed."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:115
+msgid "Term of Service custom URL."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:121
+msgid "Page ID where the Privacy Policy page will be located / displayed."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:127
+msgid "Page Title where the Privacy Policy page will be located / displayed."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:132
+msgid "Privacy Policy custom URL."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:138
+msgid "List of WP menus."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:144
+msgid "Menu ID."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:149
+msgid "Menu name."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:154
+msgid "Flag whether this menu is Hub navigation."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:162
+msgid "List of extra items to be displayed in navigation."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:169
+msgid "Menu title."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:174
+msgid "Menu url."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:183
+msgid "URL of custom menus screen in WP Admin."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:190
+msgid "URL of settings in WP Admin."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:197
+msgid "URL of WPMU DEV Dashboard translations settings in WP Admin."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:204
+msgid "Front Page absolute url, can be empty, if not set it yet."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:211
+msgid "URL to manage users and roles, fallback to WPMUDEV Hub if front page not set."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:218
+msgid "Help custom URL."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:224
+msgid "Custom Home URL."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:230
+msgid "Custom Home Title."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:237
+msgid "Whether custom Home URL will be opened in new tab."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:242
+msgid "Live Chats configuration."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:276
+msgid "Default language that will be used for Client Portal."
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:280, rest-api/v1/client-portal-settings.php:299
+msgid "Language ID"
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:286, rest-api/v1/client-portal-settings.php:304
+msgid "Language Display Name"
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:293
+msgid "Available Languages to Select for Client Portal"
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:361, rest-api/v1/client-portal-settings.php:410, rest-api/v1/client-portal-settings.php:434
+msgid "--Page not found--"
+msgstr ""
+
+#: rest-api/v1/client-portal-settings.php:369, rest-api/v1/client-portal-settings.php:418, rest-api/v1/client-portal-settings.php:442
+msgid "Please select a page"
+msgstr ""
+
+#. translators: %d: Site ID.
+#: rest-api/v1/client-portal-settings.php:579
+msgid "Site with id %d not found."
+msgstr ""
+
+#. translators: %d: Page ID.
+#: rest-api/v1/client-portal-settings.php:609
+msgid "Page with id %d not found."
+msgstr ""
+
+#. translators: %d: Page ID.
+#: rest-api/v1/client-portal-settings.php:641
+msgid "Invalid Term of Services page. Page with id %d not found."
+msgstr ""
+
+#. translators: %d: Page ID.
+#: rest-api/v1/client-portal-settings.php:663
+msgid "Invalid Privacy Policies page. Page with id %d not found."
+msgstr ""
+
+#. translators: 1: Parameter name, 2: List of menu IDs
+#. translators: 1: language id from input, 2: List of available languages
+#: rest-api/v1/client-portal-settings.php:725, rest-api/v1/client-portal-settings.php:750
+msgid "%1$s is not one of %2$s."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:21, rest-api/v1/reseller/hosting-settings/products.php:20, rest-api/v1/reseller/hosting-settings/products.php:118
+msgid "Hub Product ID."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:27
+msgid "Whether product is archived."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:33
+msgid "Product Name."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:40
+msgid "Product Image. Original size"
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:47
+msgid "Product Image. 180px size"
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:54
+msgid "Product Image. 50px size"
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:61
+msgid "List of plans."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:67, rest-api/v1/reseller/hosting-settings/products.php:31, rest-api/v1/reseller/hosting-settings/products.php:129
+msgid "Hub Plan ID."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:73
+msgid "Whether plan is archived."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:78
+msgid "Plan Name."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:83
+msgid "Plan Price."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:88
+msgid "Plan Price Currency."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:93
+msgid "Plan Price Currency symbol."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:98
+msgid "Whether plan is recurring type."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:103
+msgid "Plan billing interval when its recurring."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:109
+msgid "Plan billing interval count when its recurring."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:114
+msgid "Plan billing cycle."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:128
+msgid "Plan ID."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:133
+msgid "TLD ID."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:138
+msgid "TLD name."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:144
+msgid "Registration Price value for client checkout. Based of markup, currency rate and decimal point round."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:150
+msgid "Renewal Price value for client checkout. Based of markup, currency rate and decimal point round."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:156
+msgid "Registration Price value for client checkout with currency symbol. Based of markup, currency rate and decimal point round."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:162
+msgid "Renewal Price value for client checkout with currency symbol. Based of markup, currency rate and decimal point round."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:168
+msgid "Price currency for client checkout."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:174
+msgid "Price currency symbol for client checkout."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:185
+msgid "Whether the TLD is offered or not."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:189
+msgid "The TLD being searched."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:193
+msgid "Whether the domain is an Internationalized Domain Name."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:197
+msgid "Whether the searched TLD is invalid or not."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:201
+msgid "Whether there is an exact match for the search."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:205
+msgid "The exact match for the search."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:210
+msgid "The lookup results."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:218
+msgid "The domain name suggestions."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:226
+msgid "Whether the search has been completed."
+msgstr ""
+
+#: rest-api/v1/reseller-settings.php:230
+msgid "The key used for the search."
+msgstr ""
+
+#: rest-api/v1/settings.php:15
+msgid "Get Whitelabel HUB settings."
+msgstr ""
+
+#: rest-api/v1/settings.php:21
+msgid "Update Whitelabel HUB settings."
+msgstr ""
+
+#: rest-api/v1/settings.php:28
+msgid "Reset Whitelabel HUB settings."
+msgstr ""
+
+#: rest-api/v1/settings.php:44
+msgid "Whether to reset settings on uninstall."
+msgstr ""
+
+#: rest-api/v1/settings.php:49
+msgid "Whether manage plugin is available only for selected admins."
+msgstr ""
+
+#: rest-api/v1/settings.php:54
+msgid "Selected admins that allowed to manage plugin."
+msgstr ""
+
+#: rest-api/v1/settings.php:138
+msgid "Please provide selected admins to be allowed to manage."
+msgstr ""
+
+#: rest-api/v1/settings.php:144
+msgid "To ensure you will still have access to the plugin settings, please add your own user to the selected admins list."
+msgstr ""
+
+#: rest-api/v1/sites.php:15
+msgid "Get Sites / Blogs list."
+msgstr ""
+
+#: rest-api/v1/sites.php:32
+msgid "Site ID."
+msgstr ""
+
+#: rest-api/v1/sites.php:37
+msgid "Site title."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-plans.php:15
+msgid "Get available Domain Reseller plans from Hub."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:23, rest-api/v1/reseller/public-domain-settings.php:23
+msgid "Get Domain Reseller settings."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:29
+msgid "Update Domain Reseller settings."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:46
+msgid "Whether domain reseller active."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:50
+msgid "Domain Reseller widget customizations."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:54
+msgid "Placeholder text in the search field."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:59
+msgid "Placeholder color in the search field."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:64
+msgid "Search field input background color."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:69
+msgid "Search field input color."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:74
+msgid "Search button label's text."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:79
+msgid "Search button label's color."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:84
+msgid "Search button background color."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:89
+msgid "Search result options."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:98
+msgid "Buy button label's text."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:103
+msgid "Buy button label's color."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:108
+msgid "Buy button background color."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:118
+msgid "Whether Hub Client Billing active. This will return null when domain reseller already active."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:123
+msgid "Payment currency in the Hub Client Billing settings."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:128
+msgid "Payment currency symbol in the Hub Client Billing settings."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:133
+msgid "Round off decimal places in the Hub Domain Reseller settings."
+msgstr ""
+
+#: rest-api/v1/reseller/domain-settings.php:246
+msgid "Domain Reseller is inactive. Please activate it first."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-products.php:15
+msgid "Get available Hosting Reseller products from Hub."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-products.php:32
+msgid "Order sort attribute ascending or descending."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-products.php:42
+msgid "Sort products by object attribute."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-products.php:53
+msgid "Filter by IDs."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-products.php:61
+msgid "Filter the results based on product is_archived state."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-products.php:66
+msgid "Filter the plan results based on product is_archived state."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:15, rest-api/v1/reseller/public-hosting-settings.php:15
+msgid "Get Hosting Reseller settings."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:21
+msgid "Update Hosting Reseller settings."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:35, rest-api/v1/reseller/hosting-settings/products.php:79, rest-api/v1/reseller/hosting-settings/products.php:105
+msgid "Reseller Product identifier."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:42, rest-api/v1/reseller/hosting-settings/products.php:41, rest-api/v1/reseller/hosting-settings/products.php:85, rest-api/v1/reseller/hosting-settings/products.php:139
+msgid "Reseller Product sort order."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:54
+msgid "Whether hosting reseller active."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:58
+msgid "List of available products."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:67
+msgid "Hosting Reseller pricing table customizations."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:71
+msgid "Product fields to be displayed in pricing table."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:81
+msgid "Pricing table layout."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:87
+msgid "Order button label text."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:92
+msgid "Order button label color."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:97
+msgid "Order button background color."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:102
+msgid "Container background color."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:112
+msgid "Whether Hub Client Billing active. This will return null when hosting reseller already active."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings.php:234, rest-api/v1/reseller/hosting-settings/products.php:174, rest-api/v1/reseller/hosting-settings/products.php:192, rest-api/v1/reseller/hosting-settings/products.php:210, rest-api/v1/reseller/hosting-settings/products.php:223
+msgid "Hosting Reseller is inactive. Please activate it first."
+msgstr ""
+
+#: rest-api/v1/reseller/public-domain-lookup.php:15
+msgid "Lookup domain."
+msgstr ""
+
+#: rest-api/v1/reseller/public-domain-lookup.php:95
+msgid "Domain Reseller is inactive."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings/products.php:15
+msgid "Add product to Hosting Reseller settings."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings/products.php:47, rest-api/v1/reseller/hosting-settings/products.php:145
+msgid "Whether product will be visible in Pricing Table."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings/products.php:52, rest-api/v1/reseller/hosting-settings/products.php:150
+msgid "Whether product will be visible in Hub Embed."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings/products.php:68
+msgid "Set product sort order to Hosting Reseller settings."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings/products.php:113
+msgid "Edit existing product on Hosting Reseller settings."
+msgstr ""
+
+#: rest-api/v1/reseller/hosting-settings/products.php:158
+msgid "Delete existing product on Hosting Reseller settings."
+msgstr ""
+
+#. translators: %1$s - URL to an article about our hosting benefits.
+#: wpmudev-hub-plugin.php:59
+msgid "Your site is running an outdated version of PHP that is no longer supported or receiving security updates. Please update PHP to at least version %1$s at your current hosting provider in order to activate The Hub Client, or consider switching to <a href=\"%2$s\" target=\"_blank\" rel=\"noopener noreferrer\">WPMU DEV Hosting</a>."
+msgstr ""

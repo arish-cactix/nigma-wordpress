@@ -1,0 +1,142 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Smart phone field for Gravity Forms\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-05-03 08:23+0000\n"
+"PO-Revision-Date: 2023-05-03 08:29+0000\n"
+"Last-Translator: \n"
+"Language-Team: German\n"
+"Language: de_DE\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.4; wp-6.2\n"
+"X-Domain: gravityforms"
+
+#: backend/class-backend.php:45
+msgid "Automatically select countries"
+msgstr "Länder automatisch auswählen"
+
+#: backend/class-backend.php:123
+msgid "Check this box for adding validation on smart phone field."
+msgstr ""
+"Aktivieren Sie dieses Kontrollkästchen, um eine Validierung im Smartphone-"
+"Feld hinzuzufügen."
+
+#: backend/class-backend.php:119
+msgid "Check this box to show ip based country flag."
+msgstr ""
+"Aktivieren Sie dieses Kontrollkästchen, um die IP-basierte Landesflagge "
+"anzuzeigen."
+
+#: backend/class-backend.php:118
+msgid "Check this box to show smart phone field"
+msgstr ""
+"Aktivieren Sie dieses Kontrollkästchen, um das Smartphone-Feld anzuzeigen"
+
+#: backend/class-backend.php:39
+msgid ""
+"Choose <strong>Flag without dial code</strong> for getting country/dial code "
+"in notification/entries."
+msgstr ""
+"Wählen Sie <strong>Ohne Vorwahl markieren</strong>, um Land/Vorwahl in "
+"Benachrichtigungen/Einträgen zu erhalten."
+
+#: backend/class-backend.php:124
+msgid "Choose flag option for getting flag and dial code in input field."
+msgstr ""
+"Wählen Sie die Flaggenoption, um Flagge und Vorwahl im Eingabefeld zu "
+"erhalten."
+
+#: backend/class-backend.php:51
+msgid "Default country"
+msgstr "Standardland"
+
+#: gravityforms-smart-phone-field.php:339
+msgid ""
+"Did you know our PRO version includes the ability to use prevent submission "
+"with wrong validation and more features? Check it out!"
+msgstr ""
+"Wussten Sie, dass unsere PRO-Version die Möglichkeit bietet, die Einreichung "
+"bei falscher Validierung zu verhindern, und weitere Funktionen enthält? Hör "
+"zu!"
+
+#: gravityforms-smart-phone-field.php:346
+msgid "Dismiss"
+msgstr "Zurückweisen"
+
+#: backend/class-backend.php:23 backend/class-backend.php:118
+msgid "Enable smart phone field"
+msgstr "Smartphone-Feld aktivieren"
+
+#: backend/class-backend.php:31
+msgid "Flag Options"
+msgstr "Flag-Optionen"
+
+#: gravityforms-smart-phone-field.php:337
+msgid "Hi there, Thanks for using Smart Phone Field for Gravity Forms"
+msgstr ""
+"Hallo, vielen Dank, dass Sie Smart Phone Field for Gravity Forms verwenden"
+
+#. Author URI of the plugin
+msgid "https://pluginscafe.com"
+msgstr "https://pluginscafe.com"
+
+#. Author of the plugin
+msgid "KaisarAhmmed"
+msgstr "KaisarAhmmed"
+
+#: backend/class-backend.php:125
+msgid ""
+"Multistep with country code submission is available in pro version. <a "
+"href='https://pluginscafe.com/smart-phone-field-pro/' target='_blank'>PRO</a>"
+msgstr ""
+"Multistep mit Übermittlung des Ländercodes ist in der Pro-Version verfügbar. "
+"<a href='https://pluginscafe.com/smart-phone-field-pro/' target='_blank'>"
+"PRO</a>"
+
+#: backend/class-backend.php:64
+msgid "Preferred countries"
+msgstr "Bevorzugte Länder"
+
+#: gravityforms-smart-phone-field.php:342
+msgid "See The Demo"
+msgstr "Siehe Die Demo"
+
+#: backend/class-backend.php:122
+msgid "Select an option for showing flag type in the input field."
+msgstr ""
+"Wählen Sie eine Option zum Anzeigen des Flaggentyps im Eingabefeld aus."
+
+#: backend/class-backend.php:121
+msgid ""
+"Select multiple country for showing in preferred country suggestion. Default:"
+" US, UK"
+msgstr ""
+"Wählen Sie mehrere Länder aus, die im bevorzugten Ländervorschlag angezeigt "
+"werden sollen. Standard: USA, Großbritannien"
+
+#: backend/class-backend.php:120
+msgid "Select one for showing specific country. Default: US"
+msgstr "Wählen Sie eine aus, um ein bestimmtes Land anzuzeigen. Standard: USA"
+
+#. Name of the plugin
+msgid "Smart phone field for Gravity Forms"
+msgstr "Smartphone-Feld für Gravity Forms"
+
+#: gravityforms-smart-phone-field.php:320
+msgid "Smart phone field needs to active gravity forms."
+msgstr "Das Smartphone-Feld muss aktive Gravitationsformen bilden."
+
+#. Description of the plugin
+msgid ""
+"This plugin adds countries flag with ip address on gravity form phone field"
+msgstr ""
+"Dieses Plugin fügt Länderflaggen mit IP-Adresse in das Telefonfeld des "
+"Schwerkraftformulars ein"
+
+#: gravityforms-smart-phone-field.php:353
+msgid "Upgrade Now!"
+msgstr "Jetzt upgraden!"

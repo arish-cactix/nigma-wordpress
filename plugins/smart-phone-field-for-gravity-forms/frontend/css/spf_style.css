@@ -1,0 +1,55 @@
+.gfield .iti.iti--allow-dropdown {
+    display: block;
+    position: relative;
+}
+
+.gfield .iti.iti--allow-dropdown input {
+    width: 100% !important;
+    outline: none;
+    transition: 0.3s;
+}
+
+.gfield .iti.iti--allow-dropdown input.error {
+    border-color: #f44436;
+}
+
+.ginput_container_phone .iti__flag {
+    margin-right: 2px;
+}
+
+.gfield .ginput_container_phone input {
+    padding-left: inherit;
+}
+
+.gfield .ginput_container_phone .spf-phone {
+    position: absolute;
+    height: 14px;
+    width: 14px;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    transition: .3s;
+    z-index: 9;
+}
+
+.gfield .ginput_container_phone {
+    position: relative
+}
+
+.gfield .ginput_container_phone .spf-phone.valid-msg:before,
+.gfield .ginput_container_phone .spf-phone.error-msg:before {
+    position: absolute;
+    content: "";
+    height: 100%;
+    width: 100%;
+    background-image: url(../img/valid.png);
+    background-size: contain;
+}
+
+.gfield .ginput_container_phone .spf-phone.error-msg:before {
+    background-image: url(../img/invalid.png)
+}
+
+.gfield .ginput_container_phone .spf-phone.hide {
+    display: none;
+}

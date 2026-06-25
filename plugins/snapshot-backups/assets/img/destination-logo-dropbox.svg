@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="85px" height="85px" viewBox="0 0 85 85" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 54.1 (76490) - https://sketchapp.com -->
+    <title>Dropbox logo background</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <rect id="path-1" x="0" y="0" width="85" height="85" rx="10"></rect>
+        <filter x="-8.2%" y="-5.9%" width="116.5%" height="116.5%" filterUnits="objectBoundingBox" id="filter-2">
+            <feOffset dx="0" dy="2" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="2" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0.953204719   0 0 0 0 0.953204719   0 0 0 0 0.953204719  0 0 0 0.5 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="Dropbox-logo-background" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g>
+            <use fill="black" fill-opacity="1" filter="url(#filter-2)" xlink:href="#path-1"></use>
+            <use fill="#0F82E2" fill-rule="evenodd" xlink:href="#path-1"></use>
+        </g>
+        <path d="M65,30.3250883 L51.5307401,22 L42.1052632,29.4472249 L55.6861349,37.3846154 L65,30.3250883 Z M42.8947368,46.6153846 L33.4958739,54.0381786 L29.4736842,51.5385018 L29.4736842,54.3401011 L42.8947368,62 L56.3157895,54.3401011 L56.3157895,51.5385018 L52.2935997,54.0381786 L42.8947368,46.6153846 Z M33.4692599,22 L20,30.3247524 L29.3138651,37.3846154 L42.8947368,29.4472249 L33.4692599,22 Z M42.5001758,45.3226563 L33.2371347,52.7692308 L20,44.4448696 L29.1533528,37.3856232 L42.5001758,45.3226563 L55.8466472,37.3846154 L65,44.4452055 L51.7628653,52.7692308 L42.5001758,45.3226563 L42.5001758,45.3226563 Z" id="Dropbox_1_" fill="#FFFFFF"></path>
+    </g>
+</svg>

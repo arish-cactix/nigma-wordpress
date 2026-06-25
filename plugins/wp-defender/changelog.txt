@@ -1,0 +1,77 @@
+Plugin Name: WP Defender
+Author: WPMU DEV
+Tested up to: 6.7.1
+
+Change Log:
+
+= 4.12.0 ( 2024-12-09 ) =
+
+- Enhance: Ability to scan malicious code in files in the site's root
+- Enhance: Optimize WAF traffic management
+- Enhance: Optimize XML-RPC traffic management
+- Enhance: Remove strict declarations for default WP filters
+- Fix: Notice for _load_textdomain_just_in_time called incorrectly
+- Fix: Update malware signature to avoid false positives
+- Fix: Undefined array key warning when creating a new subsite on multisite if Audit logging is enabled
+
+= 4.11.0 ( 2024-11-04 ) =
+
+- Enhance: Compatibility with WordPress 6.7
+- Enhance: Malware signatures update
+- Enhance: Update SUI to the latest version
+- Fix: Optimize security recommendations flow
+- Fix: Malware Scanning can't detect the suspicious code
+- Fix: Max included file size in Malware Scanning isn't working
+- Fix: Detecting changes in files whose names match default folders
+- Fix: SEOPress plugin files are being falsely flagged as suspicious
+
+= 4.10.1 ( 2024-10-03 ) =
+
+- Fix: Optimize XML-RPC traffic management
+
+= 4.10.0 ( 2024-10-01 ) =
+
+- Enhance: Update malware signatures to detect different infected files
+- Enhance: Display notice on the Malware Scanning page if a file is missing or unreadable
+- Enhance: Defender > Recommendations > Disable XML-RPC syncs with Hosting XML-RPC Protection
+- Enhance: Improvements in deleting and exporting IPs
+- Enhance: Translation improvements
+- Fix: False positive in Malware Scanning for Toolset plugin
+- Fix: Defender does not recognize phishing code
+- Fix: Malware Scanning gets stuck on fresh multisite
+- Fix: Text content not displayed in the Services upsell on the Malware Scanning page
+- Fix: Security keys not getting updated
+- Fix: Malware Scanning detects the old plugin file as modified
+- Fix: 404 Detection > Duration Unit disappears when changing the Firewall logs count to 100
+
+= 4.9.0 ( 2024-09-02 ) =
+
+- New: Smart IP Detection method
+- Enhance: Improved error handling of Malware Scan during checksum
+- Enhance: Improved scan logic to detect plugins from wp.org
+- Enhance: Mention Defender in Cloudflare and X-Forwarded-For IP detection notices
+- Enhance: Usage Tracking improvements
+- Fix: Google reCAPTCHA verification failure on WooCommerce my-account and checkout pages
+- Fix: Google reCAPTCHA V3 error in the console log
+- Fix: 2FA settings issue in WooCommerce
+- Fix: Issues when uploading Config
+- Fix: Getting 'ERROR: Something went wrong' when registering a new authenticator
+- Fix: Copy error in translations
+- Fix: Undefined array key in Audit logs
+- Fix: Foreign key getting duplicated
+- Fix: Broken error notice design in 2FA methods
+
+= 4.8.2 ( 2024-07-31 ) =
+
+- Fix: Incorrect IP header detection on WPMU DEV hosting
+- Fix: Malware Scanning is not working for specific timezones
+- Fix: Can not set notification schedule after changing the site language
+- Fix: Quarantine feature improvements
+
+= 4.8.1 ( 2024-07-23 ) =
+
+- Enhance: Improvements for Known vulnerabilities
+- Fix: Multiple redirects when Mask Login Redirect Traffic is set to custom/external URL
+
+
+396685-1733990499-au

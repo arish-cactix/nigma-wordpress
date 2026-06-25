@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="17px" height="15px" viewBox="0 0 17 15" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>049D156A-D707-4131-B320-87A67B28EB21</title>
+    <defs>
+        <radialGradient cx="170.56885%" cy="14.5893004%" fx="170.56885%" fy="14.5893004%" r="647.928532%" gradientTransform="translate(1.705688,0.145893),scale(0.364964,1.000000),rotate(30.000468),translate(-1.705688,-0.145893)" id="radialGradient-1">
+            <stop stop-color="#4387FD" offset="0%"></stop>
+            <stop stop-color="#3078F0" offset="65%"></stop>
+            <stop stop-color="#2B72EA" offset="90.99%"></stop>
+            <stop stop-color="#286EE6" offset="100%"></stop>
+        </radialGradient>
+        <radialGradient cx="186.325483%" cy="107.77149%" fx="186.325483%" fy="107.77149%" r="344.622%" gradientTransform="translate(1.863255,1.077715),scale(0.839286,1.000000),rotate(30.000468),translate(-1.863255,-1.077715)" id="radialGradient-2">
+            <stop stop-color="#FFD24D" offset="0%"></stop>
+            <stop stop-color="#F6C338" offset="100%"></stop>
+        </radialGradient>
+    </defs>
+    <g id="Destinations" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Destinations-/-Add-Destination" transform="translate(-704.000000, -521.000000)" fill-rule="nonzero">
+            <g id="Modal---Add-destination" transform="translate(429.000000, 216.000000)">
+                <g id="icon-GoogleDrive" transform="translate(275.000000, 305.000000)">
+                    <polygon id="Path" fill="#0DA960" points="3 14.8 0.1 9.8 5.5 0.4 8.4 5.4"></polygon>
+                    <polygon id="Path" fill="url(#radialGradient-1)" points="3 14.8 5.9 9.8 16.7 9.8 13.8 14.8"></polygon>
+                    <polygon id="Path" fill="url(#radialGradient-2)" points="16.7 9.8 10.9 9.8 5.5 0.4 11.3 0.4"></polygon>
+                    <polygon id="Path" fill="#2D6FDD" points="8.4 9.8 5.9 9.8 7.2 7.6 3 14.8"></polygon>
+                    <polygon id="Path" fill="#E5B93C" points="10.9 9.8 16.7 9.8 9.7 7.6"></polygon>
+                    <polygon id="Path" fill="#0C9B57" points="7.1 7.6 8.4 5.4 5.5 0.4"></polygon>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

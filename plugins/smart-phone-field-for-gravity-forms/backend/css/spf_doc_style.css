@@ -1,0 +1,255 @@
+.pc_pluginDetails ul li a:hover,
+li.tab-active a {
+    color: #000 !important;
+    background: #fff !important
+}
+
+.pc_btn:hover,
+.pc_morePlugin a:hover {
+    background-color: #005177
+}
+
+.pc_container {
+    width: 940px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 4px
+}
+
+.pc_container img {
+    max-width: 100%;
+    display: block
+}
+
+.pc_container p {
+    font-weight: 400;
+    font-size: 16px;
+    color: #4d575e;
+    line-height: 23px;
+    margin: 5px 0
+}
+
+.pc_intro {
+    display: grid;
+    grid-template-columns: 1fr 3fr 2fr;
+    justify-content: center;
+    align-items: center;
+    grid-column-gap: 10px
+}
+
+.pc_pluginDesc h2 {
+    margin: auto;
+    font-size: 24px;
+    line-height: 34px
+}
+
+.pc_intro p {
+    margin: 5px 0;
+    font-size: 16px;
+    line-height: 22px
+}
+
+.pc_intro img {
+    width: 110px
+}
+
+.pc_pluginDetails {
+    margin-top: 40px;
+    padding: 0 10px
+}
+
+.tabs {
+    max-width: 100%
+}
+
+ul.tabs-nav {
+    margin: 0;
+    padding: 0;
+    list-style: none
+}
+
+.tabs-nav li {
+    display: inline-block;
+    min-width: 150px;
+    margin: 0
+}
+
+.tabs-nav li:first-child a {
+    border-top-left-radius: 6px
+}
+
+.tabs-nav li:last-child a {
+    border-top-right-radius: 6px
+}
+
+.pc_tab {
+    margin-top: 15px
+}
+
+.pc_pluginDetails ul li a {
+    background: #eaeaed;
+    border: 1px solid #cecfd5;
+    color: #4e575e;
+    display: block;
+    font-weight: 500;
+    padding: 10px 0;
+    text-align: center;
+    text-decoration: none;
+    font-size: 15px
+}
+
+li.tab-active a {
+    cursor: default
+}
+
+.tabs-stage {
+    border-top: 1px solid #cecfd5;
+    border-radius: 0 0 6px 6px;
+    clear: both;
+    padding-top: 10px;
+    position: relative;
+    top: -1px
+}
+
+.pc_plugin_tab {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-column-gap: 15px;
+    grid-row-gap: 15px
+}
+
+.pc_morePlugin {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: center;
+    align-items: center;
+    grid-column-gap: 10px;
+    padding: 15px 11px;
+    border: 1px solid #cecfd6;
+    border-radius: 4px
+}
+
+.pc_morePlugin img {
+    width: 60px;
+    grid-row: 1/3
+}
+
+.pc_morePlugin h3 {
+    font-size: 15px;
+    margin: 5px 0
+}
+
+.pc_btn,
+.pc_morePlugin a {
+    text-decoration: none;
+    background: #0273aa;
+    text-align: center;
+    border-radius: 3px;
+    margin-top: 7px;
+    font-weight: 500;
+    letter-spacing: .5px;
+    color: #fff
+}
+
+.pc_morePlugin a {
+    grid-column: 2/-1;
+    display: block;
+    width: 60px;
+    padding: 5px 10px;
+    font-size: 13px
+}
+
+.pc_btn {
+    display: inline-block;
+    padding: 11px 15px;
+    font-size: 15px
+}
+
+.pc_btn:hover {
+    color: #fff
+}
+
+.pc_tab .single_change p {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0
+}
+
+.pc_tab .single_change ul {
+    margin: 10px 0 25px
+}
+
+.pc_tab .single_change.last ul {
+    margin-bottom: 0
+}
+
+.pc_tab .single_change ul li {
+    padding-left: 20px;
+    position: relative;
+    z-index: 1
+}
+
+.pc_tab .single_change ul li:before {
+    position: absolute;
+    content: "";
+    height: 5px;
+    width: 5px;
+    background: #4d575e;
+    border-radius: 50%;
+    left: 6px;
+    top: 50%;
+    opacity: .5;
+    transform: translateY(-50%)
+}
+
+.pc_installation_cont li {
+    position: relative;
+    padding-left: 30px
+}
+
+.pc_installation_cont li:before {
+    position: absolute;
+    content: "";
+    height: 6px;
+    width: 6px;
+    background: #000;
+    border-radius: 50%;
+    left: 15px;
+    top: 6px;
+    opacity: .5
+}
+
+.pc_installation_cont ul {
+    margin-bottom: 25px
+}
+
+.pc_tab table {
+    border: 1px solid #CECFD5;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.pc_tab table th {
+    background: #EAEAED;
+    font-size: 15px;
+}
+
+.pc_tab table td, .pc_tab table th {padding: 12px 20px;}
+
+.pc_tab table tbody tr:nth-child(2n) {
+    background: #f8f8f8;
+}
+
+.pc_tab table th:nth-child(1) {
+    text-align: left;
+}
+
+.pc_tab table td img {
+    max-width: 15px;
+}
+
+.pc_tab table td:nth-child(2) img, .pc_tab table td:nth-child(3) img {
+    margin: 0 auto;
+}

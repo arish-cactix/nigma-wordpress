@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="42px" height="38px" viewBox="0 0 42 38" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Snapshot-icon</title>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Snapshot-icon" fill="#FF6D6D" fill-rule="nonzero">
+            <polygon id="Polygon" transform="translate(21.000000, 19.000000) rotate(-90.000000) translate(-21.000000, -19.000000) " points="21 11 28 15.0131391 28 23.0394172 20.7478883 27 14 23.0394172 14 15.0131391"></polygon>
+            <polygon id="Path-4" points="22.7784541 2 33 8 19 8"></polygon>
+            <polyline id="Path-4" transform="translate(35.323972, 16.124525) rotate(60.000000) translate(-35.323972, -16.124525) " points="31.8736194 13.1639527 42.0608477 19.0850975 28.5870955 19.0773499"></polyline>
+            <polyline id="Path-4" transform="translate(30.318500, 29.781376) rotate(120.000000) translate(-30.318500, -29.781376) " points="26.9385369 26.7956595 36.9849873 32.7670919 23.652013 32.7090567"></polyline>
+            <polygon id="Path-4" transform="translate(16.500000, 32.000000) rotate(-180.000000) translate(-16.500000, -32.000000) " points="13.3005902 29 23 35 10 35"></polygon>
+            <polygon id="Path-4" transform="translate(6.669979, 21.072026) rotate(-120.000000) translate(-6.669979, -21.072026) " points="3.35490068 18.1581487 13.4049744 23.9859039 -0.0650161 23.9859039"></polygon>
+            <polygon id="Path-4" transform="translate(11.626568, 7.480520) rotate(-60.000000) translate(-11.626568, -7.480520) " points="8.31148939 4.56664236 18.3615631 10.3943976 4.89157262 10.3943976"></polygon>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,9 @@
+#wpmu_signup_blog_notification .simple-option-checkbox,
+#wpmu_signup_user_notification .simple-option-checkbox,
+#wpmu_welcome_notification .simple-option-checkbox {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+
+/* 396685-1733990495-au */
