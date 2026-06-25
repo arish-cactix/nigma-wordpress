@@ -1,5 +1,5 @@
-# WordPress Scaffold
+# WordPress Local Configuration
 
-Reserved for future local WordPress configuration.
+This directory is reserved for local-only WordPress/PHP configuration.
 
-No WordPress service is configured in this change set.
+The Docker Compose `wordpress` service uses the official WordPress PHP-FPM image and mounts the repository `wp-content/` directory into the generated WordPress core volume.

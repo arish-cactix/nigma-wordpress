@@ -11,5 +11,27 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
+  wordpress:
+    image: wordpress:6.7.1-php8.0-fpm
+    container_name: ${COMPOSE_PROJECT_NAME:-nigma-wordpress}_wordpress
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${MARIADB_DATABASE}
+      WORDPRESS_DB_USER: ${MARIADB_USER}
+      WORDPRESS_DB_PASSWORD: ${MARIADB_PASSWORD}
+      WORDPRESS_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX:-wp_}
+      WORDPRESS_DEBUG: ${WORDPRESS_DEBUG:-1}
+      WORDPRESS_CONFIG_EXTRA: |
+        define( 'WP_ENVIRONMENT_TYPE', getenv( 'WP_ENVIRONMENT_TYPE' ) ?: 'local' );
+        define( 'DISALLOW_FILE_EDIT', true );
+      WP_ENVIRONMENT_TYPE: ${WP_ENVIRONMENT_TYPE:-local}
+    volumes:
+      - wordpress_core:/var/www/html
+      - ./wp-content:/var/www/html/wp-content
+
 volumes:
   db_data:
+  wordpress_core:
