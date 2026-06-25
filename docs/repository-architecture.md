@@ -12,13 +12,11 @@ This repository is the **application repository**, not a complete WordPress inst
 
 The objective is to version only the code that belongs to the application while keeping environment-specific assets and runtime state outside Git.
 
-## Target Repository Structure
+## Current Repository Structure
 
 ```text
 nigma-wordpress/
-├── .github/
-│   └── workflows/
-├── docker/
+├── database/              # local-only, ignored
 ├── docs/
 ├── wp-content/
 │   ├── index.php
@@ -27,8 +25,6 @@ nigma-wordpress/
 │   └── mu-plugins/
 ├── README.md
 ├── AGENTS.md
-├── docker-compose.yml
-├── .env.example
 └── .gitignore
 ```
 
@@ -56,7 +52,7 @@ Environment-specific components are intentionally excluded:
 
 The production repository was initialized inside `wp-content`.
 
-The local repository will evolve into the structure shown above while preserving `wp-content` as the deployable application directory.
+The local repository preserves `wp-content` as the deployable application directory at the repository root.
 
 ### Themes
 
@@ -94,6 +90,8 @@ Reason:
 ### Database
 
 Do not commit database dumps.
+
+Local database exports and imports may be stored in a root-level `database/` directory, but that directory is local-only and ignored by Git.
 
 Reason:
 

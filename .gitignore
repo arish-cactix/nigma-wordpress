@@ -9,73 +9,77 @@
 !.gitignore
 
 # ------------------------------------------------------------------------------
-# Root wp-content files
+# wp-content application tree
 # ------------------------------------------------------------------------------
-!/index.php
+!/wp-content/
+!/wp-content/index.php
 
 # ------------------------------------------------------------------------------
 # Themes
 # ------------------------------------------------------------------------------
-!/themes/
-/themes/*
-
-!/themes/index.php
-
-!/themes/Avada/
-!/themes/Avada/**
-
-!/themes/Avada-Child-Theme/
-!/themes/Avada-Child-Theme/**
+!/wp-content/themes/
+!/wp-content/themes/**
 
 # ------------------------------------------------------------------------------
 # Plugins
 # Track all plugins
 # ------------------------------------------------------------------------------
-!/plugins/
-/plugins/*
-
-!/plugins/index.php
-!/plugins/**
+!/wp-content/plugins/
+!/wp-content/plugins/**
 
 # ------------------------------------------------------------------------------
 # MU Plugins
 # ------------------------------------------------------------------------------
-!/mu-plugins/
-!/mu-plugins/**
+!/wp-content/mu-plugins/
+!/wp-content/mu-plugins/**
 
 # ------------------------------------------------------------------------------
 # Uploads (not version controlled)
 # ------------------------------------------------------------------------------
+/wp-content/uploads/
 /uploads/
+
+# ------------------------------------------------------------------------------
+# Local database exports/imports (not version controlled)
+# ------------------------------------------------------------------------------
+/database/
 
 # ------------------------------------------------------------------------------
 # Languages
 # ------------------------------------------------------------------------------
+/wp-content/languages/
 /languages/
 
 # ------------------------------------------------------------------------------
 # LiteSpeed
 # ------------------------------------------------------------------------------
+/wp-content/litespeed/
 /litespeed/
 /.litespeed_conf.dat
+/wp-content/object-cache.php
 /object-cache.php
 
 # ------------------------------------------------------------------------------
 # Defender
 # ------------------------------------------------------------------------------
+/wp-content/.defender-security-quarantine/
 /.defender-security-quarantine/
+/wp-content/wp-defender-secrets.php
 /wp-defender-secrets.php
 
 # ------------------------------------------------------------------------------
 # Maintenance
 # ------------------------------------------------------------------------------
+/wp-content/maintenance/
 /maintenance/
+/wp-content/maintenance.php
 /maintenance.php
 
 # ------------------------------------------------------------------------------
 # Logs
 # ------------------------------------------------------------------------------
 *.log
+/wp-content/post-smtp-migration.log
 /post-smtp-migration.log
 
 # ------------------------------------------------------------------------------
@@ -92,6 +96,9 @@
 
 /upgrade/
 /upgrade-temp-backup/
+/wp-content/upgrade/
+/wp-content/upgrade-temp-backup/
+/wp-content/snapshot-backups/
 /snapshot-backups/
 
 # ------------------------------------------------------------------------------

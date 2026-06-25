@@ -30,11 +30,13 @@ The local environment should:
 
 ```text
 nigma-wordpress/
-├── docker/
+├── database/              # local-only, ignored
 ├── docs/
 ├── wp-content/
-├── docker-compose.yml
-├── .env.example
+│   ├── index.php
+│   ├── themes/
+│   ├── plugins/
+│   └── mu-plugins/
 ├── README.md
 └── AGENTS.md
 ```
@@ -66,7 +68,7 @@ Local development should use:
 - a sanitized development database, or
 - a manually imported production snapshot.
 
-Database dumps are intentionally excluded from version control.
+Database dumps are intentionally excluded from version control. Local SQL exports/imports may be kept in the root-level `database/` directory, which is ignored by Git and must not be deployed.
 
 ## Media Strategy
 
