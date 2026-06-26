@@ -90,13 +90,11 @@ Achieved:
 - PHP error logging to `wp-content/debug.log` via mu-plugin (silent, no visitor exposure)
 - Log rotation via logrotate: weekly, 4 weeks retained, compressed
 - Security review cadence documented: monthly, quarterly, and annual checklists
+- Performance benchmarking procedure and baseline established (`docs/performance.md`, `scripts/benchmark.sh`)
 
 Remaining:
 
 - **Backup automation** *(pending)* — configure EC2 Data Lifecycle Manager: monthly AMI, retain 3 minimum. Restore procedure: launch new EC2 instance from EBS snapshot. WP Snapshot Backups plugin is secondary and will be removed once DLM is active.
-- **Log management** ✅ — PHP error logging active via `mu-plugins/error-logging.php`, writes silently to `wp-content/debug.log`. Log rotation installed on deploy: weekly, 4 weeks retained, compressed. View logs: `tail -n 100 /var/www/nigma/wp-content/debug.log`.
-- **Security review cadence** ✅ — monthly, quarterly, and annual checklists documented in `docs/security-review.md`
-- Performance benchmarking
 
 ## Phase 6 – Future Enhancements
 

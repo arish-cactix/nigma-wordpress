@@ -30,6 +30,8 @@ Project Health:
 - Uptime monitoring active (UptimeRobot)
 - PHP error logging active (silent, writes to `wp-content/debug.log`)
 - Log rotation configured (weekly, 4 weeks retained, compressed)
+- Security review cadence documented (monthly / quarterly / annual)
+- Performance benchmarking procedure established — TTFB baseline: 449ms
 
 ---
 
@@ -153,6 +155,7 @@ Project Documentation:
 - coding-standards.md
 - security.md
 - security-review.md
+- performance.md
 - documentation-policy.md
 - architecture-decisions.md
 - troubleshooting.md
@@ -179,8 +182,6 @@ For every significant task:
 ## Next Milestones
 
 - Backup automation — EC2 Data Lifecycle Manager (monthly AMI, retain 3)
-- Security review cadence
-- Performance benchmarking
 - Phase out WP Snapshot Backups plugin (after DLM is active)
 
 ---
