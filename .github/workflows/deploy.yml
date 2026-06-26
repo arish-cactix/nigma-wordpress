@@ -40,3 +40,14 @@ jobs:
 
             echo "Deploy complete."
           ENDSSH
+
+      - name: Health check
+        run: |
+          echo "Checking https://www.nigma.ae/ ..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://www.nigma.ae/)
+          echo "HTTP status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Health check FAILED — site returned HTTP $HTTP_STATUS"
+            exit 1
+          fi
+          echo "Health check passed."
