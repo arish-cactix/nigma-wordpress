@@ -2,8 +2,8 @@
 <ruleset name="NIGMA WordPress Standards">
     <description>PHPCS configuration for NIGMA WordPress project.</description>
 
-    <!-- Scan our custom code only — not Avada parent theme or third-party plugins -->
-    <file>wp-content/mu-plugins</file>
+    <!-- Scan our custom code only — explicit files to avoid scanning third-party mu-plugins -->
+    <file>wp-content/mu-plugins/security-headers-csp.php</file>
     <file>wp-content/themes/Avada-Child-Theme</file>
 
     <!-- PHP files only — CSS/JS linting is out of scope -->
