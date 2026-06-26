@@ -36,12 +36,15 @@ function nigma_csp_directives() {
 		// 'unsafe-inline' and 'unsafe-eval' are required by Avada builder and WordPress core.
 		// GTM loads Google Analytics and other tags dynamically from googletagmanager.com.
 		// YouTube embeds load iframe_api from youtube.com and player JS from s.ytimg.com.
+		// reCAPTCHA loads api.js from google.com and the library from gstatic.com.
 		"script-src 'self' 'unsafe-inline' 'unsafe-eval'"
 			. ' https://www.googletagmanager.com'
 			. ' https://www.google-analytics.com'
 			. ' https://ssl.google-analytics.com'
 			. ' https://www.youtube.com'
-			. ' https://s.ytimg.com',
+			. ' https://s.ytimg.com'
+			. ' https://www.google.com'
+			. ' https://www.gstatic.com',
 
 		// Styles
 		// 'unsafe-inline' is required by Avada (extensive inline styles).
