@@ -23,6 +23,7 @@ jobs:
 
       - name: Install PHPCS and WordPress standards
         run: |
+          composer global config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
           composer global require --no-interaction \
             squizlabs/php_codesniffer \
             wp-coding-standards/wpcs \
