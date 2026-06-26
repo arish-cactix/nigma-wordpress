@@ -25,6 +25,7 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new "$EC2_USER@$EC2_HOST" <<'ENDSSH'
             set -e
 
+            git config --global --add safe.directory /var/www/nigma
             cd /var/www/nigma
             echo "Pulling latest code..."
             git pull origin main
