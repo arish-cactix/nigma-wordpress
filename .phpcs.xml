@@ -12,6 +12,7 @@
     <!-- Exclude theme templates — they contain HTML with inline GTM/analytics scripts -->
     <exclude-pattern>*/header.php</exclude-pattern>
     <exclude-pattern>*/footer.php</exclude-pattern>
+    <exclude-pattern>*/templates/*</exclude-pattern>
 
     <!-- Exclude compiled/vendor assets -->
     <exclude-pattern>*/assets/*</exclude-pattern>

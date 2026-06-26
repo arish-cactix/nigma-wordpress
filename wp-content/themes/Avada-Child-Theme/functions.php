@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Enqueue child theme styles and scripts.
+ */
 function theme_enqueue_styles() {
 	wp_enqueue_style( 'child-style', get_stylesheet_directory_uri() . '/style.css', [], '1.1' );
 	wp_enqueue_style( 'child-assets-style', get_stylesheet_directory_uri() . '/assets/css/style.css', [] );
@@ -32,6 +35,9 @@ function theme_enqueue_styles() {
 }
 add_action( 'wp_enqueue_scripts', 'theme_enqueue_styles', 20 );
 
+/**
+ * Load child theme text domain.
+ */
 function avada_lang_setup() {
 	$lang = get_stylesheet_directory() . '/languages';
 	load_child_theme_textdomain( 'Avada', $lang );
