@@ -61,3 +61,25 @@ jobs:
             exit 1
           fi
           echo "Health check passed."
+
+      - name: Send notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.NOTIFY_EMAIL_FROM }}
+          password: ${{ secrets.NOTIFY_EMAIL_PASSWORD }}
+          to: ${{ secrets.NOTIFY_EMAIL_TO }}
+          from: NIGMA Deployments <${{ secrets.NOTIFY_EMAIL_FROM }}>
+          subject: "${{ job.status == 'success' && '✅' || '❌' }} [NIGMA] Rollback ${{ job.status }} — ${{ github.event.inputs.target_sha }}"
+          body: |
+            Status:      ${{ job.status }}
+            Rolled back to: ${{ github.event.inputs.target_sha }}
+            Triggered by:   ${{ github.actor }}
+
+            IMPORTANT: This rollback is temporary. The next push to main will
+            re-introduce the rolled-back code. Push a revert commit to make it permanent.
+
+            View run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
