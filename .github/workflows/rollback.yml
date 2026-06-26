@@ -1,0 +1,63 @@
+name: Rollback Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_sha:
+        description: 'Commit SHA to roll back to (find it in Actions → Deploy to Production history)'
+        required: true
+        type: string
+
+jobs:
+  rollback:
+    name: Rollback via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Rollback to target commit
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          TARGET_SHA: ${{ github.event.inputs.target_sha }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts || true
+
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new "$EC2_USER@$EC2_HOST" <<ENDSSH
+            set -e
+
+            git config --global --add safe.directory /var/www/nigma
+            cd /var/www/nigma
+
+            echo "Fetching latest history..."
+            git fetch origin
+
+            echo "Rolling back to $TARGET_SHA..."
+            git reset --hard $TARGET_SHA
+
+            echo "Fixing file ownership..."
+            sudo chown -R ubuntu:ubuntu /var/www/nigma/wp-content
+            sudo chown -R www-data:www-data /var/www/nigma/wp-content/uploads
+            sudo chown -R www-data:www-data /var/www/nigma/wp-content/litespeed
+
+            echo "Clearing LiteSpeed cache..."
+            sudo find /var/www/nigma/wp-content/litespeed/ -mindepth 1 -delete
+
+            echo "Rollback complete. Server is now at $TARGET_SHA"
+            echo "WARNING: The next deploy from main will re-introduce the rolled-back code."
+            echo "You must push a revert commit to main to make this rollback permanent."
+          ENDSSH
+
+      - name: Health check
+        run: |
+          echo "Checking https://www.nigma.ae/ ..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://www.nigma.ae/)
+          echo "HTTP status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Health check FAILED — site returned HTTP $HTTP_STATUS"
+            exit 1
+          fi
+          echo "Health check passed."

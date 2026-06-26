@@ -1,6 +1,6 @@
 # Deployment
 
-Version: 1.0
+Version: 1.1
 
 ## Purpose
 
@@ -95,13 +95,53 @@ After deployment:
 
 ## Rollback Strategy
 
-Every deployment should have a documented rollback path.
+Every deployment has a documented rollback path. Choose the option that matches the situation.
 
-Preferred options:
+### Option 1 — Revert commit (preferred)
 
-- Restore previous Git revision.
-- Restore from backup if required.
-- Verify application health after rollback.
+Use when the site is still up but the last deploy introduced a bug.
+
+```bash
+git revert HEAD --no-edit
+git push origin main
+```
+
+This creates a new commit that undoes the last change and triggers the normal deploy pipeline. The rollback is permanent and traceable in git history.
+
+To revert multiple commits:
+
+```bash
+git revert HEAD~3..HEAD --no-edit   # reverts last 3 commits
+git push origin main
+```
+
+### Option 2 — Emergency rollback workflow
+
+Use when the site is down and you need to restore immediately without waiting for a local commit.
+
+1. Go to **GitHub → Actions → Rollback Production**
+2. Click **Run workflow**
+3. Paste the target commit SHA (find it in the Deploy to Production history)
+4. Click **Run workflow**
+
+The workflow SSHes to the server, resets `wp-content` to that commit, clears the cache, and runs a health check.
+
+**Important:** This is a temporary fix. The next push to `main` will re-introduce the rolled-back code. Always follow up with a revert commit (Option 1) to make the rollback permanent.
+
+### Finding the right commit SHA
+
+```bash
+git log --oneline -10
+```
+
+Or browse the commit history in GitHub → Code → Commits.
+
+### After any rollback
+
+- Verify the homepage loads correctly
+- Check critical forms and login
+- Confirm the LiteSpeed cache is serving fresh content
+- Open a follow-up issue or PR to address the root cause
 
 ## Emergency Changes
 
@@ -113,15 +153,24 @@ When necessary:
 2. Commit the same change back into Git immediately.
 3. Open a follow-up review if needed.
 
+## Current Pipeline
+
+Implemented:
+
+- GitHub Actions deployment on push to `main`
+- Sparse checkout — only `wp-content/` lands on the server
+- File ownership hardening — `ubuntu` owns code, `www-data` owns `uploads/` and `litespeed/`
+- LiteSpeed cache cleared on every deploy
+- Post-deploy health check (HTTP 200)
+- Manual rollback workflow (`workflow_dispatch`)
+
 ## Future Improvements
 
 Planned enhancements:
 
-- GitHub Actions deployment.
-- Zero-downtime deployment.
-- Automated rollback.
-- Deployment notifications.
-- Smoke testing after deployment.
+- Deployment notifications (Slack or email)
+- Zero-downtime deployment
+- Staging environment
 
 ## Related Documents
 
