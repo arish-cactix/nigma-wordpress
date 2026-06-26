@@ -38,6 +38,19 @@ jobs:
             echo "Clearing LiteSpeed cache..."
             sudo find /var/www/nigma/wp-content/litespeed/ -mindepth 1 -delete
 
+            echo "Configuring log rotation..."
+            sudo tee /etc/logrotate.d/wordpress-debug > /dev/null << 'LOGROTATEEOF'
+/var/www/nigma/wp-content/debug.log {
+    weekly
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0664 www-data ubuntu
+}
+LOGROTATEEOF
+
             echo "Deploy complete."
           ENDSSH
 

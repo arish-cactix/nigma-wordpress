@@ -28,6 +28,8 @@ Project Health:
 - PHPStan static analysis (level 5) passing on every push
 - Deployment notifications, health check, and rollback workflow active
 - Uptime monitoring active (UptimeRobot)
+- PHP error logging active (silent, writes to `wp-content/debug.log`)
+- Log rotation configured (weekly, 4 weeks retained, compressed)
 
 ---
 
@@ -176,7 +178,6 @@ For every significant task:
 ## Next Milestones
 
 - Backup automation — EC2 Data Lifecycle Manager (monthly AMI, retain 3)
-- Log management
 - Security review cadence
 - Performance benchmarking
 - Phase out WP Snapshot Backups plugin (after DLM is active)

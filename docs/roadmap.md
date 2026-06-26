@@ -87,11 +87,13 @@ Achieved:
 - Uptime monitoring (UptimeRobot)
 - Deploy and rollback email notifications
 - Post-deploy health check in CI
+- PHP error logging to `wp-content/debug.log` via mu-plugin (silent, no visitor exposure)
+- Log rotation via logrotate: weekly, 4 weeks retained, compressed
 
 Remaining:
 
 - **Backup automation** *(pending)* — configure EC2 Data Lifecycle Manager: monthly AMI, retain 3 minimum. Restore procedure: launch new EC2 instance from EBS snapshot. WP Snapshot Backups plugin is secondary and will be removed once DLM is active.
-- Log management
+- **Log management** ✅ — PHP error logging active via `mu-plugins/error-logging.php`, writes silently to `wp-content/debug.log`. Log rotation installed on deploy: weekly, 4 weeks retained, compressed. View logs: `tail -n 100 /var/www/nigma/wp-content/debug.log`.
 - Security review cadence
 - Performance benchmarking
 
@@ -121,10 +123,9 @@ Every phase should:
 
 Phase 5 – Operations & Monitoring:
 
-1. Log management.
+1. Backup automation (EC2 Data Lifecycle Manager).
 2. Security review cadence.
-3. Backup verification workflow.
-4. Performance benchmarking.
+3. Performance benchmarking.
 
 ## Success Criteria
 

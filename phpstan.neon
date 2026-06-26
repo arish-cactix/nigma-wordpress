@@ -2,6 +2,7 @@ parameters:
     level: 5
     paths:
         - wp-content/mu-plugins/security-headers-csp.php
+        - wp-content/mu-plugins/error-logging.php
         - wp-content/themes/Avada-Child-Theme/functions.php
     bootstrapFiles:
         - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
