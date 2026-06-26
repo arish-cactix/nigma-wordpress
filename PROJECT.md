@@ -152,6 +152,7 @@ Project Documentation:
 - deployment.md
 - coding-standards.md
 - security.md
+- security-review.md
 - documentation-policy.md
 - architecture-decisions.md
 - troubleshooting.md

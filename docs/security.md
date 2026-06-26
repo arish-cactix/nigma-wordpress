@@ -150,3 +150,4 @@ AI coding agents must:
 - docs/deployment.md
 - docs/coding-standards.md
 - docs/architecture-decisions.md
+- docs/security-review.md
