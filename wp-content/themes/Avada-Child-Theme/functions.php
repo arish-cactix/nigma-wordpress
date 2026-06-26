@@ -1,7 +1,7 @@
 <?php
 
 function theme_enqueue_styles() {
-    wp_enqueue_style( 'child-style', get_stylesheet_directory_uri() . '/style.css', [] );
+    wp_enqueue_style( 'child-style', get_stylesheet_directory_uri() . '/style.css', [], '1.1' );
 	wp_enqueue_style( 'child-style-2', get_stylesheet_directory_uri() . '/assets/css/style.css', [] );
 	wp_enqueue_style( 'child-style-2', get_stylesheet_directory_uri() . '/assets/css/bootstrap.min.css', [] );
 	wp_enqueue_style( 'child-style-2', get_stylesheet_directory_uri() . '/assets/css/owl.carousel.min.css', [] );
