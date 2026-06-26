@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<ruleset name="NIGMA WordPress Standards">
+    <description>PHPCS configuration for NIGMA WordPress project.</description>
+
+    <!-- Scan our custom code only — not Avada parent theme or third-party plugins -->
+    <file>wp-content/mu-plugins</file>
+    <file>wp-content/themes/Avada-Child-Theme</file>
+
+    <!-- Exclude compiled/vendor assets -->
+    <exclude-pattern>*/assets/js/*</exclude-pattern>
+    <exclude-pattern>*/assets/css/*</exclude-pattern>
+    <exclude-pattern>*/assets/fonts/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
+    <exclude-pattern>*.min.css</exclude-pattern>
+
+    <!-- WordPress Coding Standards -->
+    <rule ref="WordPress"/>
+
+    <!-- Target environment -->
+    <config name="minimum_supported_wp_version" value="6.0"/>
+    <config name="testVersion" value="8.0-"/>
+</ruleset>
