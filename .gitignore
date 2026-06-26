@@ -8,6 +8,8 @@
 # ------------------------------------------------------------------------------
 !.gitignore
 !/.phpcs.xml
+!/composer.json
+!/phpstan.neon
 !/.github/
 !/.github/**
 !/scripts/

@@ -1,0 +1,8 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - wp-content/mu-plugins/security-headers-csp.php
+        - wp-content/themes/Avada-Child-Theme/functions.php

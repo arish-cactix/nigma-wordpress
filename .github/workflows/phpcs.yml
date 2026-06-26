@@ -31,3 +31,9 @@ jobs:
 
       - name: Run PHPCS
         run: phpcs --standard=.phpcs.xml
+
+      - name: Install PHPStan and WordPress stubs
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress
