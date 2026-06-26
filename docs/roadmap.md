@@ -66,31 +66,38 @@ Achievements:
 
 ## Phase 4 – Quality Engineering
 
-Status: **Planned**
+Status: **In Progress**
 
-Objectives:
+Achieved:
 
-- PHP_CodeSniffer
-- WordPress Coding Standards
-- PHPUnit
-- Static analysis
-- Automated code formatting
-- End-to-end testing
-- Performance benchmarking
+- PHP_CodeSniffer with WordPress Coding Standards on every push and PR
+- Scans `mu-plugins/security-headers-csp.php` and `themes/Avada-Child-Theme`
+- Excludes third-party mu-plugins and template files (header.php, footer.php, templates/)
+- Deployment notifications via email (Gmail SMTP) on every deploy and rollback
+- Manual rollback workflow (`workflow_dispatch`) with health check
+- Uptime monitoring via UptimeRobot (external, continuous)
+
+Remaining:
+
+- Static analysis (PHPStan)
+- Staging environment
 
 ## Phase 5 – Operations & Monitoring
 
-Status: **Planned**
+Status: **Partially Complete**
 
-Objectives:
+Achieved:
 
-- Monitoring dashboards
-- Backup verification
+- Uptime monitoring (UptimeRobot)
+- Deploy and rollback email notifications
+- Post-deploy health check in CI
+
+Remaining:
+
 - Log management
-- Security reviews
-- Performance optimization
-- Capacity planning
-- Maintenance automation
+- Security review cadence
+- Backup verification workflow
+- Performance benchmarking
 
 ## Phase 6 – Future Enhancements
 

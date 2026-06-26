@@ -2,7 +2,7 @@
 
 # NIGMA Engineering Dashboard
 
-Version: 1.1
+Version: 1.2
 
 > This document provides a high-level snapshot of the project's current state. Unlike the roadmap, which focuses on long-term planning, this dashboard reflects the current engineering focus and is expected to change frequently.
 
@@ -24,6 +24,9 @@ Project Health:
 - CI/CD pipeline live (GitHub Actions → EC2)
 - Content Security Policy enforced on production
 - File ownership hardened on production server
+- PHP_CodeSniffer + WordPress Coding Standards passing on every push
+- Deployment notifications, health check, and rollback workflow active
+- Uptime monitoring active (UptimeRobot)
 
 ---
 
@@ -83,9 +86,11 @@ Priority order:
 7. ~~GitHub Actions CI/CD~~
 8. ~~Post-deploy health check~~
 9. ~~Content Security Policy~~
-10. Document rollback strategy
-11. PHP_CodeSniffer + WordPress Coding Standards
-12. Monitoring / uptime alerting
+10. ~~Document rollback strategy~~
+11. ~~PHP_CodeSniffer + WordPress Coding Standards~~
+12. ~~Monitoring / uptime alerting~~
+13. Static analysis (PHPStan)
+14. Staging environment
 
 ---
 
