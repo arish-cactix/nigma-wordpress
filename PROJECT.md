@@ -2,7 +2,7 @@
 
 # NIGMA Engineering Dashboard
 
-Version: 1.2
+Version: 1.3
 
 > This document provides a high-level snapshot of the project's current state. Unlike the roadmap, which focuses on long-term planning, this dashboard reflects the current engineering focus and is expected to change frequently.
 
@@ -14,7 +14,7 @@ Version: 1.2
 
 Current Phase:
 
-**Phase 4 – Quality Engineering**
+**Phase 5 – Operations & Monitoring**
 
 Project Health:
 
@@ -25,6 +25,7 @@ Project Health:
 - Content Security Policy enforced on production
 - File ownership hardened on production server
 - PHP_CodeSniffer + WordPress Coding Standards passing on every push
+- PHPStan static analysis (level 5) passing on every push
 - Deployment notifications, health check, and rollback workflow active
 - Uptime monitoring active (UptimeRobot)
 
@@ -62,14 +63,14 @@ Project Health:
 
 ## Current Objective
 
-Phase 4 – Quality Engineering: establish code standards, linting, and testing infrastructure.
+Phase 5 – Operations & Monitoring: establish operational practices for a stable, observable production environment.
 
 Primary goals:
 
-- PHP_CodeSniffer with WordPress Coding Standards
-- Static analysis
-- Rollback strategy documentation
-- Monitoring setup
+- Log management
+- Security review cadence
+- Backup verification workflow
+- Performance benchmarking
 
 ---
 
@@ -89,8 +90,7 @@ Priority order:
 10. ~~Document rollback strategy~~
 11. ~~PHP_CodeSniffer + WordPress Coding Standards~~
 12. ~~Monitoring / uptime alerting~~
-13. Static analysis (PHPStan)
-14. Staging environment
+13. ~~Static analysis (PHPStan)~~
 
 ---
 
@@ -175,10 +175,9 @@ For every significant task:
 
 ## Next Milestones
 
-- Rollback strategy
-- PHP_CodeSniffer + WordPress Coding Standards
-- Uptime monitoring / alerting
-- Staging environment
+- Log management
+- Security review cadence
+- Backup verification workflow
 - Performance benchmarking
 
 ---
