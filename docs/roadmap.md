@@ -80,7 +80,7 @@ Achievements:
 
 ## Phase 5 – Operations & Monitoring
 
-Status: **Partially Complete**
+Status: **In Progress**
 
 Achieved:
 
@@ -90,9 +90,9 @@ Achieved:
 
 Remaining:
 
+- **Backup automation** *(pending)* — configure EC2 Data Lifecycle Manager: monthly AMI, retain 3 minimum. Restore procedure: launch new EC2 instance from EBS snapshot. WP Snapshot Backups plugin is secondary and will be removed once DLM is active.
 - Log management
 - Security review cadence
-- Backup verification workflow
 - Performance benchmarking
 
 ## Phase 6 – Future Enhancements

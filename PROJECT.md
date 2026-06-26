@@ -175,10 +175,11 @@ For every significant task:
 
 ## Next Milestones
 
+- Backup automation — EC2 Data Lifecycle Manager (monthly AMI, retain 3)
 - Log management
 - Security review cadence
-- Backup verification workflow
 - Performance benchmarking
+- Phase out WP Snapshot Backups plugin (after DLM is active)
 
 ---
 
