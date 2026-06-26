@@ -23,7 +23,7 @@ function nigma_send_csp_header() {
 	// Report-only: logs violations to the browser console, blocks nothing.
 	// When violations are resolved, change the header name to:
 	//   Content-Security-Policy
-	header( 'Content-Security-Policy-Report-Only: ' . $policy );
+	header( 'Content-Security-Policy: ' . $policy );
 }
 
 function nigma_csp_directives() {
