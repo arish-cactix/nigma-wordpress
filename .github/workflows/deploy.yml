@@ -25,12 +25,12 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$EC2_USER@$EC2_HOST" <<'ENDSSH'
             set -e
 
-            cd /var/www/nigma
+            cd /var/www/nigma/wp-content
             echo "Pulling latest code..."
             git pull origin main
 
             echo "Clearing LiteSpeed cache..."
-            wp litespeed-purge all --allow-root 2>/dev/null || true
+            wp litespeed-purge all --path=/var/www/nigma --allow-root 2>/dev/null || true
 
             echo "Deploy complete."
           ENDSSH
