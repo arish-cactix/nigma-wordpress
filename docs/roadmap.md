@@ -1,6 +1,6 @@
 # Project Roadmap
 
-Version: 1.0
+Version: 1.1
 
 ## Purpose
 
@@ -39,34 +39,30 @@ Achievements:
 
 ## Phase 2 – Local Development
 
-Status: **Planned**
+Status: **Completed** ✅
 
-Objectives:
+Achievements:
 
-- Reorganize repository structure
-- Create `wp-content/` project layout
-- Docker Compose environment
-- Environment variable support
-- Local database workflow
-- Media proxy or synchronization strategy
-- One-command developer bootstrap
-- Local mail testing
-- Optional phpMyAdmin
-- Optional Xdebug support
+- Repository reorganized with `wp-content/` structure
+- Docker Compose environment (MariaDB + WordPress PHP-FPM + nginx)
+- Environment variable configuration via `.env`
+- Local database import workflow with two-pass URL search-replace
+- Media proxy: nginx proxies missing uploads from production
+- Production-only plugin deactivation on import
 
 ## Phase 3 – Continuous Integration & Deployment
 
-Status: **Planned**
+Status: **Completed** ✅
 
-Objectives:
+Achievements:
 
-- GitHub Actions
-- Automated deployment
-- Deployment validation
-- LiteSpeed cache management
-- Rollback strategy
-- Deployment notifications
-- Post-deployment health checks
+- GitHub Actions deploy workflow (push to `main` → SSH → EC2)
+- Sparse checkout on EC2 — only `wp-content/` tracked, WordPress core untouched
+- LiteSpeed cache cleared on every deploy (rm -rf + recreate)
+- File ownership enforced: `ubuntu` owns code, `www-data` writes only to `uploads/` and `litespeed/`
+- Post-deploy health check: HTTP 200 verified after every deploy
+- Content Security Policy enforced via mu-plugin (covers GTM, GA, Google Fonts, YouTube, reCAPTCHA, Vimeo)
+- X-Frame-Options, HSTS, Referrer-Policy via WP Defender Pro
 
 ## Phase 4 – Quality Engineering
 
@@ -121,12 +117,12 @@ Every phase should:
 
 ## Current Priority
 
-The next milestone is:
+Phase 4 – Quality Engineering:
 
-1. Reorganize the local repository.
-2. Build the Docker development environment.
-3. Implement environment-based configuration.
-4. Begin CI/CD implementation.
+1. Document rollback strategy.
+2. PHP_CodeSniffer with WordPress Coding Standards.
+3. Static analysis.
+4. Uptime monitoring and alerting.
 
 ## Success Criteria
 

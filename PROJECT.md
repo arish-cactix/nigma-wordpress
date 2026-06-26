@@ -2,7 +2,7 @@
 
 # NIGMA Engineering Dashboard
 
-Version: 1.0
+Version: 1.1
 
 > This document provides a high-level snapshot of the project's current state. Unlike the roadmap, which focuses on long-term planning, this dashboard reflects the current engineering focus and is expected to change frequently.
 
@@ -14,27 +14,59 @@ Version: 1.0
 
 Current Phase:
 
-**Phase 2 – Local Development Implementation**
+**Phase 4 – Quality Engineering**
 
 Project Health:
 
 - Repository established
 - Documentation foundation completed
 - Docker local development environment implemented
+- CI/CD pipeline live (GitHub Actions → EC2)
+- Content Security Policy enforced on production
+- File ownership hardened on production server
+
+---
+
+## Completed Phases
+
+### Phase 2 – Local Development ✅
+
+- Repository reorganized with `wp-content/` structure
+- Docker Compose environment (MariaDB + WordPress PHP-FPM + nginx)
+- Environment variable configuration via `.env`
+- Local database import workflow (`docker/db/import-db.sh`)
+- Media proxy strategy (nginx proxies missing uploads from production)
+- Two-pass URL search-replace on import
+- Production-only plugin deactivation on import
+
+### Phase 3 – CI/CD ✅
+
+- GitHub Actions deploy workflow (`.github/workflows/deploy.yml`)
+- Sparse checkout on EC2 — only `wp-content/` tracked, WordPress core untouched
+- Automated deployment: push to `main` → SSH → git pull → cache purge
+- LiteSpeed cache cleared on every deploy
+- File ownership enforced: `ubuntu` owns code, `www-data` writes only to `uploads/` and `litespeed/`
+- Post-deploy health check: HTTP 200 verified after every deploy
+
+### Security Hardening (Phase 3 addition) ✅
+
+- `Content-Security-Policy` enforced via mu-plugin (`wp-content/mu-plugins/security-headers-csp.php`)
+- Policy covers: GTM, GA, Google Fonts, YouTube, reCAPTCHA, Vimeo
+- X-Frame-Options, HSTS, Referrer-Policy, Permissions-Policy via WP Defender Pro
+- File permissions: `ubuntu:ubuntu` on all code, `www-data:www-data` on `uploads/` and `litespeed/` only
 
 ---
 
 ## Current Objective
 
-Build a reproducible local development environment that closely mirrors production while keeping production infrastructure isolated.
+Phase 4 – Quality Engineering: establish code standards, linting, and testing infrastructure.
 
 Primary goals:
 
-- Repository reorganization
-- Docker development environment
-- Environment variable configuration
-- Local database workflow
-- Media handling strategy
+- PHP_CodeSniffer with WordPress Coding Standards
+- Static analysis
+- Rollback strategy documentation
+- Monitoring setup
 
 ---
 
@@ -43,14 +75,17 @@ Primary goals:
 Priority order:
 
 1. ~~Reorganize repository structure~~
-2. ~~Move `wp-content` into the repository root~~
-3. ~~Create `docker/`~~
-4. ~~Create `docker-compose.yml`~~
-5. ~~Create `.env.example`~~
-6. ~~Configure environment-based WordPress configuration~~
-7. ~~Implement media URL override~~
-8. Validate local development workflow
-9. Create `.github/` and GitHub Actions
+2. ~~Docker development environment~~
+3. ~~Environment variable configuration~~
+4. ~~Local database workflow~~
+5. ~~Media URL override~~
+6. ~~Validate local development workflow~~
+7. ~~GitHub Actions CI/CD~~
+8. ~~Post-deploy health check~~
+9. ~~Content Security Policy~~
+10. Document rollback strategy
+11. PHP_CodeSniffer + WordPress Coding Standards
+12. Monitoring / uptime alerting
 
 ---
 
@@ -66,10 +101,17 @@ Production
 
 Development
 
-- GitHub repository
-- Local Docker (planned)
+- GitHub repository (`arish-cactix/nigma-wordpress`)
+- Local Docker (MariaDB 10.6 + WordPress PHP 8.0 FPM + nginx)
 - Git-based workflow
 - AI-assisted development
+
+Deployment
+
+- GitHub Actions on push to `main`
+- Sparse checkout at `/var/www/nigma/` (wp-content only)
+- EC2 deploy user: `ubuntu`
+- WordPress root: `/var/www/nigma/`
 
 ---
 
@@ -126,31 +168,13 @@ For every significant task:
 
 ---
 
-## Current Milestone
-
-Complete the local development environment.
-
-Success criteria:
-
-- A developer can clone the repository.
-- Configure a local `.env`.
-- Start Docker.
-- Import a development database.
-- Access the application locally.
-- Begin development immediately.
-
----
-
 ## Next Milestones
 
-After local development:
-
-- GitHub Actions
-- Automated deployment
-- Rollback support
-- Testing
-- Monitoring
-- Performance optimization
+- Rollback strategy
+- PHP_CodeSniffer + WordPress Coding Standards
+- Uptime monitoring / alerting
+- Staging environment
+- Performance benchmarking
 
 ---
 
