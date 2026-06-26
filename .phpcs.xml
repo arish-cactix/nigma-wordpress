@@ -6,13 +6,16 @@
     <file>wp-content/mu-plugins</file>
     <file>wp-content/themes/Avada-Child-Theme</file>
 
+    <!-- PHP files only — CSS/JS linting is out of scope -->
+    <arg name="extensions" value="php"/>
+
+    <!-- Exclude theme templates — they contain HTML with inline GTM/analytics scripts -->
+    <exclude-pattern>*/header.php</exclude-pattern>
+    <exclude-pattern>*/footer.php</exclude-pattern>
+
     <!-- Exclude compiled/vendor assets -->
-    <exclude-pattern>*/assets/js/*</exclude-pattern>
-    <exclude-pattern>*/assets/css/*</exclude-pattern>
-    <exclude-pattern>*/assets/fonts/*</exclude-pattern>
+    <exclude-pattern>*/assets/*</exclude-pattern>
     <exclude-pattern>*/vendor/*</exclude-pattern>
-    <exclude-pattern>*.min.js</exclude-pattern>
-    <exclude-pattern>*.min.css</exclude-pattern>
 
     <!-- WordPress Coding Standards -->
     <rule ref="WordPress"/>

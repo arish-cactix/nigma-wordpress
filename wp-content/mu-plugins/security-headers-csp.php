@@ -1,9 +1,7 @@
 <?php
 /**
  * Plugin Name: NIGMA Content Security Policy
- * Description: Sends Content-Security-Policy-Report-Only on all frontend responses.
- *              Review violations in browser DevTools (F12 → Console).
- *              Switch header name to Content-Security-Policy to enforce once clean.
+ * Description: Applies Content-Security-Policy header on all frontend responses.
  * Version:     1.0
  */
 
