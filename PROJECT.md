@@ -2,7 +2,7 @@
 
 # NIGMA Engineering Dashboard
 
-Version: 1.3
+Version: 1.4
 
 > This document provides a high-level snapshot of the project's current state. Unlike the roadmap, which focuses on long-term planning, this dashboard reflects the current engineering focus and is expected to change frequently.
 
@@ -14,7 +14,7 @@ Version: 1.3
 
 Current Phase:
 
-**Phase 5 – Operations & Monitoring**
+**Phase 6 – Future Enhancements**
 
 Project Health:
 
@@ -36,6 +36,16 @@ Project Health:
 ---
 
 ## Completed Phases
+
+### Phase 5 – Operations & Monitoring ✅
+
+- Uptime monitoring (UptimeRobot)
+- Deploy and rollback email notifications
+- Post-deploy health check in CI
+- PHP error logging via mu-plugin (`wp-content/mu-plugins/error-logging.php`)
+- Log rotation: weekly, 4 weeks retained, compressed
+- Security review cadence: monthly, quarterly, annual (`docs/security-review.md`)
+- Performance benchmarking procedure and TTFB baseline (`docs/performance.md`)
 
 ### Phase 2 – Local Development ✅
 
@@ -67,14 +77,7 @@ Project Health:
 
 ## Current Objective
 
-Phase 5 – Operations & Monitoring: establish operational practices for a stable, observable production environment.
-
-Primary goals:
-
-- Log management
-- Security review cadence
-- Backup verification workflow
-- Performance benchmarking
+Phases 1–5 are complete. The project is in a stable, mature state. Active work is driven by incoming requirements, maintenance, and Phase 6 initiatives as capacity allows.
 
 ---
 
@@ -95,6 +98,10 @@ Priority order:
 11. ~~PHP_CodeSniffer + WordPress Coding Standards~~
 12. ~~Monitoring / uptime alerting~~
 13. ~~Static analysis (PHPStan)~~
+14. ~~PHP error logging~~
+15. ~~Log rotation~~
+16. ~~Security review cadence~~
+17. ~~Performance benchmarking~~
 
 ---
 
@@ -181,8 +188,12 @@ For every significant task:
 
 ## Next Milestones
 
+No active sprint. Future initiatives (Phase 6):
+
 - Backup automation — EC2 Data Lifecycle Manager (monthly AMI, retain 3)
 - Phase out WP Snapshot Backups plugin (after DLM is active)
+- Infrastructure as Code
+- Enhanced observability
 
 ---
 

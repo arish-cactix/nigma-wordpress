@@ -1,6 +1,6 @@
 # Project Roadmap
 
-Version: 1.2
+Version: 1.3
 
 ## Purpose
 
@@ -80,26 +80,23 @@ Achievements:
 
 ## Phase 5 – Operations & Monitoring
 
-Status: **In Progress**
+Status: **Completed** ✅
 
-Achieved:
+Achievements:
 
 - Uptime monitoring (UptimeRobot)
 - Deploy and rollback email notifications
 - Post-deploy health check in CI
 - PHP error logging to `wp-content/debug.log` via mu-plugin (silent, no visitor exposure)
 - Log rotation via logrotate: weekly, 4 weeks retained, compressed
-- Security review cadence documented: monthly, quarterly, and annual checklists
+- Security review cadence documented: monthly, quarterly, and annual checklists (`docs/security-review.md`)
 - Performance benchmarking procedure and baseline established (`docs/performance.md`, `scripts/benchmark.sh`)
-
-Remaining:
-
-- **Backup automation** *(pending)* — configure EC2 Data Lifecycle Manager: monthly AMI, retain 3 minimum. Restore procedure: launch new EC2 instance from EBS snapshot. WP Snapshot Backups plugin is secondary and will be removed once DLM is active.
 
 ## Phase 6 – Future Enhancements
 
 Potential future initiatives:
 
+- Backup automation — EC2 Data Lifecycle Manager (monthly AMI, retain 3; WP Snapshot Backups plugin to be removed once active)
 - Blue/Green deployments
 - Zero-downtime deployments
 - Canary releases
@@ -120,11 +117,7 @@ Every phase should:
 
 ## Current Priority
 
-Phase 5 – Operations & Monitoring:
-
-1. Backup automation (EC2 Data Lifecycle Manager).
-2. Security review cadence.
-3. Performance benchmarking.
+Phase 6 – Future Enhancements: no active sprint. Initiatives are pursued as capacity and priorities allow.
 
 ## Success Criteria
 
