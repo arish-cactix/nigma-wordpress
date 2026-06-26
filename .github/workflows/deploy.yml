@@ -31,7 +31,9 @@ jobs:
             git pull origin main
 
             echo "Fixing file ownership..."
-            sudo chown -R www-data:www-data /var/www/nigma/wp-content
+            sudo chown -R ubuntu:ubuntu /var/www/nigma/wp-content
+            sudo chown -R www-data:www-data /var/www/nigma/wp-content/uploads
+            sudo chown -R www-data:www-data /var/www/nigma/wp-content/litespeed
 
             echo "Clearing LiteSpeed cache..."
             wp litespeed-purge all --path=/var/www/nigma --allow-root 2>/dev/null || true
