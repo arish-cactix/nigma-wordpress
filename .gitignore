@@ -9,6 +9,8 @@
 !.gitignore
 !/.github/
 !/.github/**
+!/scripts/
+!/scripts/**
 
 # ------------------------------------------------------------------------------
 # Local Docker scaffold
