@@ -323,5 +323,6 @@ Not version controlled:
 - AGENTS.md
 - project-overview.md
 - repository-architecture.md
+- server-dependencies.md
 - deployment.md
 - architecture-decisions.md
