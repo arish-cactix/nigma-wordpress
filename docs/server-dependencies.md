@@ -43,6 +43,7 @@ Last verified: 2026-08-13
 | `postfix@-.service` | Postfix mail transfer agent | running |
 | `ssh.service` | OpenSSH server | running |
 | `cron.service` | System scheduled task runner | running |
+| `certbot.timer` | Let's Encrypt certificate renewal timer | enabled |
 | `snap.amazon-ssm-agent.amazon-ssm-agent.service` | AWS Systems Manager agent | running |
 | `snapd.service` | Snap package manager daemon | running |
 | `rsyslog.service` | System logging | running |
@@ -53,6 +54,7 @@ Last verified: 2026-08-13
 
 | Package | Version |
 |---------|---------|
+| certbot | 0.40.0-1ubuntu0.1 |
 | openlitespeed | 1.7.14-2+focal |
 | lsphp80 | 8.0.17-1+focal |
 | lsphp80-common | 8.0.17-1+focal |
@@ -67,6 +69,7 @@ Last verified: 2026-08-13
 | postfix | 3.4.13-0ubuntu1.2 |
 | redis-server | 5:5.0.7-2ubuntu0.1 |
 | snapd | 2.54.3+20.04.1ubuntu0.2 |
+| python3-certbot | 0.40.0-1ubuntu0.1 |
 
 ## Snap Packages
 
@@ -90,6 +93,24 @@ sudo systemctl restart snap.amazon-ssm-agent.amazon-ssm-agent.service
 | PHP Runtime Path | `/usr/local/lsws/lsphp80` |
 | PHP Configuration | `/usr/local/lsws/lsphp80/etc/php/8.0/litespeed/php.ini` |
 | PHP CLI Binary | `/usr/local/lsws/lsphp80/bin/php` |
+
+## SSL and Certificates
+
+| Dependency | Current Production |
+|------------|--------------------|
+| Certificate Authority | Let's Encrypt |
+| Certificate Tooling | Certbot 0.40.0 |
+| Certificate Name | `nigma.ae` |
+| Covered Domains | `nigma.ae`, `www.nigma.ae` |
+| Certificate Directory | `/etc/letsencrypt/live/nigma.ae` |
+| Renewal Timer | `certbot.timer` |
+| Renewal Service | `certbot.service` |
+| Web Server Reload Hook | `systemctl restart lsws` |
+| Verified Expiry | 2026-10-26 03:47:05 UTC |
+
+Let's Encrypt account, archive, live certificate, renewal, and renewal-hook directories are present under `/etc/letsencrypt`.
+
+Private key contents are not stored in this repository.
 
 ## PHP Extensions
 
@@ -190,25 +211,3 @@ System cron files were present for OS and package maintenance:
 - `/etc/cron.weekly/update-notifier-common`
 
 Cron command contents were not copied into this repository because scheduled task definitions can contain sensitive arguments.
-
-## Exclusions
-
-The following are intentionally excluded from this document:
-
-- WordPress core version
-- WordPress themes
-- WordPress plugins
-- Must-use plugins
-- Drop-ins
-- WordPress database contents
-- `wp-config.php` values
-- Credentials, tokens, keys, and secrets
-- Application-level package dependencies
-
-## Related Documents
-
-- README.md
-- AGENTS.md
-- docs/production-environment.md
-- docs/security.md
-- docs/troubleshooting.md
