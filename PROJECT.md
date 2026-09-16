@@ -32,6 +32,7 @@ Project Health:
 - Log rotation configured (weekly, 4 weeks retained, compressed)
 - Security review cadence documented (monthly / quarterly / annual)
 - Performance benchmarking procedure established — TTFB baseline: 449ms
+- Leadership page (`/group/leadership/`) synced from Imdaad's Contentful CMS, replacing manual duplication (ADR-012)
 
 ---
 
