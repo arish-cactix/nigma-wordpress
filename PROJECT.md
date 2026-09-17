@@ -64,7 +64,7 @@ Project Health:
 - Sparse checkout on EC2 — only `wp-content/` tracked, WordPress core untouched
 - Automated deployment: push to `main` → SSH → git pull → cache purge
 - LiteSpeed cache cleared on every deploy
-- File ownership enforced: `ubuntu` owns code, `www-data` writes only to `uploads/` and `litespeed/`
+- File ownership enforced: `ubuntu` owns all of `wp-content/`, including `uploads/` and `litespeed/` (see ADR-013 — PHP on production actually runs as `ubuntu`, not `www-data`)
 - Post-deploy health check: HTTP 200 verified after every deploy
 
 ### Security Hardening (Phase 3 addition) ✅
@@ -72,7 +72,7 @@ Project Health:
 - `Content-Security-Policy` enforced via mu-plugin (`wp-content/mu-plugins/security-headers-csp.php`)
 - Policy covers: GTM, GA, Google Fonts, YouTube, reCAPTCHA, Vimeo
 - X-Frame-Options, HSTS, Referrer-Policy, Permissions-Policy via WP Defender Pro
-- File permissions: `ubuntu:ubuntu` on all code, `www-data:www-data` on `uploads/` and `litespeed/` only
+- File permissions: `ubuntu:ubuntu` on all of `wp-content/` (see ADR-013)
 
 ---
 
@@ -195,6 +195,7 @@ No active sprint. Future initiatives (Phase 6):
 - Phase out WP Snapshot Backups plugin (after DLM is active)
 - Infrastructure as Code
 - Enhanced observability
+- Reconfigure OpenLiteSpeed to run PHP as a dedicated low-privilege user, restoring runtime/code isolation (ADR-013)
 
 ---
 

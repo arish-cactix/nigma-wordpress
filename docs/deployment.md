@@ -159,7 +159,7 @@ Implemented:
 
 - GitHub Actions deployment on push to `main`
 - Sparse checkout — only `wp-content/` lands on the server
-- File ownership hardening — `ubuntu` owns code, `www-data` owns `uploads/` and `litespeed/`
+- File ownership hardening — `ubuntu` owns all of `wp-content/`, including `uploads/` and `litespeed/` (see ADR-013)
 - LiteSpeed cache cleared on every deploy
 - Post-deploy health check (HTTP 200)
 - Manual rollback workflow (`workflow_dispatch`)

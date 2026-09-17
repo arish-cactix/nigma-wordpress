@@ -259,6 +259,35 @@ Nothing runs automatically (no cron). Contentful credentials are read from `wp-c
 
 ---
 
+# ADR-013 — Uploads and LiteSpeed Cache Ownership Matches the Actual PHP Runtime User
+
+## Context
+
+Documentation (PROJECT.md, docs/deployment.md, docs/security.md) described the intended file-ownership model as: `ubuntu` owns the codebase, `www-data` owns and writes `wp-content/uploads/` and `wp-content/litespeed/` — a deliberate split so the web-facing runtime user couldn't modify application code.
+
+Investigating a failed image sideload in the Imdaad Leadership Sync (ADR-012), we found this was never actually true on production: OpenLiteSpeed's PHP workers (`lsphp`) run as `ubuntu`, not `www-data`. `ubuntu` is not a member of the `www-data` group. Every deploy's `sudo chown -R www-data:www-data .../uploads` (in `.github/workflows/deploy.yml`) was therefore reasserting ownership the running PHP process couldn't write to, so any in-app file write into `uploads/` (media uploads, this sync's headshot sideloads, etc.) failed with "The uploaded file could not be moved."
+
+Because PHP already runs as `ubuntu`, which already owns and can write every other file in `wp-content/` (themes, plugins, mu-plugins), the intended `www-data` isolation was already ineffective before this fix: a compromised upload could reach the codebase via the same `ubuntu`-owned files regardless of `uploads/`'s ownership.
+
+## Decision
+
+Make `uploads/` ownership match reality instead of fighting it: `ubuntu:ubuntu`, same as the rest of `wp-content/` (`litespeed/` was already `ubuntu:ubuntu`). Removed the `www-data` chown step from `deploy.yml`.
+
+Did not attempt to reconfigure OpenLiteSpeed to run PHP as `www-data` (which would have restored the originally-intended isolation) — that requires the LiteSpeed WebAdmin console or root-level vhost config access, is a larger change with more moving parts, and wasn't undertaken as part of resolving the immediate upload failure.
+
+## Rationale
+
+- Fixes real media/upload failures on production immediately.
+- Removes a chown step that was silently fighting the actual runtime configuration on every deploy.
+- Introduces no new risk: `ubuntu` already had full write access to the codebase via the PHP runtime, so this doesn't grant anything an attacker couldn't already reach.
+
+## Consequences
+
+- There is currently no OS-level containment between the WordPress application's runtime and its own codebase. This should be treated as a known gap, not a resolved one — see docs/security.md.
+- A future, more thorough fix would reconfigure OpenLiteSpeed's PHP execution context to run as a dedicated low-privilege user (e.g. `www-data`) separate from the `ubuntu` deploy/code-owning user, restoring real isolation. Tracked as a Phase 6 candidate, not scheduled.
+
+---
+
 ## Future ADRs
 
 Examples:
