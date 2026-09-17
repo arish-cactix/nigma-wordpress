@@ -74,10 +74,12 @@ Before introducing or updating plugins/themes:
 
 ## File Permissions
 
-Recommended ownership:
+Ownership:
 
 - Owner: `ubuntu`
-- Group: `www-data`
+- Group: `ubuntu`
+
+`ubuntu` owns all of `wp-content/`, including `uploads/` and `litespeed/`. This matches the account production PHP actually executes as — see ADR-013. There is currently no separate low-privilege runtime user, so an attacker able to write an arbitrary file through the WordPress application (e.g. a plugin vulnerability, an unrestricted upload) already has write access to the codebase itself; do not rely on file ownership as a containment boundary against that.
 
 Follow the principle of least privilege and avoid overly permissive file permissions.
 

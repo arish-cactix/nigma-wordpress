@@ -33,7 +33,6 @@ jobs:
 
             echo "Fixing file ownership..."
             sudo chown -R ubuntu:ubuntu /var/www/nigma/wp-content
-            sudo chown -R www-data:www-data /var/www/nigma/wp-content/uploads
 
             echo "Clearing LiteSpeed cache..."
             sudo find /var/www/nigma/wp-content/litespeed/ -mindepth 1 -delete
