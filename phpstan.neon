@@ -6,3 +6,4 @@ parameters:
         - wp-content/themes/Avada-Child-Theme/functions.php
     bootstrapFiles:
         - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
+        - scripts/phpstan-bootstrap.php

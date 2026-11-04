@@ -58,10 +58,35 @@ Do **not** deploy:
 - `wp-config.php`
 - `.env`
 - `.htaccess`
+- `deploy-version.txt` (written by the server, not by git)
 - `docker/`
+- `scripts/` (installed on the server separately)
 - `docs/`
 - `README.md`
 - `AGENTS.md`
+
+## How Deploys Work (pull-based)
+
+Production pulls its own code; GitHub does not push to it.
+
+1. A change is merged to `main`.
+2. `nigma-deploy.timer` on the server runs `/usr/local/sbin/nigma-deploy` every minute. It fetches `origin/main` over HTTPS (the repository is public, so no credentials are involved) and fast-forwards `/var/www/nigma` when there is a new commit.
+3. It fixes file ownership (code is read-only to PHP; only `uploads/`, `litespeed/`, `cache/` and `.litespeed_conf.dat` are writable by `www-data`), clears the LiteSpeed page cache, the `wp-content/litespeed` asset cache and the Redis object cache, then health-checks `/` and a search page.
+4. If the health check fails, it **rolls back automatically** to the previous commit and will not retry the failed commit until a newer one arrives.
+5. On success it publishes the deployed commit at `https://www.nigma.ae/deploy-version.txt`.
+6. The **Deploy to Production** workflow waits until that file shows the pushed commit (or a newer one containing it), runs an HTTP health check and sends the notification email. A red run therefore means production is *not* on the new commit.
+
+The server needs no inbound SSH port and GitHub holds no server credentials. Anyone who can push to `main` can change production, as before, so protect `main` accordingly.
+
+Source files live in `scripts/deploy/` (`nigma-deploy.sh`, `nigma-deploy.service`, `nigma-deploy.timer`, `install.sh`). The server does not check out `scripts/`, so a change to them takes effect only after it is re-installed on the server (run `install.sh` as root, via SSM Session Manager or Run Command).
+
+Useful commands on the server (via SSM, as root):
+
+```bash
+nigma-deploy --status           # current / live / pinned / last-failed commit
+tail -f /var/log/nigma-deploy.log
+systemctl list-timers nigma-deploy.timer
+```
 
 ## CI/CD Vision
 
@@ -115,18 +140,27 @@ git revert HEAD~3..HEAD --no-edit   # reverts last 3 commits
 git push origin main
 ```
 
-### Option 2 — Emergency rollback workflow
+### Option 2 — Rollback workflow
 
-Use when the site is down and you need to restore immediately without waiting for a local commit.
+Use when you want to restore an earlier `wp-content` state without writing the commit yourself.
 
 1. Go to **GitHub → Actions → Rollback Production**
 2. Click **Run workflow**
 3. Paste the target commit SHA (find it in the Deploy to Production history)
 4. Click **Run workflow**
 
-The workflow SSHes to the server, resets `wp-content` to that commit, clears the cache, and runs a health check.
+The workflow commits the `wp-content` tree of that commit on top of `main` ("Rollback: restore wp-content to …"). The normal pull-based deploy then applies it, so the rollback is **permanent and visible in git history** — there is no temporary state to clean up afterwards.
 
-**Important:** This is a temporary fix. The next push to `main` will re-introduce the rolled-back code. Always follow up with a revert commit (Option 1) to make the rollback permanent.
+### Option 3 — Emergency rollback on the server
+
+Use when GitHub is unavailable or the deploy pipeline itself is broken. Run on the server via SSM Session Manager, as root:
+
+```bash
+nigma-deploy --pin <good-sha>   # deploys that commit and pauses auto-deploys
+nigma-deploy --unpin            # later: resume deploying origin/main
+```
+
+While pinned, pushes to `main` are **not** deployed. Always unpin once the underlying problem is fixed on `main`.
 
 ### Finding the right commit SHA
 
@@ -157,12 +191,13 @@ When necessary:
 
 Implemented:
 
-- GitHub Actions deployment on push to `main`
+- Pull-based deploy: the server fetches `origin/main` every minute (see ADR-014)
 - Sparse checkout — only `wp-content/` lands on the server
-- File ownership hardening — `ubuntu` owns all of `wp-content/`, including `uploads/` and `litespeed/` (see ADR-013)
-- LiteSpeed cache cleared on every deploy
-- Post-deploy health check (HTTP 200)
-- Manual rollback workflow (`workflow_dispatch`)
+- File ownership hardening — code owned by `ubuntu` and read-only to PHP; PHP runs as `www-data` and can write only `uploads/`, `litespeed/`, `cache/` and `.litespeed_conf.dat` (ADR-014, supersedes ADR-013)
+- LiteSpeed page cache, asset cache and Redis object cache cleared on every deploy
+- Server-side health check with automatic rollback, and `/deploy-version.txt` verification
+- Post-deploy health check and notification email from GitHub Actions
+- Rollback workflow (`workflow_dispatch`) that commits the restored tree to `main`; emergency `nigma-deploy --pin` on the server
 
 ## Future Improvements
 

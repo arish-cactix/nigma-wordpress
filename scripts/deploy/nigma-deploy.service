@@ -1,0 +1,10 @@
+[Unit]
+Description=NIGMA pull-based deploy (fetch origin/main and deploy if changed)
+After=network-online.target mariadb.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/nigma-deploy
+TimeoutStartSec=900
+Nice=10

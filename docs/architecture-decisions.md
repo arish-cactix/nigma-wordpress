@@ -261,6 +261,8 @@ Nothing runs automatically (no cron). Contentful credentials are read from `wp-c
 
 # ADR-013 — Uploads and LiteSpeed Cache Ownership Matches the Actual PHP Runtime User
 
+> **Status: Superseded by ADR-014.** The gap described here was closed on the new server by running PHP as `www-data`.
+
 ## Context
 
 Documentation (PROJECT.md, docs/deployment.md, docs/security.md) described the intended file-ownership model as: `ubuntu` owns the codebase, `www-data` owns and writes `wp-content/uploads/` and `wp-content/litespeed/` — a deliberate split so the web-facing runtime user couldn't modify application code.
@@ -285,6 +287,39 @@ Did not attempt to reconfigure OpenLiteSpeed to run PHP as `www-data` (which wou
 
 - There is currently no OS-level containment between the WordPress application's runtime and its own codebase. This should be treated as a known gap, not a resolved one — see docs/security.md.
 - A future, more thorough fix would reconfigure OpenLiteSpeed's PHP execution context to run as a dedicated low-privilege user (e.g. `www-data`) separate from the `ubuntu` deploy/code-owning user, restoring real isolation. Tracked as a Phase 6 candidate, not scheduled.
+
+# ADR-014 — Hardened Graviton Host, PHP as `www-data`, and Pull-Based Deploys
+
+## Context
+
+On 2026-11-04 the production server was found to be compromised: malicious files had been planted in WordPress core and plugin directories, extra administrator accounts existed, and a persistent background process re-created the files when they were removed. The server ran an end-of-life operating system (Ubuntu 20.04), PHP 8.0 (end of life), WordPress core and several licence-gated premium plugins that had fallen behind, and a burstable `t3a.medium` instance that had exhausted its CPU credits for an extended period.
+
+ADR-013 had documented a known gap: PHP ran as the code-owning `ubuntu` user, so any code execution inside WordPress could modify the code base and persist. That gap is what made the compromise durable.
+
+The previous deploy mechanism (GitHub Actions connecting over SSH to the server) also depended on an inbound SSH rule and on private keys that had lived on the compromised host.
+
+## Decision
+
+1. **Rebuild on a new host instead of cleaning in place:** AWS Graviton `t4g.medium` (arm64), Ubuntu 24.04 LTS, OpenLiteSpeed 1.9.4, PHP 8.3, MariaDB 10.11, Redis object cache. Code comes from git plus freshly installed, checksum-verified WordPress core; only the audited database and the uploads folder were carried over. The Elastic IP was moved to the new host; the old host was stopped and kept for rollback and forensics.
+2. **Run PHP as `www-data`** with the code read-only to it (supersedes ADR-013). PHP may write only `uploads/`, `litespeed/`, `cache/` and `.litespeed_conf.dat`. Dangerous PHP functions are disabled, `.git`, dotfiles, `wp-config.php` and `xmlrpc.php` are denied, and PHP execution is blocked inside `uploads/`.
+3. **No inbound SSH.** Administration is through AWS Systems Manager. The OpenLiteSpeed WebAdmin listens on localhost only. IMDSv2 is required.
+4. **Pull-based deploys.** The server runs `nigma-deploy.timer`, which fetches `origin/main` over HTTPS (the repository is public), deploys, health-checks and rolls back automatically on failure, then publishes the deployed commit at `/deploy-version.txt`. GitHub Actions verifies that file instead of connecting to the server. The previous SSH key pair and write-capable deploy key were revoked.
+
+## Rationale
+
+- A rebuild removes any persistence that an in-place cleanup could miss, and moves the server off unsupported software at the same time.
+- Running PHP as an unprivileged user restores the isolation ADR-013 identified as missing: a compromised plugin can no longer rewrite the code base or its own persistence.
+- Pull-based deploys remove the inbound port and every long-lived credential from the pipeline, and a failed deploy no longer leaves production in a half-deployed state.
+- Graviton gives equal or better performance per cost, but burstable instances still need monitoring; this is tracked as a constraint.
+
+## Consequences
+
+- Updating plugins or themes from the WordPress admin no longer works (code is read-only to PHP). Updates are made with WP-CLI as `ubuntu` or by committing to git, which is the intended workflow.
+- LiteSpeed Cache settings that need `.htaccess` changes must be applied with WP-CLI as `ubuntu`; the admin UI will show a "please add these codes" notice instead.
+- The deploy script and units live in `scripts/deploy/` but are **installed on the server separately**; changing them requires re-running `scripts/deploy/install.sh` there.
+- Anyone who can push to `main` can change production. Branch protection on `main` is recommended.
+- Premium plugins with expired or missing licences (Gravity Forms, ACF Pro, Avada and Fusion) could not be updated and remain a risk until renewed.
+- The old host is retained temporarily and should be terminated after the soak period.
 
 ---
 

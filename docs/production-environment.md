@@ -1,7 +1,7 @@
 
 # Production Environment
 
-Version: 1.1
+Version: 1.2
 
 ## Purpose
 
@@ -15,13 +15,15 @@ This document defines the current production environment for the NIGMA WordPress
 |-----------|--------------------|
 | Website | https://www.nigma.ae |
 | Environment | Production |
-| Hosting | AWS EC2 (Mumbai Region) |
-| Operating System | Ubuntu Linux |
-| Web Server | LiteSpeed |
-| PHP | 8.0.17 (LiteSpeed SAPI) |
-| Database | MariaDB 10.6.7 |
-| WordPress | 6.7.1 *(Update when production changes)* |
-| HTTPS | Enabled |
+| Hosting | AWS EC2 `t4g.medium` (Graviton, arm64), Mumbai region (`ap-south-1`) — moved from x86 `t3a.medium` on 2026-11-04 (ADR-014) |
+| Operating System | Ubuntu 24.04 LTS |
+| Web Server | OpenLiteSpeed 1.9.4 |
+| PHP | 8.3 (LSAPI `lsphp83`), runs as `www-data`, `memory_limit` 256M |
+| Database | MariaDB 10.11 |
+| Object cache | Redis 7 (via LiteSpeed Cache) |
+| WordPress | 7.1.4 *(Update when production changes)* |
+| CDN | QUIC.cloud in front of `www.nigma.ae`; `nigma.ae` points straight at the Elastic IP |
+| HTTPS | Enabled (Let's Encrypt, `certbot`, webroot challenge) |
 | Multisite | No |
 | Timezone | Asia/Dubai |
 
@@ -39,15 +41,33 @@ Version-controlled application code
 /var/www/nigma/wp-content
 ```
 
-Git is intentionally initialized inside `wp-content`.
+The git checkout is at `/var/www/nigma` with a sparse checkout limited to `wp-content/`. WordPress core is installed separately (not in git) and is verified with `wp core verify-checksums`.
+
+Ownership model (ADR-014)
+
+- Code (`wp-content/plugins`, `themes`, `mu-plugins`, core files, `.htaccess`, `wp-config.php`): owned by `ubuntu`, read-only to PHP.
+- PHP (`www-data`) can write only `wp-content/uploads/`, `litespeed/`, `cache/` and `.litespeed_conf.dat`.
+- `wp-content/object-cache.php` (LiteSpeed Redis drop-in) is an untracked copy of the plugin's `lib/object-cache.php`, kept read-only to PHP. Re-copy it after a LiteSpeed Cache update.
+- Changes to LiteSpeed Cache settings that need `.htaccess` rules must be applied with WP-CLI as `ubuntu` (`wp litespeed-option set …`).
+
+Hardening
+
+- `disable_functions` blocks `exec`, `system`, `shell_exec`, `passthru`, `proc_open`, `popen`. Run WP-CLI with `WP_CLI_PHP_ARGS=-ddisable_functions=`.
+- The vhost denies `.git`, dotfiles, `wp-config.php`, `xmlrpc.php` and PHP execution inside `uploads/`.
+- The OpenLiteSpeed WebAdmin listens on `127.0.0.1` only.
+
+Deploys
+
+- Pull-based via `nigma-deploy.timer` (see `docs/deployment.md`).
 
 ## Technology Stack
 
 Infrastructure
 
-- AWS EC2
-- Amazon EBS
-- SSH administration
+- AWS EC2 (Graviton `t4g.medium`), Amazon EBS
+- Administration through AWS Systems Manager (SSM) Session Manager / Run Command; **no inbound SSH**
+- Security group allows only ports 80 and 443; IMDSv2 required
+- Elastic IP `3.7.4.103`; DNS is managed at Etisalat (client-controlled)
 
 Application
 
@@ -133,6 +153,8 @@ Not version controlled:
 - Production uses LiteSpeed-specific caching behaviour.
 - Premium plugins and themes require licence-aware maintenance.
 - Uploads remain outside version control.
+- `t4g` instances are burstable: monitor CPU credit balance (CloudWatch `CPUCreditBalance`).
+- Some premium plugins cannot be updated from the server until their licences are valid (Gravity Forms, ACF Pro, Avada/Fusion); see `docs/security.md`.
 
 ## Future Improvements
 
