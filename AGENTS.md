@@ -82,11 +82,11 @@ Production runs on:
 - Redis object cache
 - WordPress 7.1.4
 
-Production does not use Docker.
+The live production server does not use Docker (it runs OpenLiteSpeed natively).
 
 Production is administered through AWS SSM (no inbound SSH) and deploys are **pull-based**: a timer on the server fetches `origin/main`. See `docs/deployment.md`, `docs/production-environment.md` and ADR-014. Run WP-CLI there as `ubuntu` with `WP_CLI_PHP_ARGS=-ddisable_functions=`.
 
-Docker is for local development only.
+Docker is used for local development (`docker-compose.yml`) and, optionally, as the runtime of **new or rebuilt** servers (`docker/prod`, ADR-016). A host's runtime is chosen by `/etc/nigma/runtime` (absent or `native` = the live server; `docker` = the Docker stack); the deployer checks that the Docker environment exists and builds it first if not. The media library is stored in a private S3 bucket, never in git.
 
 ## Core Operating Rules
 
@@ -278,7 +278,7 @@ Consider:
 
 ## Local Development Rules
 
-Docker is local-only.
+The root `docker-compose.yml` and `docker/db`, `docker/nginx`, `docker/wordpress` are local-only. `docker/prod` is the production Docker runtime for new or rebuilt servers (ADR-016) and is never used for local development.
 
 Local development should:
 

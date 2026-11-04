@@ -90,6 +90,17 @@ tail -f /var/log/nigma-deploy.log
 systemctl list-timers nigma-deploy.timer
 ```
 
+## Docker runtime (new or rebuilt hosts)
+
+A host chooses its runtime with `/etc/nigma/runtime`: absent or `native` is the live server (OpenLiteSpeed installed directly; behaviour unchanged), `docker` is the stack in `docker/prod` (ADR-016). On a `docker` host every deploy run first checks that the environment exists and is healthy:
+
+```
+environment present and healthy?  yes -> deploy the code
+                                  no  -> build / repair the environment (all containers + SSL), verify, then deploy the code
+```
+
+If the environment cannot be made healthy, no code is deployed. Setup, SSL, and the S3-backed media library are described in `docker/prod/README.md` and `docs/runbook.md`.
+
 ## CI/CD Vision
 
 Target pipeline:

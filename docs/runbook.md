@@ -168,7 +168,44 @@ Before changing the spam patterns, test them against every real URL on the site 
 | CPU high, site slow | Burstable instance out of CPU credits, or a bot flood | CloudWatch `CPUCreditBalance` and `CPUSurplusCreditBalance`; look at the access log (`/usr/local/lsws/logs/`) for floods |
 | PHP Coding Standards red | Style or static-analysis error in custom code | Read the failing step; PHPCS covers only the two mu-plugins listed in `.phpcs.xml` and the child theme |
 
-## 8. If you suspect a compromise
+## 8. Build or rebuild a server (Docker runtime)
+
+The live server is native. A **new or rebuilt** host can instead run the Docker stack, which builds its own environment (ADR-016). Details: `docker/prod/README.md`.
+
+Prerequisites: Ubuntu 24.04, ports 80/443 open, an instance role with the S3 policy (`docker/prod/iam-policy.example.json`), and (for a real certificate) a DNS record pointing at the host.
+
+```bash
+# as root, via SSM
+apt-get update && apt-get install -y git
+git clone --filter=blob:none --no-checkout https://github.com/arish-cactix/nigma-wordpress.git /opt/nigma/infra
+cd /opt/nigma/infra && git sparse-checkout init --no-cone && git sparse-checkout set /docker/prod/ /scripts/deploy/ && git checkout main
+bash scripts/deploy/install.sh --runtime docker --domains nigma.ae,www.nigma.ae --cert-name nigma-ae \
+  --media-s3 s3://YOUR-BUCKET/uploads --db-s3 s3://YOUR-BUCKET/db --backup-timer --now
+```
+
+Use `--acme-staging` on a test host. `--now` builds the environment immediately; otherwise the timer does it within a minute.
+
+Verify (all containers `running+healthy`, SSL `ok` or `placeholder-pending` until DNS points here):
+
+```bash
+nigma-docker-bootstrap --status
+nigma-deploy --status
+tail -n 50 /var/log/nigma-bootstrap.log
+curl -sk -o /dev/null -w '%{http_code}\n' --resolve www.nigma.ae:443:127.0.0.1 https://www.nigma.ae/
+```
+
+Data: the media library and database are restored from S3 when empty. Back up/restore by hand with `nigma-data backup`, `nigma-data media-restore`, `nigma-data db-restore [file|s3-uri|latest]`. Check the last backup in the S3 console; **test a restore periodically**.
+
+Cut over a rebuilt host the same way as before: point the DNS/Elastic IP at it once `nigma-docker-bootstrap --status` is clean, then let the real certificate be issued (`nigma-docker-bootstrap --ssl --force`).
+
+| Symptom | Cause | Action |
+|---|---|---|
+| Deploy log: "Docker environment is not healthy ... not deploying code yet" | A repair was attempted under 10 minutes ago | `tail /var/log/nigma-bootstrap.log`; fix the cause; `nigma-deploy --force` retries now |
+| SSL status `placeholder-pending` | No name in `SITE_DOMAINS` resolves to this host yet | Point DNS at the host; then `nigma-docker-bootstrap --ssl --force` |
+| Certificate request fails | Port 80 closed, DNS wrong, or Let's Encrypt rate limit | Check the log; use `ACME_STAGING=1` while testing |
+| Database empty after bootstrap | `DB_BACKUP_S3_URI` unset or no dump uploaded | `nigma-data db-restore <file>` |
+
+## 9. If you suspect a compromise
 
 Run the **Compromise check** in `docs/security.md`. Do not "clean in place" and trust the result: rebuild from git and a verified core (ADR-014), and rotate credentials.
 

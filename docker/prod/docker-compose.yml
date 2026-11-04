@@ -1,0 +1,131 @@
+# NIGMA production Docker stack (ADR-016).
+#
+# Used on NEW or REBUILT servers that run the "docker" runtime. The live server
+# (native OpenLiteSpeed, ADR-014) does not use this file.
+#
+# Run it through the bootstrap, not by hand:
+#   nigma-docker-bootstrap            # build/repair the environment, verify, SSL
+#   nigma-docker-bootstrap --status   # what is running
+#
+# Design:
+#   * Only the web container publishes ports (80, 443). MariaDB and Redis are
+#     reachable only on the internal compose network.
+#   * Code is mounted READ-ONLY into the web container; PHP runs as www-data and
+#     can write only uploads/, litespeed/, cache/, .litespeed_conf.dat, debug.log.
+#   * No Docker socket is mounted into any container.
+#   * Secrets come from /etc/nigma/.env (root-only, generated on first bootstrap).
+name: nigma
+
+services:
+  web:
+    image: litespeedtech/openlitespeed:1.9.4-lsphp83
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      # Server configuration, rendered by the bootstrap from docker/prod/lsws templates.
+      - ${NIGMA_CONF_DIR:-/etc/nigma/docker}/lsws/httpd_config.conf:/usr/local/lsws/conf/httpd_config.conf:ro
+      - ${NIGMA_CONF_DIR:-/etc/nigma/docker}/lsws/vhconf.conf:/usr/local/lsws/conf/vhosts/nigma/vhconf.conf:ro
+      - ./php/99-nigma.ini:/usr/local/lsws/lsphp83/etc/php/8.3/mods-available/99-nigma.ini:ro
+      # Code: read-only. The few places PHP may write are mounted on top, read-write.
+      - ${NIGMA_APP_DIR:-/var/www/nigma}:/var/www/nigma:ro
+      - ${NIGMA_APP_DIR:-/var/www/nigma}/wp-content/uploads:/var/www/nigma/wp-content/uploads
+      - ${NIGMA_APP_DIR:-/var/www/nigma}/wp-content/litespeed:/var/www/nigma/wp-content/litespeed
+      - ${NIGMA_APP_DIR:-/var/www/nigma}/wp-content/cache:/var/www/nigma/wp-content/cache
+      - ${NIGMA_APP_DIR:-/var/www/nigma}/wp-content/.litespeed_conf.dat:/var/www/nigma/wp-content/.litespeed_conf.dat
+      - ${NIGMA_APP_DIR:-/var/www/nigma}/wp-content/debug.log:/var/www/nigma/wp-content/debug.log
+      # TLS certificates (read-only) and the ACME webroot served at /.well-known/acme-challenge/.
+      - ${NIGMA_STATE_DIR:-/var/lib/nigma}/letsencrypt:/etc/letsencrypt:ro
+      - ${NIGMA_STATE_DIR:-/var/lib/nigma}/acme:/var/www/acme:ro
+      # Page cache and logs persist across container re-creation.
+      - ${NIGMA_STATE_DIR:-/var/lib/nigma}/lscache:/usr/local/lsws/cachedata
+      - ${NIGMA_LOG_DIR:-/var/log/nigma}/lsws:/usr/local/lsws/logs
+    healthcheck:
+      # "The web server answers" (any HTTP status). Application health is checked by the deployer.
+      test: ["CMD-SHELL", "test \"$$(curl -sk -o /dev/null -w '%{http_code}' https://127.0.0.1/)\" != \"000\""]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in /etc/nigma/.env}
+      MARIADB_DATABASE: ${DB_NAME:?set DB_NAME in /etc/nigma/.env}
+      MARIADB_USER: ${DB_USER:?set DB_USER in /etc/nigma/.env}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in /etc/nigma/.env}
+      MARIADB_AUTO_UPGRADE: "1"
+      TZ: ${TZ:-UTC}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_520_ci
+      - --innodb-buffer-pool-size=${DB_BUFFER_POOL:-256M}
+      - --max-connections=100
+    volumes:
+      - ${NIGMA_STATE_DIR:-/var/lib/nigma}/db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  redis:
+    image: redis:7.2-alpine
+    restart: unless-stopped
+    # Object cache only: nothing needs to survive a restart.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Renews certificates every 12 hours. After a renewal it touches
+  # /etc/letsencrypt/.renewed; the deployer sees the flag and reloads the web
+  # server (no Docker socket is ever given to a container).
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    entrypoint: >-
+      /bin/sh -c 'trap exit TERM;
+      while :; do
+        certbot renew --webroot -w /var/www/acme --deploy-hook "touch /etc/letsencrypt/.renewed" --quiet;
+        sleep 12h & wait $${!};
+      done'
+    volumes:
+      - ${NIGMA_STATE_DIR:-/var/lib/nigma}/letsencrypt:/etc/letsencrypt
+      - ${NIGMA_STATE_DIR:-/var/lib/nigma}/acme:/var/www/acme
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'sleep 12h' >/dev/null || pgrep -f 'certbot renew' >/dev/null"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # One-off WP-CLI, started only on demand: `docker compose --profile tools run --rm wpcli ...`
+  wpcli:
+    image: wordpress:cli-php8.3
+    profiles: ["tools"]
+    # Run `wp` directly: the image's own entrypoint tries to guess whether the first argument is a
+    # wp-cli command by loading WordPress, which fails once core is present (found by a real-host test).
+    entrypoint: ["wp"]
+    user: "${CODE_UID:-1000}:${WEB_GID:-33}"
+    working_dir: /var/www/nigma
+    environment:
+      HOME: /tmp
+    volumes:
+      - ${NIGMA_APP_DIR:-/var/www/nigma}:/var/www/nigma
+    depends_on:
+      db:
+        condition: service_healthy

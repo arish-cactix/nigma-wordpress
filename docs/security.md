@@ -104,6 +104,8 @@ Anyone who can push to `main` can change production: restrict write access and e
 
 ## Backup & Recovery
 
+The media library and database dumps used to rebuild a server are kept in a **private S3 bucket**, never in git (the repository is public and the folder can hold visitor uploads). The bucket must have Block Public Access, versioning and default encryption enabled; the instance role gets list/get/put only (`docker/prod/iam-policy.example.json`). Docker hosts also keep container logs bounded.
+
 Maintain:
 
 - Database backups.
