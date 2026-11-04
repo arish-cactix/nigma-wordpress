@@ -59,7 +59,7 @@ class Headless extends WP_REST_Controller {
 					'url' => [
 						'type'              => 'string',
 						'required'          => true,
-						'description'       => esc_html__( 'URL to get HTML tags for.', 'rank-math' ),
+						'description'       => esc_html__( 'URL to get HTML tags for.', 'seo-by-rank-math' ),
 						'validate_callback' => [ $this, 'is_valid_url' ],
 					],
 				],
@@ -184,8 +184,8 @@ class Headless extends WP_REST_Controller {
 	public function is_valid_url( $url ) {
 		$url = preg_replace_callback(
 			'/[^\x20-\x7f]/',
-			function( $match ) {
-				return rawurlencode( $match[0] );
+			function ( $matcher ) {
+				return rawurlencode( $matcher[0] );
 			},
 			$url
 		);

@@ -21,7 +21,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class Ask_Review {
 
-	use Hooker, Ajax;
+	use Hooker;
+	use Ajax;
 
 	/**
 	 * Now.
@@ -48,7 +49,7 @@ class Ask_Review {
 	 * Constructor method.
 	 */
 	public function __construct() {
-		$this->current_time = current_time( 'timestamp' );
+		$this->current_time = Helper::get_current_time();
 		$this->record_date  = strtotime( $this->record_date );
 		$this->install_date = get_option( 'rank_math_install_date' );
 		if ( false === $this->install_date ) {
@@ -165,18 +166,38 @@ class Ask_Review {
 	 * @return void
 	 */
 	public function add_notice() {
+		// 50-50 split between WordPress.org and Trustpilot.
+		$show_wordpress = (bool) wp_rand( 0, 1 );
+
+		if ( $show_wordpress ) {
+			$selected_link = 'https://wordpress.org/support/plugin/seo-by-rank-math/reviews/?filter=5#new-post';
+		} else {
+			// If Trustpilot, pick one of the two links (50-50).
+			$review_links  = [
+				'https://www.trustpilot.com/review/www.rankmath.com',
+				'https://www.trustpilot.com/evaluate/www.rankmath.com',
+			];
+			$selected_link = $review_links[ array_rand( $review_links ) ];
+		}
+
 		$message = '<p>';
 
 		// Translators: placeholder is the plugin name.
-		$message .= sprintf( esc_html__( 'Hey, we noticed you\'ve been using %s for more than a week now – that\'s awesome!', 'rank-math' ), '<strong>' . _x( 'Rank Math SEO', 'plugin name inside the review notice', 'rank-math' ) . '</strong>' );
+		$message .= sprintf( esc_html__( 'Hey, we noticed you\'ve been using %s for more than a week now – that\'s awesome!', 'seo-by-rank-math' ), '<strong>' . _x( 'Rank Math SEO', 'plugin name inside the review notice', 'seo-by-rank-math' ) . '</strong>' );
 		$message .= '<br>';
 
-		$message .= esc_html__( 'Could you please do us a BIG favor and give it a rating on WordPress.org to help us spread the word and boost our motivation?', 'rank-math' ) . '</p>
-			<p><strong>Bhanu Ahluwalia</strong><br>' . esc_html__( 'Co-founder of Rank Math', 'rank-math' ) . '</p>
+		if ( $show_wordpress ) {
+			$message .= esc_html__( 'We would love to get your feedback! It\'s essential for our continued development. Please consider taking a moment to leave us a review.', 'seo-by-rank-math' );
+		} else {
+			$message .= esc_html__( 'We would love to get your feedback! It\'s essential for our continued development. Please consider taking a moment to leave a review of your experience on Trustpilot.', 'seo-by-rank-math' );
+		}
+
+		$message .= '</p>
+			<p><strong>Bhanu Ahluwalia</strong><br>' . esc_html__( 'Co-founder of Rank Math', 'seo-by-rank-math' ) . '</p>
 			<p>
-				<a href="https://wordpress.org/support/plugin/seo-by-rank-math/reviews/?filter=5#new-post" class="rank-math-dismiss-review-notice rank-math-review-action rank-math-review-out" target="_blank" rel="noopener noreferrer"><strong>' . esc_html__( 'Yes, you deserve it', 'rank-math' ) . '</strong></a><br>
-				<a href="#" class="rank-math-dismiss-review-notice rank-math-maybe-later-action">' . esc_html__( 'No, maybe later', 'rank-math' ) . '</a><br>
-				<a href="#" class="rank-math-dismiss-review-notice rank-math-already-reviewed-action">' . esc_html__( 'I already did', 'rank-math' ) . '</a>
+				<a href="' . esc_url( $selected_link ) . '" class="rank-math-dismiss-review-notice rank-math-review-action rank-math-review-out" target="_blank" rel="noopener noreferrer"><strong>' . esc_html__( 'Yes, you deserve it', 'seo-by-rank-math' ) . '</strong></a><br>
+				<a href="#" class="rank-math-dismiss-review-notice rank-math-maybe-later-action">' . esc_html__( 'No, maybe later', 'seo-by-rank-math' ) . '</a><br>
+				<a href="#" class="rank-math-dismiss-review-notice rank-math-already-reviewed-action">' . esc_html__( 'I already did', 'seo-by-rank-math' ) . '</a>
 			</p>';
 
 		Helper::add_notification(
@@ -235,7 +256,7 @@ class Ask_Review {
 	public function already_reviewed() {
 		check_ajax_referer( 'rank-math-ajax-nonce', 'security' );
 		$this->has_cap_ajax( 'onpage_general' );
-		update_option( 'rank_math_already_reviewed', current_time( 'timestamp' ) );
+		update_option( 'rank_math_already_reviewed', Helper::get_current_time() );
 		$this->success( 'success' );
 	}
 }

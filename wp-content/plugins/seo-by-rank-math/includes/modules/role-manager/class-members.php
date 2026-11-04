@@ -41,10 +41,11 @@ class Members {
 	 * Registers cap group.
 	 */
 	public function register_cap_groups() {
+		// @phpstan-ignore-next-line
 		\members_register_cap_group(
 			self::GROUP,
 			[
-				'label'    => esc_html__( 'Rank Math', 'rank-math' ),
+				'label'    => esc_html__( 'Rank Math', 'seo-by-rank-math' ),
 				'caps'     => [],
 				'icon'     => 'dashicons-chart-area',
 				'priority' => 30,
@@ -58,10 +59,11 @@ class Members {
 	public function register_caps() {
 		$caps = Capability_Manager::get()->get_capabilities();
 		if ( 'administrator' === Param::get( 'role' ) ) {
-			$caps['rank_math_edit_htaccess'] = esc_html__( 'Edit .htaccess', 'rank-math' );
+			$caps['rank_math_edit_htaccess'] = esc_html__( 'Edit .htaccess', 'seo-by-rank-math' );
 		}
 
 		foreach ( $caps as $key => $value ) {
+			// @phpstan-ignore-next-line
 			\members_register_cap(
 				$key,
 				[

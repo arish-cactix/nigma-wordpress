@@ -11,6 +11,7 @@
 namespace RankMath\WooCommerce;
 
 use RankMath\KB;
+use RankMath\Helper;
 use RankMath\Admin\Admin_Helper;
 use RankMath\Module\Base;
 use RankMath\Traits\Hooker;
@@ -30,7 +31,7 @@ class Admin extends Base {
 	 */
 	public function __construct() {
 
-		$directory = dirname( __FILE__ );
+		$directory = __DIR__;
 		$this->config(
 			[
 				'id'        => 'woocommerce',
@@ -71,10 +72,13 @@ class Admin extends Base {
 			[
 				'woocommerce' => [
 					'icon'  => 'rm-icon rm-icon-cart',
-					'title' => esc_html__( 'WooCommerce', 'rank-math' ),
+					'title' => esc_html__( 'WooCommerce', 'seo-by-rank-math' ),
 					/* translators: Link to kb article */
-					'desc'  => sprintf( esc_html__( 'Choose how you want Rank Math to handle your WooCommerce SEO. %s.', 'rank-math' ), '<a href="' . KB::get( 'woocommerce-settings', 'Options Panel WooCommerce Tab' ) . '" target="_blank">' . esc_html__( 'Learn more', 'rank-math' ) . '</a>' ),
+					'desc'  => sprintf( esc_html__( 'Choose how you want Rank Math to handle your WooCommerce SEO. %s.', 'seo-by-rank-math' ), '<a href="' . KB::get( 'woocommerce-settings', 'Options Panel WooCommerce Tab' ) . '" target="_blank">' . esc_html__( 'Learn more', 'seo-by-rank-math' ) . '</a>' ),
 					'file'  => $this->directory . '/views/options-general.php',
+					'json'  => [
+						'brandTaxonomies' => Helper::get_object_taxonomies( 'product', 'choices', false ),
+					],
 				],
 			],
 			7

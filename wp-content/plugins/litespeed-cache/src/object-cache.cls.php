@@ -1,142 +1,315 @@
 <?php
-
 /**
- * The object cache class
+ * The object cache class.
  *
- * @since      	1.8
- * @package    	LiteSpeed
- * @subpackage 	LiteSpeed/inc
- * @author     	LiteSpeed Technologies <info@litespeedtech.com>
+ * @since       1.8
+ * @package     LiteSpeed
  */
 
 namespace LiteSpeed;
 
-defined('WPINC') || exit();
+defined( 'WPINC' ) || exit();
 
-require_once dirname(__DIR__) . '/autoload.php';
+require_once dirname( __DIR__ ) . '/autoload.php';
 
-class Object_Cache extends Root
-{
-	const O_DEBUG = 'debug';
-	const O_OBJECT = 'object';
-	const O_OBJECT_KIND = 'object-kind';
-	const O_OBJECT_HOST = 'object-host';
-	const O_OBJECT_PORT = 'object-port';
-	const O_OBJECT_LIFE = 'object-life';
-	const O_OBJECT_PERSISTENT = 'object-persistent';
-	const O_OBJECT_ADMIN = 'object-admin';
-	const O_OBJECT_TRANSIENTS = 'object-transients';
-	const O_OBJECT_DB_ID = 'object-db_id';
-	const O_OBJECT_USER = 'object-user';
-	const O_OBJECT_PSWD = 'object-pswd';
-	const O_OBJECT_GLOBAL_GROUPS = 'object-global_groups';
-	const O_OBJECT_NON_PERSISTENT_GROUPS = 'object-non_persistent_groups';
-
-	private $_conn;
-	private $_cfg_debug;
-	private $_cfg_enabled;
-	private $_cfg_method;
-	private $_cfg_host;
-	private $_cfg_port;
-	private $_cfg_life;
-	private $_cfg_persistent;
-	private $_cfg_admin;
-	private $_cfg_transients;
-	private $_cfg_db;
-	private $_cfg_user;
-	private $_cfg_pswd;
-	private $_default_life = 360;
-
-	private $_oc_driver = 'Memcached'; // Redis or Memcached
-
-	private $_global_groups = array();
-	private $_non_persistent_groups = array();
+/**
+ * Object cache handler using Redis or Memcached.
+ *
+ * NOTE: this class may be included without initialized core.
+ *
+ * @since 1.8
+ */
+class Object_Cache extends Root {
+	const LOG_TAG       = '[Object_Cache]';
+	const REDIS_TIMEOUT = 1.0;
 
 	/**
-	 * Init
+	 * Debug option key.
 	 *
-	 * NOTE: this class may be included without initialized  core
+	 * @var string
+	 */
+	const O_DEBUG = 'debug';
+
+	/**
+	 * Object cache enable key.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT = 'object';
+
+	/**
+	 * Object kind (Redis/Memcached).
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_KIND = 'object-kind';
+
+	/**
+	 * Object host.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_HOST = 'object-host';
+
+	/**
+	 * Object port.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_PORT = 'object-port';
+
+	/**
+	 * Object life/TTL.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_LIFE = 'object-life';
+
+	/**
+	 * Persistent connection flag.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_PERSISTENT = 'object-persistent';
+
+	/**
+	 * Admin cache flag.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_ADMIN = 'object-admin';
+
+	/**
+	 * DB index for Redis.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_DB_ID = 'object-db_id';
+
+	/**
+	 * Username for auth.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_USER = 'object-user';
+
+	/**
+	 * Password for auth.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_PSWD = 'object-pswd';
+
+	/**
+	 * Global groups list.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_GLOBAL_GROUPS = 'object-global_groups';
+
+	/**
+	 * Non-persistent groups list.
+	 *
+	 * @var string
+	 */
+	const O_OBJECT_NON_PERSISTENT_GROUPS = 'object-non_persistent_groups';
+
+	/**
+	 * Connection instance.
+	 *
+	 * @var \Redis|\Memcached|null
+	 */
+	private $_conn;
+
+	/**
+	 * Debug config.
+	 *
+	 * @var bool
+	 */
+	private $_cfg_debug;
+
+	/**
+	 * Whether OC is enabled.
+	 *
+	 * @var bool
+	 */
+	private $_cfg_enabled;
+
+	/**
+	 * Whether a backend is configured, kept even after a connection or command failure.
+	 *
+	 * @var bool
+	 */
+	private $_cfg_configured = false;
+
+	/**
+	 * Whether the most recent get() reached the backend and it confirmed the key is absent.
+	 *
+	 * @var bool
+	 */
+	private $_last_get_missed = false;
+
+	/**
+	 * True => Redis, false => Memcached.
+	 *
+	 * @var bool
+	 */
+	private $_cfg_method;
+
+	/**
+	 * Host name.
+	 *
+	 * @var string
+	 */
+	private $_cfg_host;
+
+	/**
+	 * Port number.
+	 *
+	 * @var int|string
+	 */
+	private $_cfg_port;
+
+	/**
+	 * Use persistent connection.
+	 *
+	 * @var bool
+	 */
+	private $_cfg_persistent;
+
+	/**
+	 * Cache admin pages.
+	 *
+	 * @var bool
+	 */
+	private $_cfg_admin;
+
+	/**
+	 * Redis DB index.
+	 *
+	 * @var int
+	 */
+	private $_cfg_db;
+
+	/**
+	 * Auth username.
+	 *
+	 * @var string
+	 */
+	private $_cfg_user;
+
+	/**
+	 * Auth password.
+	 *
+	 * @var string
+	 */
+	private $_cfg_pswd;
+
+	/**
+	 * 'Redis' or 'Memcached'.
+	 *
+	 * @var string
+	 */
+	private $_oc_driver = 'Memcached'; // Redis or Memcached.
+
+	/**
+	 * Global groups.
+	 *
+	 * @var array
+	 */
+	private $_global_groups = [];
+
+	/**
+	 * Non-persistent groups.
+	 *
+	 * @var array
+	 */
+	private $_non_persistent_groups = [];
+
+	/**
+	 * Init.
+	 *
+	 * NOTE: this class may be included without initialized core.
 	 *
 	 * @since  1.8
+	 *
+	 * @param array|false $cfg Optional configuration to bootstrap without core.
 	 */
-	public function __construct($cfg = false)
-	{
-		if ($cfg) {
-			if (!is_array($cfg[Base::O_OBJECT_GLOBAL_GROUPS])) {
-				$cfg[Base::O_OBJECT_GLOBAL_GROUPS] = explode("\n", $cfg[Base::O_OBJECT_GLOBAL_GROUPS]);
+	public function __construct( $cfg = false ) {
+		if ( $cfg ) {
+			if ( ! is_array( $cfg[ Base::O_OBJECT_GLOBAL_GROUPS ] ) ) {
+				$cfg[ Base::O_OBJECT_GLOBAL_GROUPS ] = explode( "\n", $cfg[ Base::O_OBJECT_GLOBAL_GROUPS ] );
 			}
-			if (!is_array($cfg[Base::O_OBJECT_NON_PERSISTENT_GROUPS])) {
-				$cfg[Base::O_OBJECT_NON_PERSISTENT_GROUPS] = explode("\n", $cfg[Base::O_OBJECT_NON_PERSISTENT_GROUPS]);
+			if ( ! is_array( $cfg[ Base::O_OBJECT_NON_PERSISTENT_GROUPS ] ) ) {
+				$cfg[ Base::O_OBJECT_NON_PERSISTENT_GROUPS ] = explode( "\n", $cfg[ Base::O_OBJECT_NON_PERSISTENT_GROUPS ] );
 			}
-			$this->_cfg_debug = $cfg[Base::O_DEBUG] ? $cfg[Base::O_DEBUG] : false;
-			$this->_cfg_method = $cfg[Base::O_OBJECT_KIND] ? true : false;
-			$this->_cfg_host = $cfg[Base::O_OBJECT_HOST];
-			$this->_cfg_port = $cfg[Base::O_OBJECT_PORT];
-			$this->_cfg_life = $cfg[Base::O_OBJECT_LIFE];
-			$this->_cfg_persistent = $cfg[Base::O_OBJECT_PERSISTENT];
-			$this->_cfg_admin = $cfg[Base::O_OBJECT_ADMIN];
-			$this->_cfg_transients = $cfg[Base::O_OBJECT_TRANSIENTS];
-			$this->_cfg_db = $cfg[Base::O_OBJECT_DB_ID];
-			$this->_cfg_user = $cfg[Base::O_OBJECT_USER];
-			$this->_cfg_pswd = $cfg[Base::O_OBJECT_PSWD];
-			$this->_global_groups = $cfg[Base::O_OBJECT_GLOBAL_GROUPS];
-			$this->_non_persistent_groups = $cfg[Base::O_OBJECT_NON_PERSISTENT_GROUPS];
+			$this->_cfg_debug             = $cfg[ Base::O_DEBUG ] ? $cfg[ Base::O_DEBUG ] : false;
+			$this->_cfg_method            = $cfg[ Base::O_OBJECT_KIND ] ? true : false;
+			$this->_cfg_host              = $cfg[ Base::O_OBJECT_HOST ];
+			$this->_cfg_port              = $cfg[ Base::O_OBJECT_PORT ];
+			$this->_cfg_persistent        = $cfg[ Base::O_OBJECT_PERSISTENT ];
+			$this->_cfg_admin             = $cfg[ Base::O_OBJECT_ADMIN ];
+			$this->_cfg_db                = $cfg[ Base::O_OBJECT_DB_ID ];
+			$this->_cfg_user              = $cfg[ Base::O_OBJECT_USER ];
+			$this->_cfg_pswd              = $cfg[ Base::O_OBJECT_PSWD ];
+			$this->_global_groups         = $cfg[ Base::O_OBJECT_GLOBAL_GROUPS ];
+			$this->_non_persistent_groups = $cfg[ Base::O_OBJECT_NON_PERSISTENT_GROUPS ];
 
-			if ($this->_cfg_method) {
+			if ( $this->_cfg_method ) {
 				$this->_oc_driver = 'Redis';
 			}
-			$this->_cfg_enabled = $cfg[Base::O_OBJECT] && class_exists($this->_oc_driver) && $this->_cfg_host;
+			$this->_cfg_configured = $cfg[ Base::O_OBJECT ] && $this->_cfg_host;
+			$this->_cfg_enabled    = $this->_cfg_configured && class_exists( $this->_oc_driver );
+		} elseif ( defined( 'LITESPEED_CONF_LOADED' ) ) { // If OC is OFF, will hit here to init OC after conf initialized
+			$this->_cfg_debug             = $this->conf( Base::O_DEBUG ) ? $this->conf( Base::O_DEBUG ) : false;
+			$this->_cfg_method            = $this->conf( Base::O_OBJECT_KIND ) ? true : false;
+			$this->_cfg_host              = $this->conf( Base::O_OBJECT_HOST );
+			$this->_cfg_port              = $this->conf( Base::O_OBJECT_PORT );
+			$this->_cfg_persistent        = $this->conf( Base::O_OBJECT_PERSISTENT );
+			$this->_cfg_admin             = $this->conf( Base::O_OBJECT_ADMIN );
+			$this->_cfg_db                = $this->conf( Base::O_OBJECT_DB_ID );
+			$this->_cfg_user              = $this->conf( Base::O_OBJECT_USER );
+			$this->_cfg_pswd              = $this->conf( Base::O_OBJECT_PSWD );
+			$this->_global_groups         = $this->conf( Base::O_OBJECT_GLOBAL_GROUPS );
+			$this->_non_persistent_groups = $this->conf( Base::O_OBJECT_NON_PERSISTENT_GROUPS );
 
-			$this->debug_oc('init with cfg result : ', $this->_cfg_enabled);
-		}
-		// If OC is OFF, will hit here to init OC after conf initialized
-		elseif (defined('LITESPEED_CONF_LOADED')) {
-			$this->_cfg_debug = $this->conf(Base::O_DEBUG) ? $this->conf(Base::O_DEBUG) : false;
-			$this->_cfg_method = $this->conf(Base::O_OBJECT_KIND) ? true : false;
-			$this->_cfg_host = $this->conf(Base::O_OBJECT_HOST);
-			$this->_cfg_port = $this->conf(Base::O_OBJECT_PORT);
-			$this->_cfg_life = $this->conf(Base::O_OBJECT_LIFE);
-			$this->_cfg_persistent = $this->conf(Base::O_OBJECT_PERSISTENT);
-			$this->_cfg_admin = $this->conf(Base::O_OBJECT_ADMIN);
-			$this->_cfg_transients = $this->conf(Base::O_OBJECT_TRANSIENTS);
-			$this->_cfg_db = $this->conf(Base::O_OBJECT_DB_ID);
-			$this->_cfg_user = $this->conf(Base::O_OBJECT_USER);
-			$this->_cfg_pswd = $this->conf(Base::O_OBJECT_PSWD);
-			$this->_global_groups = $this->conf(Base::O_OBJECT_GLOBAL_GROUPS);
-			$this->_non_persistent_groups = $this->conf(Base::O_OBJECT_NON_PERSISTENT_GROUPS);
-
-			if ($this->_cfg_method) {
+			if ( $this->_cfg_method ) {
 				$this->_oc_driver = 'Redis';
 			}
-			$this->_cfg_enabled = $this->conf(Base::O_OBJECT) && class_exists($this->_oc_driver) && $this->_cfg_host;
-		} elseif (defined('self::CONF_FILE') && file_exists(WP_CONTENT_DIR . '/' . self::CONF_FILE)) {
-			// Get cfg from _data_file
-			// Use self::const to avoid loading more classes
-			$cfg = \json_decode(file_get_contents(WP_CONTENT_DIR . '/' . self::CONF_FILE), true);
-			if (!empty($cfg[self::O_OBJECT_HOST])) {
-				$this->_cfg_debug = !empty($cfg[Base::O_DEBUG]) ? $cfg[Base::O_DEBUG] : false;
-				$this->_cfg_method = !empty($cfg[self::O_OBJECT_KIND]) ? $cfg[self::O_OBJECT_KIND] : false;
-				$this->_cfg_host = $cfg[self::O_OBJECT_HOST];
-				$this->_cfg_port = $cfg[self::O_OBJECT_PORT];
-				$this->_cfg_life = !empty($cfg[self::O_OBJECT_LIFE]) ? $cfg[self::O_OBJECT_LIFE] : $this->_default_life;
-				$this->_cfg_persistent = !empty($cfg[self::O_OBJECT_PERSISTENT]) ? $cfg[self::O_OBJECT_PERSISTENT] : false;
-				$this->_cfg_admin = !empty($cfg[self::O_OBJECT_ADMIN]) ? $cfg[self::O_OBJECT_ADMIN] : false;
-				$this->_cfg_transients = !empty($cfg[self::O_OBJECT_TRANSIENTS]) ? $cfg[self::O_OBJECT_TRANSIENTS] : false;
-				$this->_cfg_db = !empty($cfg[self::O_OBJECT_DB_ID]) ? $cfg[self::O_OBJECT_DB_ID] : 0;
-				$this->_cfg_user = !empty($cfg[self::O_OBJECT_USER]) ? $cfg[self::O_OBJECT_USER] : '';
-				$this->_cfg_pswd = !empty($cfg[self::O_OBJECT_PSWD]) ? $cfg[self::O_OBJECT_PSWD] : '';
-				$this->_global_groups = !empty($cfg[self::O_OBJECT_GLOBAL_GROUPS]) ? $cfg[self::O_OBJECT_GLOBAL_GROUPS] : array();
-				$this->_non_persistent_groups = !empty($cfg[self::O_OBJECT_NON_PERSISTENT_GROUPS]) ? $cfg[self::O_OBJECT_NON_PERSISTENT_GROUPS] : array();
+			$this->_cfg_configured = $this->conf( Base::O_OBJECT ) && $this->_cfg_host;
+			$this->_cfg_enabled    = $this->_cfg_configured && class_exists( $this->_oc_driver );
+		} else {
+			// Loaded by the drop-in before the options exist: read the runtime configuration file.
+			$cfg = self::read_conf_file( WP_CONTENT_DIR );
+			if ( ! empty( $cfg[ self::O_OBJECT_HOST ] ) ) {
+				$this->_cfg_debug             = ! empty( $cfg[ Base::O_DEBUG ] ) ? $cfg[ Base::O_DEBUG ] : false;
+				$this->_cfg_method            = ! empty( $cfg[ self::O_OBJECT_KIND ] ) ? $cfg[ self::O_OBJECT_KIND ] : false;
+				$this->_cfg_host              = $cfg[ self::O_OBJECT_HOST ];
+				$this->_cfg_port              = $cfg[ self::O_OBJECT_PORT ];
+				$this->_cfg_persistent        = ! empty( $cfg[ self::O_OBJECT_PERSISTENT ] ) ? $cfg[ self::O_OBJECT_PERSISTENT ] : false;
+				$this->_cfg_admin             = ! empty( $cfg[ self::O_OBJECT_ADMIN ] ) ? $cfg[ self::O_OBJECT_ADMIN ] : false;
+				$this->_cfg_db                = ! empty( $cfg[ self::O_OBJECT_DB_ID ] ) ? $cfg[ self::O_OBJECT_DB_ID ] : 0;
+				$this->_cfg_user              = ! empty( $cfg[ self::O_OBJECT_USER ] ) ? $cfg[ self::O_OBJECT_USER ] : '';
+				$this->_cfg_pswd              = ! empty( $cfg[ self::O_OBJECT_PSWD ] ) ? $cfg[ self::O_OBJECT_PSWD ] : '';
+				$this->_global_groups         = ! empty( $cfg[ self::O_OBJECT_GLOBAL_GROUPS ] ) ? $cfg[ self::O_OBJECT_GLOBAL_GROUPS ] : [];
+				$this->_non_persistent_groups = ! empty( $cfg[ self::O_OBJECT_NON_PERSISTENT_GROUPS ] ) ? $cfg[ self::O_OBJECT_NON_PERSISTENT_GROUPS ] : [];
 
-				if ($this->_cfg_method) {
+				if ( $this->_cfg_method ) {
 					$this->_oc_driver = 'Redis';
 				}
-				$this->_cfg_enabled = class_exists($this->_oc_driver) && $this->_cfg_host;
+				$this->_cfg_configured = (bool) $this->_cfg_host;
+				$this->_cfg_enabled    = $this->_cfg_configured && class_exists( $this->_oc_driver );
 			} else {
 				$this->_cfg_enabled = false;
 			}
-		} else {
-			$this->_cfg_enabled = false;
+		}
+
+		// If OC not available, mark failure so OC methods return false early.
+		// NOTE: Do NOT call wp_using_ext_object_cache(false) here — it causes
+		// "Cannot redeclare wp_cache_init()" fatal on multisite (second call
+		// to wp_start_object_cache() would load cache.php again).
+		if ( ! $this->_cfg_enabled ) {
+			! defined( 'LITESPEED_OC_FAILURE' ) && define( 'LITESPEED_OC_FAILURE', true );
 		}
 	}
 
@@ -145,280 +318,375 @@ class Object_Cache extends Root
 	 *
 	 * @since  6.3
 	 * @access private
+	 *
+	 * @param string $text Log text.
+	 * @return void
 	 */
-	private function debug_oc($text, $show_error = false)
-	{
-		if (defined('LSCWP_LOG')) {
-			Debug2::debug($text);
-
+	private function debug_oc( $text ) {
+		if ( defined( 'LSCWP_LOG' ) ) {
+			self::debug( $text );
 			return;
 		}
 
-		if (!$show_error && !$this->_cfg_debug) {
+		if ( Base::VAL_ON2 !== $this->_cfg_debug ) {
 			return;
 		}
 
-		$LITESPEED_DATA_FOLDER = defined('LITESPEED_DATA_FOLDER') ? LITESPEED_DATA_FOLDER : 'litespeed';
-		$LSCWP_CONTENT_DIR = defined('LSCWP_CONTENT_DIR') ? LSCWP_CONTENT_DIR : WP_CONTENT_DIR;
-		$LITESPEED_STATIC_DIR = $LSCWP_CONTENT_DIR . '/' . $LITESPEED_DATA_FOLDER;
-		$log_path_prefix = $LITESPEED_STATIC_DIR . '/debug/';
-		$log_file = $log_path_prefix . Debug2::FilePath('debug');
+		// Without a real AUTH_KEY the log name falls back to the options API, which re-enters this drop-in before the connection exists.
+		if ( '' === Debug2::auth_key_secret() ) {
+			return;
+		}
 
-		if (file_exists($log_path_prefix . 'index.php') && file_exists($log_file)) {
+		$litespeed_data_folder = defined( 'LITESPEED_DATA_FOLDER' ) ? LITESPEED_DATA_FOLDER : 'litespeed';
+		$lscwp_content_dir     = defined( 'LSCWP_CONTENT_DIR' ) ? LSCWP_CONTENT_DIR : WP_CONTENT_DIR;
+		$litespeed_static_dir  = $lscwp_content_dir . '/' . $litespeed_data_folder;
+		$log_path_prefix       = $litespeed_static_dir . '/debug/';
+		$log_name              = Debug2::FilePath( 'debug' );
+		if ( ! $log_name ) {
+			return;
+		}
+		$log_file = $log_path_prefix . $log_name;
+
+		if ( file_exists( $log_path_prefix . 'index.php' ) && file_exists( $log_file ) ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log(gmdate('m/d/y H:i:s') . ' - OC - ' . $text . PHP_EOL, 3, $log_file);
 		}
 	}
 
 	/**
-	 * Get `Store Transients` setting value
-	 *
-	 * @since  1.8.3
-	 * @access public
-	 */
-	public function store_transients($group)
-	{
-		return $this->_cfg_transients && $this->_is_transients_group($group);
-	}
-
-	/**
-	 * Check if the group belongs to transients or not
+	 * Check if the group belongs to transients or not.
 	 *
 	 * @since  1.8.3
 	 * @access private
+	 *
+	 * @param string $group Group name.
+	 * @return bool
 	 */
-	private function _is_transients_group($group)
-	{
-		return in_array($group, array('transient', 'site-transient'));
+	private function _is_transients_group( $group ) {
+		return in_array( $group, [ 'transient', 'site-transient' ], true );
 	}
 
 	/**
-	 * Update WP object cache file config
+	 * Update WP object cache file config.
 	 *
 	 * @since  1.8
 	 * @access public
+	 *
+	 * @param array $options Options to apply after update.
+	 * @return void
 	 */
-	public function update_file($options)
-	{
+	public function update_file( $options ) {
 		$changed = false;
 
-		// NOTE: When included in oc.php, `LSCWP_DIR` will show undefined, so this must be assigned/generated when used
+		// NOTE: When included in oc.php, `LSCWP_DIR` will show undefined, so this must be assigned/generated when used.
 		$_oc_ori_file = LSCWP_DIR . 'lib/object-cache.php';
-		$_oc_wp_file = WP_CONTENT_DIR . '/object-cache.php';
+		$_oc_wp_file  = WP_CONTENT_DIR . '/object-cache.php';
 
-		// Update cls file
-		if (!file_exists($_oc_wp_file) || md5_file($_oc_wp_file) !== md5_file($_oc_ori_file)) {
-			$this->debug_oc('copying object-cache.php file to ' . $_oc_wp_file);
-			copy($_oc_ori_file, $_oc_wp_file);
-
+		// Update cls file.
+		if ( ! file_exists( $_oc_wp_file ) || md5_file( $_oc_wp_file ) !== md5_file( $_oc_ori_file ) ) {
+			$this->debug_oc( 'copying object-cache.php file to ' . $_oc_wp_file );
+			if ( ! copy( $_oc_ori_file, $_oc_wp_file ) ) {
+				Admin_Display::error( __( 'Could not write the object cache drop-in.', 'litespeed-cache' ) );
+				return;
+			}
 			$changed = true;
 		}
 
 		/**
-		 * Clear object cache
+		 * Clear object cache.
 		 */
-		if ($changed) {
-			$this->_reconnect($options);
+		if ( $changed ) {
+			$this->_reconnect( $options );
 		}
 	}
 
 	/**
-	 * Remove object cache file
+	 * Classify wp-content/object-cache.php: `absent`, `current` (identical to lib/object-cache.php), `stale` (an older copy of this plugin's drop-in) or `foreign`.
+	 *
+	 * @since 7.9.2
+	 */
+	public function dropin_state() {
+		$file = WP_CONTENT_DIR . '/object-cache.php';
+		if ( ! file_exists( $file ) ) {
+			return 'absent';
+		}
+		$digest = md5_file( $file );
+		if ( false !== $digest && md5_file( LSCWP_DIR . 'lib/object-cache.php' ) === $digest ) {
+			return 'current';
+		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$head = (string) file_get_contents( $file, false, null, 0, 2048 );
+		return false !== strpos( $head, 'LiteSpeed Object Cache' ) && false !== strpos( $head, "'LSCWP_OBJECT_CACHE'" ) ? 'stale' : 'foreign';
+	}
+
+	/**
+	 * Remove object cache file.
 	 *
 	 * @since  1.8.2
 	 * @access public
+	 *
+	 * @return void
 	 */
-	public function del_file()
-	{
-		// NOTE: When included in oc.php, `LSCWP_DIR` will show undefined, so this must be assigned/generated when used
-		$_oc_ori_file = LSCWP_DIR . 'lib/object-cache.php';
+	public function del_file() {
+		// NOTE: When included in oc.php, `LSCWP_DIR` will show undefined, so this must be assigned/generated when used.
 		$_oc_wp_file = WP_CONTENT_DIR . '/object-cache.php';
 
-		if (file_exists($_oc_wp_file) && md5_file($_oc_wp_file) === md5_file($_oc_ori_file)) {
-			$this->debug_oc('removing ' . $_oc_wp_file);
-			unlink($_oc_wp_file);
+		$state = $this->dropin_state();
+		if ( 'current' === $state || 'stale' === $state ) {
+			$this->debug_oc( 'removing ' . $_oc_wp_file );
+			wp_delete_file( $_oc_wp_file );
 		}
 	}
 
 	/**
-	 * Try to build connection
+	 * Try to build connection.
 	 *
 	 * @since  1.8
 	 * @access public
+	 *
+	 * @return bool|null False on failure, true on success, null if unsupported.
 	 */
-	public function test_connection()
-	{
+	public function test_connection() {
 		return $this->_connect();
 	}
 
 	/**
-	 * Force to connect with this setting
+	 * Whether conditional writes can reach the backend, independently of admin read bypass.
+	 *
+	 * @return bool
+	 */
+	public function usable() {
+		return $this->_cfg_enabled && $this->_connect();
+	}
+
+	/**
+	 * Whether a backend is configured for this request, even if it later failed to connect or respond.
+	 *
+	 * @return bool
+	 */
+	public function configured() {
+		return $this->_cfg_configured;
+	}
+
+	/**
+	 * Whether reads of a group may reach the backend (false when Cache WP-Admin bypasses it).
+	 *
+	 * @param string $group Cache group name.
+	 * @return bool
+	 */
+	public function can_read( $group = '' ) {
+		return $this->_can_cache( $group );
+	}
+
+	/**
+	 * Force to connect with this setting.
 	 *
 	 * @since  1.8
 	 * @access private
+	 *
+	 * @param array $cfg Reconnect configuration.
+	 * @return void
 	 */
-	private function _reconnect($cfg)
-	{
-		$this->debug_oc('Reconnecting');
-		if (isset($this->_conn)) {
+	private function _reconnect( $cfg ) {
+		$this->debug_oc( 'Reconnecting' );
+		if ( isset( $this->_conn ) ) {
 			// error_log( 'Object: Quitting existing connection!' );
-			$this->debug_oc('Quitting existing connection');
+			$this->debug_oc( 'Quitting existing connection' );
 			$this->flush();
 			$this->_conn = null;
-			$this->cls(false, true);
+			$this->cls( false, true );
 		}
 
-		$cls = $this->cls(false, false, $cfg);
+		$cls = $this->cls( false, false, $cfg );
 		$cls->_connect();
-		if (isset($cls->_conn)) {
+		if ( isset( $cls->_conn ) ) {
 			$cls->flush();
 		}
 	}
 
 	/**
-	 * Connect to Memcached/Redis server
+	 * Connect to Memcached/Redis server.
 	 *
 	 * @since  1.8
 	 * @access private
+	 *
+	 * @return bool|null False on failure, true on success, null if driver missing.
 	 */
-	private function _connect()
-	{
-		if (isset($this->_conn)) {
+	private function _connect() {
+		if ( isset( $this->_conn ) ) {
 			// error_log( 'Object: _connected' );
 			return true;
 		}
 
-		if (!class_exists($this->_oc_driver) || !$this->_cfg_host) {
-			return null;
-		}
-
-		if (defined('LITESPEED_OC_FAILURE')) {
+		if ( ! class_exists( $this->_oc_driver ) || ! $this->_cfg_host ) {
+			$this->debug_oc( '_oc_driver cls non existed or _cfg_host missed: ' . $this->_oc_driver . ' [_cfg_host] ' . $this->_cfg_host . ':' . $this->_cfg_port );
 			return false;
 		}
 
-		$this->debug_oc('Init ' . $this->_oc_driver . ' connection');
-		$this->debug_oc('connecting to ' . $this->_cfg_host . ':' . $this->_cfg_port);
+		if ( defined( 'LITESPEED_OC_FAILURE' ) ) {
+			$this->debug_oc( 'LITESPEED_OC_FAILURE const defined' );
+			return false;
+		}
+
+		$this->debug_oc( 'Init ' . $this->_oc_driver . ' connection to ' . $this->_cfg_host . ':' . $this->_cfg_port );
 
 		$failed = false;
+
 		/**
-		 * Connect to Redis
+		 * Connect to Redis.
 		 *
 		 * @since  1.8.1
 		 * @see https://github.com/phpredis/phpredis/#example-1
 		 */
-		if ($this->_oc_driver == 'Redis') {
-			set_error_handler('litespeed_exception_handler');
+		if ( 'Redis' === $this->_oc_driver ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler
+			set_error_handler( 'litespeed_exception_handler' );
 			try {
 				$this->_conn = new \Redis();
 				// error_log( 'Object: _connect Redis' );
 
-				if ($this->_cfg_persistent) {
-					if ($this->_cfg_port) {
-						$this->_conn->pconnect($this->_cfg_host, $this->_cfg_port);
-					} else {
-						$this->_conn->pconnect($this->_cfg_host);
-					}
-				} else {
-					if ($this->_cfg_port) {
-						$this->_conn->connect($this->_cfg_host, $this->_cfg_port);
-					} else {
-						$this->_conn->connect($this->_cfg_host);
-					}
-				}
+				$method = $this->_cfg_persistent ? 'pconnect' : 'connect';
+				// Port 0 means the driver default: -1 matches v7.9.1 omitting the argument, so a `/path.sock` host stays a UNIX socket.
+				$port = $this->_cfg_port ? (int) $this->_cfg_port : -1;
+				// Bound both opening and reads, including reused persistent sockets; a failed connect is caught by the PING check below.
+				$this->_conn->$method( $this->_cfg_host, $port, self::REDIS_TIMEOUT );
+				$this->_conn->setOption( \Redis::OPT_READ_TIMEOUT, self::REDIS_TIMEOUT );
 
-				if ($this->_cfg_pswd) {
-					if ($this->_cfg_user) {
-						$this->_conn->auth(array($this->_cfg_user, $this->_cfg_pswd));
+				if ( $this->_cfg_pswd ) {
+					if ( $this->_cfg_user ) {
+						$this->_conn->auth( [ $this->_cfg_user, $this->_cfg_pswd ] );
 					} else {
-						$this->_conn->auth($this->_cfg_pswd);
+						$this->_conn->auth( $this->_cfg_pswd );
 					}
 				}
 
-				if ($this->_cfg_db) {
-					$this->_conn->select($this->_cfg_db);
+				if ( defined( 'Redis::OPT_REPLY_LITERAL' ) ) {
+					$this->debug_oc( 'Redis set OPT_REPLY_LITERAL' );
+					$this->_conn->setOption( \Redis::OPT_REPLY_LITERAL, true );
 				}
 
-				$res = $this->_conn->ping();
+				// Enable phpredis-level zstd compression to cut Redis memory use. Payload-level only: do NOT set OPT_SERIALIZER, LSCWP already runs maybe_serialize upstream and a second serializer would corrupt reads.
+				if ( defined( 'Redis::OPT_COMPRESSION' ) && defined( 'Redis::COMPRESSION_ZSTD' ) ) {
+					$this->debug_oc( 'Redis set OPT_COMPRESSION to ZSTD' );
+					$this->_conn->setOption( \Redis::OPT_COMPRESSION, \Redis::COMPRESSION_ZSTD );
+				}
 
-				if ($res != '+PONG') {
+				// A persistent socket may have been left on another database, including when our ID is zero.
+				if ( ( $this->_cfg_db || $this->_cfg_persistent ) && ! $this->_conn->select( (int) $this->_cfg_db ) ) {
+					$this->debug_oc( 'Database ID is invalid' );
 					$failed = true;
 				}
-			} catch (\Exception $e) {
-				$this->debug_oc('Redis connect exception: ' . $e->getMessage(), true);
+
+				$res = $this->_conn->rawCommand('PING');
+
+				if ( 'PONG' !== $res ) {
+					$this->debug_oc( 'Redis resp is wrong: ' . $res );
+					$failed = true;
+				}
+			} catch ( \Exception $e ) {
+				$this->debug_oc( 'Redis connect exception: ' . $e->getMessage() );
 				$failed = true;
-			} catch (\ErrorException $e) {
-				$this->debug_oc('Redis connect error: ' . $e->getMessage(), true);
+			} catch ( \ErrorException $e ) {
+				$this->debug_oc( 'Redis connect error: ' . $e->getMessage() );
 				$failed = true;
 			}
 			restore_error_handler();
-		} else { // Connect to Memcached
-			if ($this->_cfg_persistent) {
-				$this->_conn = new \Memcached($this->_get_mem_id());
+		} else {
+			// Connect to Memcached.
+			if ( $this->_cfg_persistent ) {
+				$this->_conn = new \Memcached( $this->_get_mem_id() );
+				$this->_set_mem_timeouts();
+				$servers = $this->_conn->getServerList();
+				$matches = 1 === count( $servers ) && $servers[0]['host'] === $this->_cfg_host && (int) $servers[0]['port'] === (int) $this->_cfg_port;
+				if ( $servers && ! $matches ) {
+					$this->_conn->resetServerList();
+				}
 
-				// Check memcached persistent connection
-				if ($this->_validate_mem_server()) {
+				// Check memcached persistent connection.
+				if ( $matches && $this->_validate_mem_server() ) {
 					// error_log( 'Object: _validate_mem_server' );
-					$this->debug_oc('Got persistent ' . $this->_oc_driver . ' connection');
+					$this->debug_oc( 'Got persistent ' . $this->_oc_driver . ' connection' );
 					return true;
 				}
 
-				$this->debug_oc('No persistent ' . $this->_oc_driver . ' server list!');
+				$this->debug_oc( 'No persistent ' . $this->_oc_driver . ' server list!' );
 			} else {
 				// error_log( 'Object: new memcached!' );
 				$this->_conn = new \Memcached();
+				$this->_set_mem_timeouts();
 			}
 
-			$this->_conn->addServer($this->_cfg_host, (int) $this->_cfg_port);
+			if ( ! $this->_conn->getServerList() ) {
+				$this->_conn->addServer( $this->_cfg_host, (int) $this->_cfg_port );
+			}
 
 			/**
-			 * Add SASL auth
+			 * Add SASL auth.
+			 *
 			 * @since  1.8.1
 			 * @since  2.9.6 Fixed SASL connection @see https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:lsmcd:new_sasl
 			 */
-			if ($this->_cfg_user && $this->_cfg_pswd && method_exists($this->_conn, 'setSaslAuthData')) {
-				$this->_conn->setOption(\Memcached::OPT_BINARY_PROTOCOL, true);
-				$this->_conn->setOption(\Memcached::OPT_COMPRESSION, false);
-				$this->_conn->setSaslAuthData($this->_cfg_user, $this->_cfg_pswd);
+			if ( $this->_cfg_user && $this->_cfg_pswd && method_exists( $this->_conn, 'setSaslAuthData' ) ) {
+				$this->_conn->setOption( \Memcached::OPT_BINARY_PROTOCOL, true );
+				$this->_conn->setOption( \Memcached::OPT_COMPRESSION, false );
+				$this->_conn->setSaslAuthData( $this->_cfg_user, $this->_cfg_pswd );
 			}
 
-			// Check connection
-			if (!$this->_validate_mem_server()) {
+			// Check connection.
+			if ( ! $this->_validate_mem_server() ) {
 				$failed = true;
 			}
 		}
 
-		// If failed to connect
-		if ($failed) {
-			$this->debug_oc('❌ Failed to connect ' . $this->_oc_driver . ' server!', true);
-			$this->_conn = null;
+		// If failed to connect.
+		if ( $failed ) {
+			$this->debug_oc( '❌ Failed to connect ' . $this->_oc_driver . ' server!' );
+			$this->_conn        = null;
 			$this->_cfg_enabled = false;
-			!defined('LITESPEED_OC_FAILURE') && define('LITESPEED_OC_FAILURE', true);
-			// error_log( 'Object: false!' );
+			! defined( 'LITESPEED_OC_FAILURE' ) && define( 'LITESPEED_OC_FAILURE', true );
+
+			// Disable ext OC flag so WP transients fall back to wp_options table.
+			// After muplugins_loaded, all wp_start_object_cache() calls are done — safe to call directly.
+			// Before that (early bootstrap), defer via hook to avoid multisite "Cannot redeclare" fatal.
+			if ( function_exists( 'did_action' ) && did_action( 'muplugins_loaded' ) ) {
+				wp_using_ext_object_cache( false );
+			} elseif ( function_exists( 'add_action' ) ) {
+				add_action(
+					'muplugins_loaded',
+					function () {
+						wp_using_ext_object_cache( false );
+					},
+					-999
+				);
+			}
+
 			return false;
 		}
 
-		$this->debug_oc('Connected');
+		$this->debug_oc( '✅ Connected to ' . $this->_oc_driver . ' server.' );
 
 		return true;
 	}
 
 	/**
-	 * Check if the connected memcached host is the one in cfg
+	 * Check if the connected memcached host is the one in cfg.
 	 *
 	 * @since  1.8
 	 * @access private
+	 *
+	 * @return bool
 	 */
-	private function _validate_mem_server()
-	{
+	private function _validate_mem_server() {
 		$mem_list = $this->_conn->getStats();
-		if (empty($mem_list)) {
+		if ( empty( $mem_list ) ) {
 			return false;
 		}
 
-		foreach ($mem_list as $k => $v) {
-			if (substr($k, 0, strlen($this->_cfg_host)) != $this->_cfg_host) {
+		foreach ( $mem_list as $k => $v ) {
+			if ( substr( $k, 0, strlen( $this->_cfg_host ) ) !== $this->_cfg_host ) {
 				continue;
 			}
-			if (!empty($v['pid']) || !empty($v['curr_connections'])) {
+			if ( ! empty( $v['pid'] ) || ! empty( $v['curr_connections'] ) ) {
 				return true;
 			}
 		}
@@ -427,15 +695,16 @@ class Object_Cache extends Root
 	}
 
 	/**
-	 * Get memcached unique id to be used for connecting
+	 * Get memcached unique id to be used for connecting.
 	 *
 	 * @since  1.8
 	 * @access private
+	 *
+	 * @return string
 	 */
-	private function _get_mem_id()
-	{
+	private function _get_mem_id() {
 		$mem_id = 'litespeed';
-		if (is_multisite()) {
+		if ( is_multisite() ) {
 			$mem_id .= '_' . get_current_blog_id();
 		}
 
@@ -443,40 +712,110 @@ class Object_Cache extends Root
 	}
 
 	/**
-	 * Get cache
+	 * Get cache.
 	 *
 	 * @since  1.8
 	 * @access public
+	 *
+	 * @param string $key   Cache key.
+	 * @param string $group Optional. Cache group name.
+	 * @return mixed|false
 	 */
-	public function get($key)
-	{
-		if (!$this->_cfg_enabled) {
-			return null;
+	public function get( $key, $group = '' ) {
+		$this->_last_get_missed = false;
+
+		if ( ! $this->_cfg_enabled ) {
+			return false;
 		}
 
-		if (!$this->_can_cache()) {
-			return null;
+		if ( ! $this->_can_cache( $group ) ) {
+			return false;
 		}
 
-		if (!$this->_connect()) {
-			return null;
+		if ( ! $this->_connect() ) {
+			return false;
 		}
 
-		$res = $this->_conn->get($key);
+		if ( 'Redis' === $this->_oc_driver ) {
+			try {
+				$res = $this->_conn->get( $key );
+			} catch ( \RedisException $ex ) {
+				$this->_redis_error( $ex );
+				return false;
+			}
+			// phpredis returns false only for an absent key once no exception was raised.
+			$this->_last_get_missed = false === $res;
+		} else {
+			$res = $this->_conn->get( $key );
+			// Memcached returns false for both a miss and a failure; only RES_NOTFOUND confirms absence.
+			$this->_last_get_missed = false === $res && \Memcached::RES_NOTFOUND === $this->_conn->getResultCode();
+		}
 
 		return $res;
 	}
 
 	/**
-	 * Set cache
+	 * Whether the most recent get() reached the backend and it confirmed the key is absent.
+	 *
+	 * False after a hit and after any non-confirmed outcome: disabled, read bypass, no connection, Redis exception or a Memcached failure code.
+	 *
+	 * @return bool
+	 */
+	public function last_get_missed() {
+		return $this->_last_get_missed;
+	}
+
+	/**
+	 * Set cache.
 	 *
 	 * @since  1.8
 	 * @access public
+	 *
+	 * @param string $key    Cache key.
+	 * @param mixed  $data   Data to store.
+	 * @param int    $expire TTL seconds.
+	 * @return bool
 	 */
-	public function set($key, $data, $expire)
-	{
-		if (!$this->_cfg_enabled) {
-			return null;
+	public function set( $key, $data, $expire ) {
+		return $this->_store( $key, $data, $expire, 'set' );
+	}
+
+	/**
+	 * Store only if the shared key does not exist, without a separate read.
+	 *
+	 * @param string $key    Cache key.
+	 * @param mixed  $data   Serialized payload.
+	 * @param int    $expire TTL seconds.
+	 * @return bool
+	 */
+	public function add( $key, $data, $expire ) {
+		return (bool) $this->_store( $key, $data, $expire, 'add' );
+	}
+
+	/**
+	 * Replace only an existing shared key, without a separate read.
+	 *
+	 * @param string $key    Cache key.
+	 * @param mixed  $data   Serialized payload.
+	 * @param int    $expire TTL seconds.
+	 * @return bool
+	 */
+	public function replace( $key, $data, $expire ) {
+		return (bool) $this->_store( $key, $data, $expire, 'replace' );
+	}
+
+	/**
+	 * Share serialization-independent backend storage and expiration handling.
+	 *
+	 * @param string $key    Cache key.
+	 * @param mixed  $data   Serialized payload.
+	 * @param int    $expire TTL seconds.
+	 * @param string $method Internal set, add or replace operation.
+	 * @return bool|string Backend acknowledgement or false.
+	 */
+	private function _store( $key, $data, $expire, $method ) {
+		if ( ! $this->_cfg_enabled ) {
+			return false;
 		}
 
 		/**
@@ -484,149 +823,220 @@ class Object_Cache extends Root
 		 * Bug found by Stan at Jan/10/2020
 		 */
 		// if ( ! $this->_can_cache() ) {
-		// 	return null;
+		// return false;
 		// }
 
-		if (!$this->_connect()) {
-			return null;
+		if ( ! $this->_connect() ) {
+			return false;
 		}
-		$ttl = $expire ?: $this->_cfg_life;
 
-		if ($this->_oc_driver == 'Redis') {
+		// Per WP Object Cache API, expire=0 means "no expiration".
+		// Key eviction is handled by the cache backend (Redis maxmemory / Memcached LRU).
+		$ttl = (int) $expire;
+
+		if ( 'Redis' === $this->_oc_driver ) {
 			try {
-				$res = $this->_conn->setEx($key, $ttl, $data);
-			} catch (\RedisException $ex) {
+				$options = ( $ttl > 0 ) ? [ 'ex' => $ttl ] : [];
+				if ( 'set' !== $method ) {
+					$options[] = 'add' === $method ? 'nx' : 'xx';
+				}
+				$res = $this->_conn->set( $key, $data, $options );
+			} catch ( \RedisException $ex ) {
 				$res = false;
-				$msg = sprintf(__('Redis encountered a fatal error: %s (code: %d)', 'litespeed-cache'), $ex->getMessage(), $ex->getCode());
-				$this->debug_oc($msg);
-				Admin_Display::error($msg);
+				$this->_redis_error( $ex );
 			}
 		} else {
-			$res = $this->_conn->set($key, $data, $ttl);
+			// Memcached treats expirations above 30 days as Unix timestamps.
+			$res = $this->_conn->$method( $key, $data, $ttl > 30 * DAY_IN_SECONDS ? time() + $ttl : $ttl );
 		}
 
 		return $res;
 	}
 
 	/**
-	 * Check if can cache or not
+	 * Bound Memcached connection, polling and socket I/O without persistent backoff.
+	 *
+	 * @return void
+	 */
+	private function _set_mem_timeouts() {
+		$this->_conn->setOption( \Memcached::OPT_CONNECT_TIMEOUT, (int) ( self::REDIS_TIMEOUT * 1000 ) );
+		$this->_conn->setOption( \Memcached::OPT_POLL_TIMEOUT, (int) ( self::REDIS_TIMEOUT * 1000 ) );
+		$this->_conn->setOption( \Memcached::OPT_SEND_TIMEOUT, (int) ( self::REDIS_TIMEOUT * 1000000 ) );
+		$this->_conn->setOption( \Memcached::OPT_RECV_TIMEOUT, (int) ( self::REDIS_TIMEOUT * 1000000 ) );
+	}
+
+	/**
+	 * Check if can cache or not.
 	 *
 	 * @since  1.8
 	 * @access private
+	 *
+	 * @param string $group Optional. Cache group name.
+	 * @return bool
 	 */
-	private function _can_cache()
-	{
-		if (!$this->_cfg_admin && defined('WP_ADMIN')) {
+	private function _can_cache( $group = '' ) {
+		// Transients always use OC regardless of Cache WP-Admin setting
+		if ( $this->_is_transients_group( $group ) ) {
+			return true;
+		}
+		if ( ! $this->_cfg_admin && defined( 'WP_ADMIN' ) ) {
 			return false;
 		}
 		return true;
 	}
 
 	/**
-	 * Delete cache
+	 * Delete cache.
 	 *
 	 * @since  1.8
 	 * @access public
+	 *
+	 * @param string $key Cache key.
+	 * @return bool
 	 */
-	public function delete($key)
-	{
-		if (!$this->_cfg_enabled) {
-			return null;
+	public function delete( $key ) {
+		if ( ! $this->_cfg_enabled ) {
+			return false;
 		}
 
-		if (!$this->_connect()) {
-			return null;
+		if ( ! $this->_connect() ) {
+			return false;
 		}
 
-		if ($this->_oc_driver == 'Redis') {
-			$res = $this->_conn->del($key);
+		if ( 'Redis' === $this->_oc_driver ) {
+			try {
+				$res = $this->_conn->del( $key );
+			} catch ( \RedisException $ex ) {
+				$this->_redis_error( $ex );
+				return false;
+			}
 		} else {
-			$res = $this->_conn->delete($key);
+			$res = $this->_conn->delete( $key );
 		}
 
 		return (bool) $res;
 	}
 
 	/**
-	 * Clear all cache
+	 * Clear all cache.
 	 *
 	 * @since  1.8
 	 * @access public
+	 *
+	 * @return bool
 	 */
-	public function flush()
-	{
-		if (!$this->_cfg_enabled) {
-			$this->debug_oc('bypass flushing');
-			return null;
+	public function flush() {
+		if ( ! $this->_cfg_enabled ) {
+			$this->debug_oc( 'bypass flushing' );
+			return false;
 		}
 
-		if (!$this->_connect()) {
-			return null;
+		if ( ! $this->_connect() ) {
+			return false;
 		}
 
-		$this->debug_oc('flush!');
+		$this->debug_oc( 'flush!' );
 
-		if ($this->_oc_driver == 'Redis') {
-			$res = $this->_conn->flushDb();
+		if ( 'Redis' === $this->_oc_driver ) {
+			// A synchronous flush may take longer than an ordinary read; restore the request timeout afterwards.
+			$read_timeout = $this->_conn->getOption( \Redis::OPT_READ_TIMEOUT );
+			try {
+				$this->_conn->setOption( \Redis::OPT_READ_TIMEOUT, max( self::REDIS_TIMEOUT, (float) ini_get( 'default_socket_timeout' ) ) );
+				$res = $this->_conn->flushDb();
+			} catch ( \RedisException $ex ) {
+				$this->_redis_error( $ex );
+				return false;
+			} finally {
+				$this->_conn->setOption( \Redis::OPT_READ_TIMEOUT, $read_timeout );
+			}
 		} else {
 			$res = $this->_conn->flush();
 			$this->_conn->resetServerList();
+			// The cleared server list cannot serve another operation until _connect() runs again.
+			$this->_conn = null;
 		}
 
 		return $res;
 	}
 
 	/**
-	 * Add global groups
+	 * Log a Redis exception and surface it as an admin notice.
+	 *
+	 * @since 7.9
+	 * @access private
+	 *
+	 * @param \RedisException $ex Exception raised by phpredis.
+	 * @return void
+	 */
+	private function _redis_error( $ex ) {
+		$this->debug_oc( sprintf( 'Redis op failed: %s (code: %d)', $ex->getMessage(), $ex->getCode() ) );
+
+		$this->_cfg_enabled = false;
+
+		if ( did_action( 'plugins_loaded' ) ) {
+			Admin_Display::error( 'LiteSpeed Object Cache: Redis is unavailable. Check Redis server status (memory, connectivity) and the plugin debug log for details.' );
+		}
+	}
+
+	/**
+	 * Add global groups.
 	 *
 	 * @since 1.8
 	 * @access public
+	 *
+	 * @param string|string[] $groups Group(s) to add.
+	 * @return void
 	 */
-	public function add_global_groups($groups)
-	{
-		if (!is_array($groups)) {
-			$groups = array($groups);
+	public function add_global_groups( $groups ) {
+		if ( ! is_array( $groups ) ) {
+			$groups = [ $groups ];
 		}
 
-		$this->_global_groups = array_merge($this->_global_groups, $groups);
-		$this->_global_groups = array_unique($this->_global_groups);
+		$this->_global_groups = array_merge( $this->_global_groups, $groups );
+		$this->_global_groups = array_unique( $this->_global_groups );
 	}
 
 	/**
-	 * Check if is in global groups or not
+	 * Check if is in global groups or not.
 	 *
 	 * @since 1.8
 	 * @access public
+	 *
+	 * @param string $group Group name.
+	 * @return bool
 	 */
-	public function is_global($group)
-	{
-		return in_array($group, $this->_global_groups);
+	public function is_global( $group ) {
+		return in_array( $group, $this->_global_groups, true );
 	}
 
 	/**
-	 * Add non persistent groups
+	 * Add non persistent groups.
 	 *
 	 * @since 1.8
 	 * @access public
+	 *
+	 * @param string|string[] $groups Group(s) to add.
+	 * @return void
 	 */
-	public function add_non_persistent_groups($groups)
-	{
-		if (!is_array($groups)) {
-			$groups = array($groups);
+	public function add_non_persistent_groups( $groups ) {
+		if ( ! is_array( $groups ) ) {
+			$groups = [ $groups ];
 		}
 
-		$this->_non_persistent_groups = array_merge($this->_non_persistent_groups, $groups);
-		$this->_non_persistent_groups = array_unique($this->_non_persistent_groups);
+		$this->_non_persistent_groups = array_merge( $this->_non_persistent_groups, $groups );
+		$this->_non_persistent_groups = array_unique( $this->_non_persistent_groups );
 	}
 
 	/**
-	 * Check if is in non persistent groups or not
+	 * Check if is in non persistent groups or not.
 	 *
 	 * @since 1.8
 	 * @access public
+	 *
+	 * @param string $group Group name.
+	 * @return bool
 	 */
-	public function is_non_persistent($group)
-	{
-		return in_array($group, $this->_non_persistent_groups);
+	public function is_non_persistent( $group ) {
+		return in_array( $group, $this->_non_persistent_groups, true );
 	}
 }

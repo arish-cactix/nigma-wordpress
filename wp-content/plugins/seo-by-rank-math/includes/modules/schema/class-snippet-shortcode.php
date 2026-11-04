@@ -23,7 +23,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class Snippet_Shortcode {
 
-	use Hooker, Shortcode;
+	use Hooker;
+	use Shortcode;
 
 	/**
 	 * Post object.
@@ -77,7 +78,7 @@ class Snippet_Shortcode {
 
 		$data = $this->get_schema_data( $atts['id'], $atts['post_id'] );
 		if ( empty( $data ) || empty( $data['schema'] ) ) {
-			return esc_html__( 'No schema found.', 'rank-math' );
+			return esc_html__( 'No schema found.', 'seo-by-rank-math' );
 		}
 
 		$post    = get_post( $data['post_id'] );
@@ -118,9 +119,7 @@ class Snippet_Shortcode {
 	 * @return string Shortcode output.
 	 */
 	public function get_snippet_content( $schema, $post, $atts ) {
-		if ( empty( $atts['is_block'] ) ) {
-			wp_enqueue_style( 'rank-math-review-snippet', untrailingslashit( plugin_dir_url( __FILE__ ) ) . '/blocks/schema/assets/css/schema.css', null, rank_math()->version );
-		}
+		wp_enqueue_style( 'rank-math-review-snippet', untrailingslashit( plugin_dir_url( __FILE__ ) ) . '/blocks/schema/assets/css/schema.css', null, rank_math()->version );
 		$type         = \strtolower( $schema['@type'] );
 		$type         = preg_replace( '/[^a-z0-9_-]+/i', '', $type );
 		$this->post   = $post;
@@ -163,11 +162,11 @@ class Snippet_Shortcode {
 	/**
 	 * Get field value.
 	 *
-	 * @param  string $field_id Field id.
-	 * @param  mixed  $default  Default value.
+	 * @param  string $field_id      Field id.
+	 * @param  mixed  $default_value Default value.
 	 * @return mixed
 	 */
-	public function get_field_value( $field_id, $default = null ) {
+	public function get_field_value( $field_id, $default_value = null ) {
 		$array = $this->schema;
 		if ( isset( $array[ $field_id ] ) ) {
 			if ( isset( $array[ $field_id ]['@type'] ) ) {
@@ -179,7 +178,7 @@ class Snippet_Shortcode {
 
 		foreach ( explode( '.', $field_id ) as $segment ) {
 			if ( ! is_array( $array ) || ! array_key_exists( $segment, $array ) ) {
-				return $default;
+				return $default_value;
 			}
 
 			$array = $array[ $segment ];
@@ -191,13 +190,13 @@ class Snippet_Shortcode {
 	/**
 	 * Get field.
 	 *
-	 * @param  string $title        Field title.
-	 * @param  string $field_id     Field id to get value.
-	 * @param  string $convert_date Convert date value to proper format.
-	 * @param  mixed  $default      Default value.
+	 * @param  string $title         Field title.
+	 * @param  string $field_id      Field id to get value.
+	 * @param  string $convert_date  Convert date value to proper format.
+	 * @param  mixed  $default_value Default value.
 	 */
-	public function get_field( $title, $field_id, $convert_date = false, $default = null ) {
-		$value = $this->get_field_value( $field_id, $default );
+	public function get_field( $title, $field_id, $convert_date = false, $default_value = null ) {
+		$value = $this->get_field_value( $field_id, $default_value );
 		if ( empty( $value ) ) {
 			return;
 		}
@@ -226,7 +225,7 @@ class Snippet_Shortcode {
 		}
 
 		echo '<div>';
-		echo '<strong>' . esc_html__( 'Opening Hours', 'rank-math' ) . '</strong><br />';
+		echo '<strong>' . esc_html__( 'Opening Hours', 'seo-by-rank-math' ) . '</strong><br />';
 		foreach ( $opening_hours as $opening_hour ) {
 			$this->get_opening_hour( $opening_hour );
 		}
@@ -240,9 +239,9 @@ class Snippet_Shortcode {
 	 */
 	public function get_opening_hour( $opening_hour ) {
 		$labels = [
-			'dayOfWeek' => esc_html__( 'Days', 'rank-math' ),
-			'opens'     => esc_html__( 'Opening Time', 'rank-math' ),
-			'closes'    => esc_html__( 'Closing Time', 'rank-math' ),
+			'dayOfWeek' => esc_html__( 'Days', 'seo-by-rank-math' ),
+			'opens'     => esc_html__( 'Opening Time', 'seo-by-rank-math' ),
+			'closes'    => esc_html__( 'Closing Time', 'seo-by-rank-math' ),
 		];
 		foreach ( $labels as $key => $label ) {
 			if ( empty( $opening_hour[ $key ] ) ) {
@@ -333,7 +332,7 @@ class Snippet_Shortcode {
 		?>
 		<div class="rank-math-total-wrapper">
 
-			<strong><?php echo $this->do_filter( 'review/text', esc_html__( 'Editor\'s Rating:', 'rank-math' ) ); // phpcs:ignore ?></strong><br />
+			<strong><?php echo $this->do_filter( 'review/text', esc_html__( 'Editor\'s Rating:', 'seo-by-rank-math' ) ); // phpcs:ignore ?></strong><br />
 
 			<span class="rank-math-total"><?php echo $rating; // phpcs:ignore ?></span>
 
@@ -401,11 +400,16 @@ class Snippet_Shortcode {
 	 */
 	private function get_schema_data( $shortcode_id, $post_id = false ) {
 		if ( ! empty( $shortcode_id ) && is_string( $shortcode_id ) ) {
-			return DB::get_schema_by_shortcode_id( $shortcode_id );
+			$data = DB::get_schema_by_shortcode_id( $shortcode_id );
+			return $data && $this->can_view_schema_post( $data['post_id'] ) ? $data : false;
 		}
 
 		if ( ! $post_id ) {
 			$post_id = Param::get( 'post_id' ) ? Param::get( 'post_id' ) : get_the_ID();
+		}
+
+		if ( ! $this->can_view_schema_post( $post_id ) ) {
+			return false;
 		}
 
 		$data = DB::get_schemas( $post_id );
@@ -413,6 +417,25 @@ class Snippet_Shortcode {
 			'post_id' => $post_id,
 			'schema'  => $data,
 		];
+	}
+
+	/**
+	 * Check whether the current requester is allowed to see the given post's schema.
+	 *
+	 * Prevents schema (and any excerpt/content derived from it) from being disclosed
+	 * for posts that are not publicly viewable, e.g. draft, pending, private, scheduled,
+	 * or password protected — while still allowing a post's own author/editor to see
+	 * the schema while previewing or editing that same draft.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return bool
+	 */
+	private function can_view_schema_post( $post_id ) {
+		if ( ! $post_id || post_password_required( $post_id ) ) {
+			return false;
+		}
+
+		return is_post_publicly_viewable( $post_id ) || current_user_can( 'read_post', $post_id );
 	}
 
 	/**
@@ -436,6 +459,14 @@ class Snippet_Shortcode {
 			if ( is_array( $schema ) ) {
 				$new_schemas[ $key ] = $this->replace_variables( $schema, $post );
 				continue;
+			}
+
+			// Need this conditions to convert date to valid ISO 8601 format.
+			if ( in_array( $key, [ 'datePublished', 'uploadDate' ], true ) && '%date(Y-m-dTH:i:sP)%' === $schema ) {
+				$schema = '%date(Y-m-d\TH:i:sP)%';
+			}
+			if ( 'dateModified' === $key && '%modified(Y-m-dTH:i:sP)%' === $schema ) {
+				$schema = '%modified(Y-m-d\TH:i:sP)%';
 			}
 
 			$new_schemas[ $key ] = Str::contains( '%', $schema ) ? Helper::replace_seo_fields( $schema, $post ) : $schema;
@@ -480,7 +511,7 @@ class Snippet_Shortcode {
 
 		return array_filter(
 			$schemas['schema'],
-			function( $schema ) {
+			function ( $schema ) {
 				return ! empty( $schema['metadata']['reviewLocation'] );
 			}
 		);

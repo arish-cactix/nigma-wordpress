@@ -11,6 +11,8 @@
 namespace RankMath\Admin\Importers;
 
 use RankMath\Helper;
+use RankMath\Installer;
+use RankMath\Helpers\DB as DB_Helper;
 use RankMath\Admin\Admin_Helper;
 use RankMath\Redirections\Redirection;
 
@@ -51,11 +53,14 @@ class Redirections extends Plugin_Importer {
 		global $wpdb;
 
 		$count = 0;
-		$rows  = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}redirection_items" );
+		$rows  = DB_Helper::get_results( "SELECT * FROM {$wpdb->prefix}redirection_items" );
 
 		if ( empty( $rows ) ) {
 			return false;
 		}
+
+		// Ensure the redirections tables exist before saving, since the module may not be active yet.
+		Installer::create_tables( [ 'redirections' ] );
 
 		foreach ( (array) $rows as $row ) {
 			$item = Redirection::from(
@@ -75,7 +80,7 @@ class Redirections extends Plugin_Importer {
 			$id = $item->save();
 			if ( false !== $id ) {
 				do_action( 'rank_math/redirection/after_import', $id, $row );
-				$count++;
+				++$count;
 			}
 		}
 

@@ -53,9 +53,16 @@ class DB {
 			return $schema_cache[ $table . '_' . $object_id ];
 		}
 
-		$key  = 'termmeta' === $table ? 'term_id' : 'post_id';
-		$data = self::table( $table )
-			->select( 'meta_id' )
+		$keys_by_table = [
+			'termmeta' => 'term_id',
+			'usermeta' => 'user_id',
+		];
+		$key           = isset( $keys_by_table[ $table ] ) ? $keys_by_table[ $table ] : 'post_id';
+
+		// The wp_usermeta table's primary key column is umeta_id, unlike post/term/comment meta tables which use meta_id.
+		$id_column = 'usermeta' === $table ? 'umeta_id' : 'meta_id';
+		$data      = self::table( $table )
+			->select( [ $id_column => 'meta_id' ] )
 			->select( 'meta_value' )
 			->where( $key, $object_id )
 			->whereLike( 'meta_key', 'rank_math_schema', '' )
@@ -108,7 +115,7 @@ class DB {
 
 		$types = array_reduce(
 			wp_list_pluck( $schemas, '@type' ),
-			function( $carry, $type ) {
+			function ( $carry, $type ) {
 				if ( is_array( $type ) ) {
 					return array_merge( $carry, $type );
 				}
@@ -252,7 +259,7 @@ class DB {
 		}
 
 		$job_postings = array_map(
-			function( $schema ) {
+			function ( $schema ) {
 				return isset( $schema['@type'] ) && 'JobPosting' === $schema['@type'] ? $schema : false;
 			},
 			$schemas

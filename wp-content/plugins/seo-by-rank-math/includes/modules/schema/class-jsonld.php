@@ -107,11 +107,11 @@ class JsonLD {
 	/**
 	 * Function to get Old schema data. This code is used in the Schema_Converter to convert old schema data.
 	 *
-	 * @param  int   $post_id Post id for conversion.
-	 * @param  mixed $class   Class instance of snippet.
+	 * @param  int   $post_id       Post id for conversion.
+	 * @param  mixed $snippet_class Class instance of snippet.
 	 * @return array
 	 */
-	public function get_old_schema( $post_id, $class ) {
+	public function get_old_schema( $post_id, $snippet_class ) {
 		global $post;
 		$post          = get_post( $post_id ); // phpcs:ignore
 		$this->post    = $post;
@@ -125,7 +125,7 @@ class JsonLD {
 		 * @param array  $unsigned An array of data to output in json-ld.
 		 * @param JsonLD $unsigned JsonLD instance.
 		 */
-		return $class->process( [], $this );
+		return $snippet_class->process( [], $this );
 	}
 
 	/**
@@ -146,7 +146,10 @@ class JsonLD {
 		 * @param array  $unsigned An array of data to output in JSON-LD.
 		 * @param JsonLD $unsigned JsonLD instance.
 		 */
-		$data = $this->do_filter( 'json_ld', [], $this );
+		$data = array_filter( $this->do_filter( 'json_ld', [], $this ) );
+		if ( empty( $data ) ) {
+			return;
+		}
 		$data = $this->do_filter( 'schema/validated_data', $this->validate_schema( $data ) );
 		if ( is_array( $data ) && ! empty( $data ) ) {
 
@@ -254,15 +257,15 @@ class JsonLD {
 	/**
 	 * Function to replace variables used in Schema fields.
 	 *
-	 * @param array  $schemas Schema to replace.
-	 * @param object $object  Current Object.
-	 * @param array  $data   Array of json-ld data.
+	 * @param array  $schemas        Schema to replace.
+	 * @param object $current_object Current Object.
+	 * @param array  $data           Array of json-ld data.
 	 *
 	 * @return array
 	 */
-	public function replace_variables( $schemas, $object = [], $data = [] ) {
-		$new_schemas = [];
-		$object      = empty( $object ) ? get_queried_object() : $object;
+	public function replace_variables( $schemas, $current_object = [], $data = [] ) {
+		$new_schemas    = [];
+		$current_object = empty( $current_object ) ? get_queried_object() : $current_object;
 		foreach ( $schemas as $key => $schema ) {
 			if ( 'metadata' === $key ) {
 				$new_schemas['isPrimary'] = ! empty( $schema['isPrimary'] );
@@ -276,7 +279,7 @@ class JsonLD {
 
 			$this->replace_author( $schema, $data );
 			if ( is_array( $schema ) ) {
-				$new_schemas[ $key ] = $this->replace_variables( $schema, $object, $data );
+				$new_schemas[ $key ] = $this->replace_variables( $schema, $current_object, $data );
 				continue;
 			}
 
@@ -289,7 +292,7 @@ class JsonLD {
 			}
 
 			$new_schemas[ $key ] = is_string( $schema ) && Str::contains( '%', $schema ) && ! filter_var( $schema, FILTER_VALIDATE_URL )
-				? Helper::replace_vars( $schema, $object ) : $schema;
+				? Helper::replace_vars( $schema, $current_object ) : $schema;
 			if ( '' === $new_schemas[ $key ] ) {
 				unset( $new_schemas[ $key ] );
 			}
@@ -304,7 +307,7 @@ class JsonLD {
 	 * @param array $schema Schema to replace.
 	 * @param array $data   Array of json-ld data.
 	 *
-	 * @return array
+	 * @return void
 	 */
 	private function replace_author( &$schema, $data ) {
 		if ( empty( $data['ProfilePage'] ) ) {
@@ -347,7 +350,7 @@ class JsonLD {
 			 */
 			$pre = $this->do_filter( $hook, false, $jsonld->parts, $data );
 			if ( false !== $pre ) {
-				$new_schemas[ $key ] = $this->do_filter( $hook . '_entity', $pre );
+				$new_schemas[ $key ] = $this->do_filter( $hook . '_custom_entity', [] );
 				$new_schemas[ $key ] = $this->do_filter( 'snippet/rich_snippet_entity', $new_schemas[ $key ] );
 				continue;
 			}
@@ -368,8 +371,9 @@ class JsonLD {
 	 */
 	public function can_add_global_entities( $data = [], $is_product_archive = false ) {
 		if ( ! $is_product_archive && ( is_category() || is_tag() || is_tax() ) ) {
-			$object = get_queried_object();
-			return $object && ! Helper::get_settings( 'titles.remove_' . $object->taxonomy . '_snippet_data' ) && ! $this->do_filter( 'snippet/remove_taxonomy_data', false, $object->taxonomy );
+			$object              = get_queried_object();
+			$add_global_entities = $object && ! Helper::get_settings( 'titles.remove_' . $object->taxonomy . '_snippet_data' ) && ! $this->do_filter( 'snippet/remove_taxonomy_data', false, $object->taxonomy );
+			return $this->do_filter( 'schema/add_global_entities', $add_global_entities, $this );
 		}
 
 		if ( is_front_page() || ! is_singular() || ! Helper::can_use_default_schema( $this->post_id ) || ! empty( $data ) ) {
@@ -706,6 +710,10 @@ class JsonLD {
 			return $description;
 		}
 
+		if ( post_password_required( $product->get_id() ) ) {
+			return '';
+		}
+
 		$product_object = get_post( $product->get_id() );
 		$description    = Paper::get_from_options( 'pt_product_description', $product_object, '%excerpt%' );
 
@@ -784,9 +792,9 @@ class JsonLD {
 			$profiles[] = "https://twitter.com/$twitter";
 		}
 
-		$addional_profiles = Helper::get_settings( 'titles.social_additional_profiles' );
-		if ( ! empty( $addional_profiles ) ) {
-			$profiles = array_merge( $profiles, Arr::from_string( $addional_profiles, "\n" ) );
+		$additional_profiles = Helper::get_settings( 'titles.social_additional_profiles' );
+		if ( ! empty( $additional_profiles ) ) {
+			$profiles = array_merge( $profiles, Arr::from_string( $additional_profiles, "\n" ) );
 		}
 
 		return array_values( array_filter( $profiles ) );

@@ -79,13 +79,13 @@ class BuddyPress {
 		$user_id = bp_displayed_user_id();
 
 		$data['ProfilePage'] = [
-			'@type'    => 'ProfilePage',
-			'@id'      => get_author_posts_url( $user_id ),
-			'headline' => sprintf( 'About %s', get_the_author_meta( 'display_name', $user_id ) ),
-			'about'    => [
+			'@type'      => 'ProfilePage',
+			'@id'        => get_author_posts_url( $user_id ),
+			'headline'   => sprintf( 'About %s', get_the_author_meta( 'display_name', $user_id ) ),
+			'mainEntity' => [
 				'@type'       => 'Person',
 				'name'        => get_the_author_meta( 'display_name', $user_id ),
-				'url'         => esc_url( bp_core_get_user_domain( $user_id ) ),
+				'url'         => function_exists( 'bp_members_get_user_url' ) ? esc_url( bp_members_get_user_url( $user_id ) ) : esc_url( bp_core_get_user_domain( $user_id ) ),
 				'description' => get_the_author_meta( 'description', $user_id ),
 				'image'       => [
 					'@type'  => 'ImageObject',
@@ -105,8 +105,8 @@ class BuddyPress {
 		rank_math_register_var_replacement(
 			'group_name',
 			[
-				'name'        => esc_html__( 'Group name.', 'rank-math' ),
-				'description' => esc_html__( 'Group name of the current group', 'rank-math' ),
+				'name'        => esc_html__( 'Group name.', 'seo-by-rank-math' ),
+				'description' => esc_html__( 'Group name of the current group', 'seo-by-rank-math' ),
 				'variable'    => 'group_name',
 				'example'     => $this->get_group_name(),
 			],
@@ -116,8 +116,8 @@ class BuddyPress {
 		rank_math_register_var_replacement(
 			'group_desc',
 			[
-				'name'        => esc_html__( 'Group Description.', 'rank-math' ),
-				'description' => esc_html__( 'Group description of the current group', 'rank-math' ),
+				'name'        => esc_html__( 'Group Description.', 'seo-by-rank-math' ),
+				'description' => esc_html__( 'Group description of the current group', 'seo-by-rank-math' ),
 				'variable'    => 'group_desc',
 				'example'     => $this->get_group_desc(),
 			],

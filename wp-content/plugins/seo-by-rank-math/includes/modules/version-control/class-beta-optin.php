@@ -56,7 +56,7 @@ class Beta_Optin {
 	 */
 	public function hooks() {
 		$this->filter( 'site_transient_update_plugins', 'transient_update_plugins' );
-		$this->action( 'in_plugin_update_message-seo-by-rank-math/rank-math.php', 'plugin_update_message', 10, 2 );
+		$this->action( 'in_plugin_update_message-seo-by-rank-math/rank-math.php', 'plugin_update_message' );
 		$this->action( 'install_plugins_pre_plugin-information', 'beta_plugin_information' );
 		$this->action( 'admin_footer', 'beta_changelog_link_js' );
 	}
@@ -102,6 +102,9 @@ class Beta_Optin {
 	public static function get_available_versions( $beta = false ) {
 		$versions    = [];
 		$plugin_info = Version_Control::get_plugin_info();
+		if ( empty( $plugin_info['versions'] ) ) {
+			return $versions;
+		}
 
 		foreach ( (array) $plugin_info['versions'] as $version => $url ) {
 			if ( ! self::is_eligible_version( $version, $beta ) ) {
@@ -177,7 +180,7 @@ class Beta_Optin {
 		$this->trunk_version = 0;
 
 		$response = wp_remote_get( 'https://plugins.svn.wordpress.org/seo-by-rank-math/trunk/rank-math.php' );
-		if ( ! is_array( $response ) || is_wp_error( $response ) ) {
+		if ( is_wp_error( $response ) || ! is_array( $response ) ) {
 			return $this->trunk_version;
 		}
 
@@ -240,7 +243,7 @@ class Beta_Optin {
 		}
 
 		$value->response['seo-by-rank-math/rank-math.php']->is_beta        = true;
-		$value->response['seo-by-rank-math/rank-math.php']->upgrade_notice = self::NOTICE_START_MARKER . ' ' . __( 'This update will install a beta version of Rank Math.', 'rank-math' ) . ' ' . self::NOTICE_END_MARKER;
+		$value->response['seo-by-rank-math/rank-math.php']->upgrade_notice = self::NOTICE_START_MARKER . ' ' . __( 'This update will install a beta version of Rank Math.', 'seo-by-rank-math' ) . ' ' . self::NOTICE_END_MARKER;
 
 		if ( empty( $value->no_update ) ) {
 			$value->no_update = [];
@@ -255,17 +258,16 @@ class Beta_Optin {
 	 * Add warning about beta version in the update notice.
 	 *
 	 * @param  array $plugin_data An array of plugin metadata.
-	 * @param  array $response    An array of metadata about the available plugin update.
 	 * @return void
 	 */
-	public function plugin_update_message( $plugin_data, $response ) {
+	public function plugin_update_message( $plugin_data ) {
 		if ( empty( $plugin_data['is_beta'] ) ) {
 			return;
 		}
 
 		printf(
 			'</p><p class="rank-math-beta-update-notice">%s',
-			esc_html__( 'This update will install a beta version of Rank Math.', 'rank-math' )
+			esc_html__( 'This update will install a beta version of Rank Math.', 'seo-by-rank-math' )
 		);
 	}
 

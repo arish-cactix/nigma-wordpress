@@ -1,19 +1,28 @@
 <?php
-
 /**
  * The Third Party integration with the Perfmatters plugin.
  *
- * @since		4.4.5
+ * @since 4.4.5
+ * @package LiteSpeed
+ * @subpackage LiteSpeed_Cache\Thirdparty
  */
 
 namespace LiteSpeed\Thirdparty;
 
 defined('WPINC') || exit();
 
-class Perfmatters
-{
-	public static function preload()
-	{
+/**
+ * Provides compatibility for the Perfmatters plugin.
+ */
+class Perfmatters {
+
+	/**
+	 * Preload Perfmatters integration.
+	 *
+	 * @since 4.4.5
+	 * @return void
+	 */
+	public static function preload() {
 		if (!defined('PERFMATTERS_VERSION')) {
 			return;
 		}
@@ -23,13 +32,26 @@ class Perfmatters
 		}
 
 		if (has_action('shutdown', 'perfmatters_script_manager') !== false) {
-			add_action('init', __CLASS__ . '::disable_litespeed_esi', 4);
+			add_action('init', __CLASS__ . '::disable_script_manager_on_esi', 20);
 		}
 	}
 
-	public static function disable_litespeed_esi()
-	{
-		defined('LITESPEED_ESI_OFF') || define('LITESPEED_ESI_OFF', true);
-		do_action('litespeed_debug', 'Disable ESI due to Perfmatters script manager');
+	/**
+	 * Disable Perfmatters Script Manager during LiteSpeed ESI requests.
+	 *
+	 * @since 4.4.5
+	 * @return void
+	 */
+	public static function disable_script_manager_on_esi() {
+		if (!defined('LSCACHE_IS_ESI')) {
+			return;
+		}
+
+		$priority = has_action('shutdown', 'perfmatters_script_manager');
+
+		if (false !== $priority) {
+			remove_action('shutdown', 'perfmatters_script_manager', $priority);
+			do_action('litespeed_debug', 'Disable Perfmatters script manager on ESI request');
+		}
 	}
 }

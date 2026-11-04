@@ -1,25 +1,39 @@
 <?php
+// phpcs:ignoreFile
 
 /**
  * The abstract instance
  *
- * @since      	3.0
+ * @since       3.0
  */
 
 namespace LiteSpeed;
 
 defined('WPINC') || exit();
 
-abstract class Root
-{
-	const CONF_FILE = '.litespeed_conf.dat';
+abstract class Root {
+
+	const CONF_FILE        = '.litespeed_conf.php';
+	const CONF_FILE_LEGACY = '.litespeed_conf.dat';
+	const CONF_FILE_GUARD  = "<?php exit; // LiteSpeed Cache runtime configuration. Do not edit. ?>\n";
 	// Instance set
 	private static $_instances;
 
-	private static $_options = array();
-	private static $_const_options = array();
-	private static $_primary_options = array();
-	private static $_network_options = array();
+	private static $_options         = [];
+	private static $_const_options   = [];
+	private static $_primary_options = [];
+	private static $_network_options = [];
+
+	/**
+	 * Per-class summary cache backing get_summary()/save_summary()/reload_summary().
+	 *
+	 * Declared here (not in each child class) so every Root descendant that touches the summary API has a real property instead of a dynamic one, which PHP 8.2+ deprecates.
+	 * Untyped on purpose: the plugin still supports PHP 7.2, and typed properties require 7.4.
+	 *
+	 * @since 7.9
+	 * @var array<string,mixed>
+	 */
+	protected $_summary = [];
 
 	/**
 	 * Check if need to separate ccss for mobile
@@ -27,9 +41,18 @@ abstract class Root
 	 * @since  4.7
 	 * @access protected
 	 */
-	protected function _separate_mobile()
-	{
-		return (wp_is_mobile() || apply_filters('litespeed_is_mobile', false)) && $this->conf(Base::O_CACHE_MOBILE);
+	protected function _separate_mobile() {
+		return (Control::is_mobile() || apply_filters('litespeed_is_mobile', false)) && $this->conf(Base::O_CACHE_MOBILE);
+	}
+
+	/**
+	 * Log an error message
+	 *
+	 * @since 7.0
+	 */
+	public static function debugErr( $msg, $backtrace_limit = false ) {
+		$msg = '❌ ' . $msg;
+		self::debug($msg, $backtrace_limit);
 	}
 
 	/**
@@ -38,8 +61,7 @@ abstract class Root
 	 * @since  4.4
 	 * @access public
 	 */
-	public static function debug($msg, $backtrace_limit = false)
-	{
+	public static function debug( $msg, $backtrace_limit = false ) {
 		if (!defined('LSCWP_LOG')) {
 			return;
 		}
@@ -57,8 +79,7 @@ abstract class Root
 	 * @since  4.4
 	 * @access public
 	 */
-	public static function debug2($msg, $backtrace_limit = false)
-	{
+	public static function debug2( $msg, $backtrace_limit = false ) {
 		if (!defined('LSCWP_LOG_MORE')) {
 			return;
 		}
@@ -74,8 +95,7 @@ abstract class Root
 	 *
 	 * @since  3.0
 	 */
-	public function has_cache_folder($type)
-	{
+	public function has_cache_folder( $type ) {
 		$subsite_id = is_multisite() && !is_network_admin() ? get_current_blog_id() : '';
 
 		if (file_exists(LITESPEED_STATIC_DIR . '/' . $type . '/' . $subsite_id)) {
@@ -89,11 +109,10 @@ abstract class Root
 	 *
 	 * @since 4.4.2
 	 */
-	protected function _maybe_mk_cache_folder($type)
-	{
+	protected function _maybe_mk_cache_folder( $type ) {
 		if (!$this->has_cache_folder($type)) {
 			$subsite_id = is_multisite() && !is_network_admin() ? get_current_blog_id() : '';
-			$path = LITESPEED_STATIC_DIR . '/' . $type . '/' . $subsite_id;
+			$path       = LITESPEED_STATIC_DIR . '/' . $type . '/' . $subsite_id;
 			mkdir($path, 0755, true);
 		}
 	}
@@ -103,8 +122,7 @@ abstract class Root
 	 *
 	 * @since  3.0
 	 */
-	public function rm_cache_folder($type)
-	{
+	public function rm_cache_folder( $type ) {
 		if (!$this->has_cache_folder($type)) {
 			return;
 		}
@@ -132,8 +150,7 @@ abstract class Root
 	 *
 	 * @since  4.0
 	 */
-	protected function _build_filepath_prefix($type)
-	{
+	protected function _build_filepath_prefix( $type ) {
 		$filepath_prefix = '/' . $type . '/';
 		if (is_multisite()) {
 			$filepath_prefix .= get_current_blog_id() . '/';
@@ -148,14 +165,13 @@ abstract class Root
 	 * @since  4.1
 	 * @since  4.3 Elevated to root.cls
 	 */
-	public function load_queue($type)
-	{
+	public function load_queue( $type ) {
 		$filepath_prefix = $this->_build_filepath_prefix($type);
-		$static_path = LITESPEED_STATIC_DIR . $filepath_prefix . '.litespeed_conf.dat';
+		$static_path     = LITESPEED_STATIC_DIR . $filepath_prefix . '.litespeed_conf.dat';
 
-		$queue = array();
+		$queue = [];
 		if (file_exists($static_path)) {
-			$queue = \json_decode(file_get_contents($static_path), true) ?: array();
+			$queue = \json_decode(file_get_contents($static_path), true) ?: [];
 		}
 
 		return $queue;
@@ -167,10 +183,9 @@ abstract class Root
 	 * @since  4.1
 	 * @since  4.3 Elevated to root.cls
 	 */
-	public function save_queue($type, $list)
-	{
+	public function save_queue( $type, $list ) {
 		$filepath_prefix = $this->_build_filepath_prefix($type);
-		$static_path = LITESPEED_STATIC_DIR . $filepath_prefix . '.litespeed_conf.dat';
+		$static_path     = LITESPEED_STATIC_DIR . $filepath_prefix . '.litespeed_conf.dat';
 
 		$data = \json_encode($list);
 
@@ -183,10 +198,9 @@ abstract class Root
 	 * @since  3.4
 	 * @since  4.3 Elevated to root.cls
 	 */
-	public function clear_q($type, $silent = false)
-	{
+	public function clear_q( $type, $silent = false ) {
 		$filepath_prefix = $this->_build_filepath_prefix($type);
-		$static_path = LITESPEED_STATIC_DIR . $filepath_prefix . '.litespeed_conf.dat';
+		$static_path     = LITESPEED_STATIC_DIR . $filepath_prefix . '.litespeed_conf.dat';
 
 		if (file_exists($static_path)) {
 			$silent = false;
@@ -195,16 +209,65 @@ abstract class Root
 
 		if (!$silent) {
 			$msg = __('All QUIC.cloud service queues have been cleared.', 'litespeed-cache');
-			Admin_Display::succeed($msg);
+			Admin_Display::success($msg);
 		}
 	}
 
 	/**
+	 * Encode runtime configuration into the guarded file format.
+	 *
+	 * @since 7.9.2
+	 */
+	public static function encode_conf_file( $data ) {
+		$json = \json_encode((object) $data, JSON_HEX_TAG);
+		return is_string($json) ? self::CONF_FILE_GUARD . $json : false;
+	}
+
+	/**
+	 * Parse a runtime configuration file: the guard followed by a JSON object, or (legacy) a bare JSON object.
+	 *
+	 * @since 7.9.2
+	 */
+	public static function parse_conf_file( $raw, $legacy = false ) {
+		if (!is_string($raw)) {
+			return false;
+		}
+		if (!$legacy) {
+			if (0 !== strncmp($raw, self::CONF_FILE_GUARD, strlen(self::CONF_FILE_GUARD))) {
+				return false;
+			}
+			$raw = substr($raw, strlen(self::CONF_FILE_GUARD));
+		}
+		$data = \json_decode($raw, true);
+		return is_array($data) ? $data : false;
+	}
+
+	/**
+	 * Read the runtime configuration: the guarded file first, the legacy plaintext file as fallback.
+	 *
+	 * @since 7.9.2
+	 */
+	public static function read_conf_file( $dir ) {
+		foreach ([ self::CONF_FILE => false, self::CONF_FILE_LEGACY => true ] as $name => $legacy) {
+			if (!is_file($dir . '/' . $name)) {
+				continue;
+			}
+			$data = self::parse_conf_file(file_get_contents($dir . '/' . $name), $legacy);
+			if (false !== $data) {
+				return $data;
+			}
+			// An existing but unreadable file usually means a root-owned 0600 copy (e.g. written by `wp --allow-root`); no-op unless debug logging is active.
+			self::debug('[Conf] Failed to read runtime configuration file: ' . $name);
+		}
+		return [];
+	}
+
+	/**
 	 * Load an instance or create it if not existed
+	 *
 	 * @since  4.0
 	 */
-	public static function cls($cls = false, $unset = false, $data = false)
-	{
+	public static function cls( $cls = false, $unset = false, $data = false ) {
 		if (!$cls) {
 			$cls = self::ori_cls();
 		}
@@ -218,11 +281,9 @@ abstract class Root
 			}
 
 			self::$_instances[$cls_tag] = new $cls($data);
-		} else {
-			if ($unset) {
-				unset(self::$_instances[$cls_tag]);
-				return;
-			}
+		} elseif ($unset) {
+			unset(self::$_instances[$cls_tag]);
+			return;
 		}
 
 		return self::$_instances[$cls_tag];
@@ -231,8 +292,7 @@ abstract class Root
 	/**
 	 * Set one conf or confs
 	 */
-	public function set_conf($id, $val = null)
-	{
+	public function set_conf( $id, $val = null ) {
 		if (is_array($id)) {
 			foreach ($id as $k => $v) {
 				$this->set_conf($k, $v);
@@ -245,8 +305,7 @@ abstract class Root
 	/**
 	 * Set one primary conf or confs
 	 */
-	public function set_primary_conf($id, $val = null)
-	{
+	public function set_primary_conf( $id, $val = null ) {
 		if (is_array($id)) {
 			foreach ($id as $k => $v) {
 				$this->set_primary_conf($k, $v);
@@ -259,8 +318,7 @@ abstract class Root
 	/**
 	 * Set one network conf
 	 */
-	public function set_network_conf($id, $val = null)
-	{
+	public function set_network_conf( $id, $val = null ) {
 		if (is_array($id)) {
 			foreach ($id as $k => $v) {
 				$this->set_network_conf($k, $v);
@@ -273,8 +331,7 @@ abstract class Root
 	/**
 	 * Set one const conf
 	 */
-	public function set_const_conf($id, $val)
-	{
+	public function set_const_conf( $id, $val ) {
 		self::$_const_options[$id] = $val;
 	}
 
@@ -283,8 +340,7 @@ abstract class Root
 	 *
 	 * @since  3.0
 	 */
-	public function const_overwritten($id)
-	{
+	public function const_overwritten( $id ) {
 		if (!isset(self::$_const_options[$id]) || self::$_const_options[$id] == self::$_options[$id]) {
 			return null;
 		}
@@ -296,8 +352,7 @@ abstract class Root
 	 *
 	 * @since  3.2.2
 	 */
-	public function primary_overwritten($id)
-	{
+	public function primary_overwritten( $id ) {
 		if (!isset(self::$_primary_options[$id]) || self::$_primary_options[$id] == self::$_options[$id]) {
 			return null;
 		}
@@ -311,12 +366,88 @@ abstract class Root
 	}
 
 	/**
+	 * Check if is overwritten by filter.
+	 *
+	 * @since 7.7
+	 */
+	public function filter_overwritten( $id ) {
+		$val_setting = $this->conf($id, true);
+		// if setting not found
+		if( null === $val_setting ){
+			return null;
+		}
+
+		$filter_name = 'litespeed_conf_load_option_' . $id;
+		$val_filter  = apply_filters($filter_name, $val_setting );
+
+		if ($val_setting === $val_filter) {
+			// If the value is the same, return null.
+			return null;
+		}
+
+		return $val_filter;
+	}
+
+	/**
+	 * Check if is overwritten by code filter
+	 *
+	 * @deprecated 7.7 Use general filter_overwritten()
+	 * @since  7.4
+	 */
+	public function deprecated_filter_overwritten( $id ) {
+		$cls_admin_display = Admin_Display::$settings_filters;
+		// Check if filter name is set.
+		if(!isset($cls_admin_display[$id]) || !isset($cls_admin_display[$id]['filter']) || is_array($cls_admin_display[$id]['filter']) ){
+			return null;
+		}
+
+		// Missing-size rendering uses this legacy filter only as an enabled gate, with true as its input.
+		$val_setting = Base::O_MEDIA_ADD_MISSING_SIZES === $id ? true : $this->conf($id, true);
+		// if setting not found
+		if( null === $val_setting ){
+			$val_setting = '';
+		}
+
+		$val_filter = apply_filters($cls_admin_display[$id]['filter'], $val_setting );
+
+		if ($val_setting === $val_filter) {
+			// If the value is the same, return null.
+			return null;
+		}
+
+		return $val_filter;
+	}
+
+	/**
+	 * Check if is overwritten by $SERVER variable
+	 *
+	 * @since  7.4
+	 */
+	public function server_overwritten( $id ) {
+		$cls_admin_display = Admin_Display::$settings_filters;
+		if(!isset($cls_admin_display[$id]['filter'])){
+			return null;
+		}
+
+		if(!is_array($cls_admin_display[$id]['filter'])) {
+			$cls_admin_display[$id]['filter'] = array( $cls_admin_display[$id]['filter'] );
+		}
+
+		foreach( $cls_admin_display[$id]['filter'] as $variable ){
+			if(isset($_SERVER[$variable])) {
+				return [ $variable , $_SERVER[$variable] ] ;
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * Get the list of configured options for the blog.
 	 *
 	 * @since 1.0
 	 */
-	public function get_options($ori = false)
-	{
+	public function get_options( $ori = false ) {
 		if (!$ori) {
 			return array_merge(self::$_options, self::$_primary_options, self::$_network_options, self::$_const_options);
 		}
@@ -327,32 +458,28 @@ abstract class Root
 	/**
 	 * If has a conf or not
 	 */
-	public function has_conf($id)
-	{
+	public function has_conf( $id ) {
 		return array_key_exists($id, self::$_options);
 	}
 
 	/**
 	 * If has a primary conf or not
 	 */
-	public function has_primary_conf($id)
-	{
+	public function has_primary_conf( $id ) {
 		return array_key_exists($id, self::$_primary_options);
 	}
 
 	/**
 	 * If has a network conf or not
 	 */
-	public function has_network_conf($id)
-	{
+	public function has_network_conf( $id ) {
 		return array_key_exists($id, self::$_network_options);
 	}
 
 	/**
 	 * Get conf
 	 */
-	public function conf($id, $ori = false)
-	{
+	public function conf( $id, $ori = false ) {
 		if (isset(self::$_options[$id])) {
 			if (!$ori) {
 				$val = $this->const_overwritten($id);
@@ -362,6 +489,11 @@ abstract class Root
 				}
 
 				$val = $this->primary_overwritten($id); // Network Use primary site settings
+				if ($val !== null) {
+					return $val;
+				}
+
+				$val = $this->filter_overwritten($id);
 				if ($val !== null) {
 					return $val;
 				}
@@ -393,16 +525,14 @@ abstract class Root
 	/**
 	 * Get primary conf
 	 */
-	public function primary_conf($id)
-	{
+	public function primary_conf( $id ) {
 		return self::$_primary_options[$id];
 	}
 
 	/**
 	 * Get network conf
 	 */
-	public function network_conf($id)
-	{
+	public function network_conf( $id ) {
 		if (!$this->has_network_conf($id)) {
 			return null;
 		}
@@ -413,9 +543,8 @@ abstract class Root
 	/**
 	 * Get called class short name
 	 */
-	public static function ori_cls()
-	{
-		$cls = new \ReflectionClass(get_called_class());
+	public static function ori_cls() {
+		$cls       = new \ReflectionClass(get_called_class());
 		$shortname = $cls->getShortName();
 		$namespace = str_replace(__NAMESPACE__ . '\\', '', $cls->getNamespaceName() . '\\');
 		if ($namespace) {
@@ -431,13 +560,8 @@ abstract class Root
 	 *
 	 * @since 3.0
 	 */
-	public static function name($id)
-	{
+	public static function name( $id ) {
 		$name = strtolower(self::ori_cls());
-		if ($name == 'conf2') {
-			// For a certain 3.7rc correction, can be dropped after v4
-			$name = 'conf';
-		}
 		return 'litespeed.' . $name . '.' . $id;
 	}
 
@@ -446,8 +570,7 @@ abstract class Root
 	 *
 	 * @since 3.0
 	 */
-	public static function get_option($id, $default_v = false)
-	{
+	public static function get_option( $id, $default_v = false ) {
 		$v = get_option(self::name($id), $default_v);
 
 		// Maybe decode array
@@ -463,26 +586,8 @@ abstract class Root
 	 *
 	 * @since 3.0
 	 */
-	public static function get_site_option($id, $default_v = false)
-	{
+	public static function get_site_option( $id, $default_v = false ) {
 		$v = get_site_option(self::name($id), $default_v);
-
-		// Maybe decode array
-		if (is_array($default_v)) {
-			$v = self::_maybe_decode($v);
-		}
-
-		return $v;
-	}
-
-	/**
-	 * Dropin with prefix for WP's get_blog_option
-	 *
-	 * @since 3.0
-	 */
-	public static function get_blog_option($blog_id, $id, $default_v = false)
-	{
-		$v = get_blog_option($blog_id, self::name($id), $default_v);
 
 		// Maybe decode array
 		if (is_array($default_v)) {
@@ -497,8 +602,7 @@ abstract class Root
 	 *
 	 * @since 3.0
 	 */
-	public static function add_option($id, $v)
-	{
+	public static function add_option( $id, $v ) {
 		add_option(self::name($id), self::_maybe_encode($v));
 	}
 
@@ -507,8 +611,7 @@ abstract class Root
 	 *
 	 * @since 3.0
 	 */
-	public static function add_site_option($id, $v)
-	{
+	public static function add_site_option( $id, $v ) {
 		add_site_option(self::name($id), self::_maybe_encode($v));
 	}
 
@@ -516,20 +619,30 @@ abstract class Root
 	 * Dropin with prefix for WP's update_option
 	 *
 	 * @since 3.0
+	 * @return bool Whether the requested value can be read back.
 	 */
-	public static function update_option($id, $v)
-	{
-		update_option(self::name($id), self::_maybe_encode($v));
+	public static function update_option( $id, $v ) {
+		$name    = self::name( $id );
+		$encoded = self::_maybe_encode( $v );
+		update_option( $name, $encoded );
+		$missing = new \stdClass();
+		$stored  = get_option( $name, $missing );
+		return $stored === $encoded || ( is_scalar( $stored ) && is_scalar( $encoded ) && (string) $stored === (string) $encoded );
 	}
 
 	/**
 	 * Dropin with prefix for WP's update_site_option
 	 *
 	 * @since 3.0
+	 * @return bool Whether the requested value can be read back.
 	 */
-	public static function update_site_option($id, $v)
-	{
-		update_site_option(self::name($id), self::_maybe_encode($v));
+	public static function update_site_option( $id, $v ) {
+		$name    = self::name( $id );
+		$encoded = self::_maybe_encode( $v );
+		update_site_option( $name, $encoded );
+		$missing = new \stdClass();
+		$stored  = get_site_option( $name, $missing );
+		return $stored === $encoded || ( is_scalar( $stored ) && is_scalar( $encoded ) && (string) $stored === (string) $encoded );
 	}
 
 	/**
@@ -537,8 +650,7 @@ abstract class Root
 	 *
 	 * @since  4.0
 	 */
-	private static function _maybe_decode($v)
-	{
+	protected static function _maybe_decode( $v ) {
 		if (!is_array($v)) {
 			$v2 = \json_decode($v, true);
 			if ($v2 !== null) {
@@ -553,8 +665,7 @@ abstract class Root
 	 *
 	 * @since  4.0
 	 */
-	private static function _maybe_encode($v)
-	{
+	private static function _maybe_encode( $v ) {
 		if (is_array($v)) {
 			$v = \json_encode($v) ?: $v; // Non utf-8 encoded value will get failed, then used ori value
 		}
@@ -566,8 +677,7 @@ abstract class Root
 	 *
 	 * @since 3.0
 	 */
-	public static function delete_option($id)
-	{
+	public static function delete_option( $id ) {
 		delete_option(self::name($id));
 	}
 
@@ -576,8 +686,7 @@ abstract class Root
 	 *
 	 * @since 3.0
 	 */
-	public static function delete_site_option($id)
-	{
+	public static function delete_site_option( $id ) {
 		delete_site_option(self::name($id));
 	}
 
@@ -587,12 +696,11 @@ abstract class Root
 	 * @since  3.0
 	 * @access public
 	 */
-	public static function get_summary($field = false)
-	{
-		$summary = self::get_option('_summary', array());
+	public static function get_summary( $field = false ) {
+		$summary = self::get_option('_summary', []);
 
 		if (!is_array($summary)) {
-			$summary = array();
+			$summary = [];
 		}
 
 		if (!$field) {
@@ -612,18 +720,17 @@ abstract class Root
 	 * @since  3.0
 	 * @access public
 	 */
-	public static function save_summary($data = false, $reload = false, $overwrite = false)
-	{
+	public static function save_summary( $data = false, $reload = false, $overwrite = false ) {
 		if ($reload || empty(static::cls()->_summary)) {
 			self::reload_summary();
 		}
 
 		$existing_summary = static::cls()->_summary;
 		if ($overwrite || !is_array($existing_summary)) {
-			$existing_summary = array();
+			$existing_summary = [];
 		}
-		$new_summary = array_merge($existing_summary, $data ?: array());
-		// self::debug2( 'Save after Reloaded summary', $new_summary );
+		$new_summary = array_merge($existing_summary, $data ?: []);
+		// self::debug2('Save after Reloaded summary', $new_summary);
 		static::cls()->_summary = $new_summary;
 
 		self::update_option('_summary', $new_summary);
@@ -631,10 +738,10 @@ abstract class Root
 
 	/**
 	 * Reload summary
+	 *
 	 * @since 5.0
 	 */
-	public static function reload_summary()
-	{
+	public static function reload_summary() {
 		static::cls()->_summary = self::get_summary();
 		// self::debug2( 'Reloaded summary', static::cls()->_summary );
 	}
@@ -644,8 +751,7 @@ abstract class Root
 	 *
 	 * @since 3.0
 	 */
-	public static function get_instance()
-	{
+	public static function get_instance() {
 		return static::cls();
 	}
 }

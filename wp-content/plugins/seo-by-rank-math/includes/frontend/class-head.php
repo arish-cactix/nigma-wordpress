@@ -32,6 +32,15 @@ class Head {
 	use Hooker;
 
 	/**
+	 * Keeps the buffer level.
+	 *
+	 * @since 1.0.252
+	 *
+	 * @var int
+	 */
+	private $buffer_level = 0;
+
+	/**
 	 * The Constructor.
 	 */
 	public function __construct() {
@@ -156,7 +165,7 @@ class Head {
 		$old_wp_query = null;
 		if ( ! $wp_query->is_main_query() ) {
 			$old_wp_query = $wp_query;
-			wp_reset_query();
+			wp_reset_query(); //phpcs:ignore -- This function is needed here to reset the query before running the head code.
 		}
 
 		$this->credits();
@@ -372,8 +381,8 @@ class Head {
 		if ( Str::is_non_empty( $link ) ) {
 			$allowed_tags = [
 				'link' => [
-					'href'  => [],
-					'rel'   => [],
+					'href' => [],
+					'rel'  => [],
 				],
 			];
 			echo wp_kses( $link, $allowed_tags );
@@ -409,15 +418,15 @@ class Head {
 
 		if ( false === $closing ) {
 			if ( ! Helper::is_whitelabel() && ! defined( 'RANK_MATH_PRO_FILE' ) ) {
-				echo "\n<!-- " . esc_html__( 'Search Engine Optimization by Rank Math - https://rankmath.com/', 'rank-math' ) . " -->\n";
+				echo "\n<!-- " . esc_html__( 'Search Engine Optimization by Rank Math - https://rankmath.com/', 'seo-by-rank-math' ) . " -->\n";
 			} elseif ( defined( 'RANK_MATH_PRO_FILE' ) ) {
-				echo "\n<!-- " . esc_html__( 'Search Engine Optimization by Rank Math PRO - https://rankmath.com/', 'rank-math' ) . " -->\n";
+				echo "\n<!-- " . esc_html__( 'Search Engine Optimization by Rank Math PRO - https://rankmath.com/', 'seo-by-rank-math' ) . " -->\n";
 			}
 			return;
 		}
 
 		if ( ! Helper::is_whitelabel() ) {
-			echo '<!-- /' . esc_html__( 'Rank Math WordPress SEO plugin', 'rank-math' ) . " -->\n\n";
+			echo '<!-- /' . esc_html__( 'Rank Math WordPress SEO plugin', 'seo-by-rank-math' ) . " -->\n\n";
 		}
 	}
 
@@ -428,19 +437,24 @@ class Head {
 	 */
 	public function start_ob() {
 		ob_start();
+		$this->buffer_level = ob_get_level();
 	}
 
 	/**
 	 * Use output buffering to force rewrite the title tag.
 	 */
 	public function rewrite_title() {
+		if ( ob_get_level() !== $this->buffer_level ) {
+			return;
+		}
+
 		global $wp_query;
 
 		// Check if we're in the main query.
 		$old_wp_query = null;
 		if ( ! $wp_query->is_main_query() ) {
 			$old_wp_query = $wp_query;
-			wp_reset_query();
+			wp_reset_query(); //phpcs:ignore -- This function is needed here to reset the query before running the head code.
 		}
 
 		$content = ob_get_clean();

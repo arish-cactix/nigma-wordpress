@@ -1,6 +1,6 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
+	exit; // Exit if accessed directly
 }
 /**
  * Postman execution begins here:
@@ -51,6 +51,7 @@ class Postman {
 		$this->rootPluginFilenameAndPath = $rootPluginFilenameAndPath;
 		self::$rootPlugin = $rootPluginFilenameAndPath;
 		
+		require_once POST_SMTP_PATH . '/Postman/Postman-Suggest-Pro/PostmanPromotionManager.php';
 		//Load helper functions file :D
 		require_once POST_SMTP_PATH . '/includes/postman-functions.php';
 
@@ -59,21 +60,31 @@ class Postman {
 		require_once 'PostmanState.php';
 		require_once 'PostmanLogger.php';
 		require_once 'PostmanUtils.php';
+		require_once 'PostmanReferralLinks.php';
 		require_once 'Postman-Mail/PostmanTransportRegistry.php';
 		require_once 'Postman-Mail/PostmanDefaultModuleTransport.php';
 		require_once 'Postman-Mail/PostmanSmtpModuleTransport.php';
 		require_once 'Postman-Mail/PostmanGmailApiModuleTransport.php';
 		require_once 'Postman-Mail/PostmanMandrillTransport.php';
 		require_once 'Postman-Mail/PostmanSendGridTransport.php';
+		require_once 'Postman-Mail/PostmanMailerSendTransport.php';
 		require_once 'Postman-Mail/PostmanMailgunTransport.php';
         require_once 'Postman-Mail/PostmanSendinblueTransport.php';
+        require_once 'Postman-Mail/PostmanMailtrapTransport.php';
+        require_once 'Postman-Mail/PostmanResendTransport.php';
+		require_once 'Postman-Mail/PostmanCloudflareTransport.php';
+		require_once 'Postman-Mail/PostmanSmtpcomTransport.php';
 		require_once 'Postman-Mail/PostmanMailjetTransport.php';
+		require_once 'Postman-Mail/PostmanEmailitTransport.php';
+		require_once 'Postman-Mail/PostmanMailerooTransport.php';
+		require_once 'Postman-Mail/PostmanSweegoTransport.php';
 		require_once 'Postman-Mail/PostmanSendpulseTransport.php';
 		require_once 'Postman-Suggest-Pro/PostmanSuggestProSocket.php';
-        require_once 'Postman-Mail/PostmanPostmarkTransport.php';
-        require_once 'Postman-Mail/PostmanSparkPostTransport.php';
-        require_once 'Postman-Mail/PostmanElasticEmailTransport.php';
-        require_once 'PostmanOAuthToken.php';
+		require_once 'Postman-Mail/PostmanPostmarkTransport.php';
+		require_once 'Postman-Mail/PostmanSparkPostTransport.php';
+		require_once 'Postman-Mail/PostmanElasticEmailTransport.php';
+		require_once 'Postman-Mail/PostmanSmtp2GoTransport.php';
+		require_once 'PostmanOAuthToken.php';
 		require_once 'PostmanWpMailBinder.php';
 		require_once 'PostmanConfigTextHelper.php';
 		require_once 'Postman-Email-Log/PostmanEmailLogPostType.php';
@@ -87,7 +98,7 @@ class Postman {
 		require_once 'Wizard/NewWizard.php';
 		//load MainWP Child Files
 		require_once 'Extensions/MainWP-Child/mainwp-child.php';
-		
+
 		//Mobile Application
 		require_once 'Mobile/mobile.php';
 
@@ -95,9 +106,16 @@ class Postman {
 		require_once 'Postman-Email-Health-Report/PostmanEmailReporting.php';
 		require_once 'Postman-Email-Health-Report/PostmanEmailReportSending.php';
 
+		// New Dashboard
+		require_once 'Dashboard/NewDashboard.php';
+
+		// Email Tester
+		require_once 'Postman-Mail-Tester/PostmanEmailTester.php';
+
+
 		// get plugin metadata - alternative to get_plugin_data
 		$this->pluginData = array(
-				'name' => _x( 'Postman SMTP', 'Post SMTP plugin name', 'post-smtp' ),
+				'name' => 'Post SMTP',
 				'version' => $version,
 		);
 
@@ -119,10 +137,10 @@ class Postman {
 
 		// register the email transports
 
-        // store an instance of the WpMailBinder
-        $this->wpMailBinder = PostmanWpMailBinder::getInstance();
+		// store an instance of the WpMailBinder
+		$this->wpMailBinder = PostmanWpMailBinder::getInstance();
 
-        if( apply_filters( 'post_smtp_declare_wp_mail', true ) ) {
+		if( apply_filters( 'post_smtp_declare_wp_mail', true ) ) {
 
 			$mailer = PostmanOptions::getInstance()->getSmtpMailer();
 			$this->logger->trace( 'SMTP Mailer: ' . $mailer );
@@ -166,13 +184,13 @@ class Postman {
 		) );
 
 		// hook on the plugins_loaded event
-		add_action( 'plugins_loaded', array(
-				$this,
-				'on_plugins_loaded',
-		) );
+		add_action( 'init', array(
+			$this,
+			'on_init',
+		), 0 );
 
 		//Conflicting with backupbuddy, will be removed soon 
-        //add_filter( 'extra_plugin_headers', [ $this, 'add_extension_headers' ] );
+		//add_filter( 'extra_plugin_headers', [ $this, 'add_extension_headers' ] );
 
 		// hook on the wp_loaded event
 		add_action( 'wp_loaded', array(
@@ -192,14 +210,31 @@ class Postman {
 				'on_deactivation',
 		) );
 
+		 add_action( 'admin_head', array( $this, 'hide_wizard_notices' ) );
+
 	}
 
-    function add_extension_headers($headers) {
-        $headers[] = 'Class';
-        $headers[] = 'Slug';
+	/**
+	 * Hide all admin notices on the setup wizard page.
+	 */
+	public function hide_wizard_notices() {
+		
+		if ( ! is_admin() ) {
+            return;
+        }
 
-        return $headers;
-    }
+		if ( isset( $_GET['page'] ) && $_GET['page'] === 'postman/configuration_wizard' ) {
+			remove_all_actions( 'admin_notices' );
+			remove_all_actions( 'all_admin_notices' );
+		}
+	}
+
+	function add_extension_headers($headers) {
+		$headers[] = 'Class';
+		$headers[] = 'Slug';
+
+		return $headers;
+	}
 
 	/**
 	 * Functions to execute on the plugins_loaded event
@@ -207,18 +242,30 @@ class Postman {
 	 * "After active plugins and pluggable functions are loaded"
 	 * ref: http://codex.wordpress.org/Plugin_API/Action_Reference#Actions_Run_During_a_Typical_Request
 	 */
-	public function on_plugins_loaded() {
+	public function on_init() {
 
 		// register the email transports
 		$this->registerTransports( $this->rootPluginFilenameAndPath );
 
-		// load the text domain
-		$this->loadTextDomain();
 
 		// register the setup_admin function on plugins_loaded because we need to call
 		// current_user_can to verify the capability of the current user
-		if ( PostmanUtils::isAdmin() && is_admin() ) {
-			$this->setup_admin();
+		if ( is_admin() ) {
+			if ( PostmanUtils::isAdmin() ) {
+				$this->setup_admin();
+			} elseif ( PostmanUtils::canManagePostmanLogs() ) {
+				$this->bootstrap_email_log_admin();
+			}
+		}
+
+		if ( get_option( 'post_smtp_activation_redirect' ) ) {
+			delete_option( 'post_smtp_activation_redirect' );
+			if ( PostmanUtils::isAdmin() ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=postman/configuration_wizard' ) );
+			} elseif ( PostmanUtils::canManagePostmanLogs() ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=postman_email_log' ) );
+			}
+			exit;
 		}
 		
 	}
@@ -247,6 +294,8 @@ class Postman {
 		require_once 'PostmanInstaller.php';
 		$upgrader = new PostmanInstaller();
 		$upgrader->activatePostman();
+		
+		add_option( 'post_smtp_activation_redirect', true );
 	}
 
 	/**
@@ -283,6 +332,7 @@ class Postman {
 		require_once 'Postman-Configuration/PostmanConfigurationController.php';
 		require_once 'Postman-Send-Test-Email/PostmanSendTestEmailController.php';
 		require_once 'Postman-Diagnostic-Test/PostmanDiagnosticTestController.php';
+		require_once 'PostmanSMTPConflictManager.php';
 
 		// create and store an instance of the MessageHandler
 		$this->messageHandler = new PostmanMessageHandler();
@@ -297,6 +347,9 @@ class Postman {
 		new PostmanSendTestEmailController( $rootPluginFilenameAndPath );
 		new PostmanDiagnosticTestController( $rootPluginFilenameAndPath );
 
+		// Initialize SMTP Conflict Manager to detect and warn about conflicting plugins
+		new PostmanSMTPConflictManager();
+
 		// register the Postman signature (only if we're on a postman admin screen) on the in_admin_footer event
 		if ( PostmanUtils::isCurrentPagePostmanAdmin() ) {
 			add_action( 'in_admin_footer', array(
@@ -307,104 +360,95 @@ class Postman {
 	}
 
 	/**
+	 * Load email-log admin for users with manage_postman_logs only (Role Editor, etc.).
+	 */
+	public function bootstrap_email_log_admin() {
+		$this->logger->debug( 'Email log admin start-up sequence' );
+
+		require_once 'PostmanViewController.php';
+		require_once 'Postman-Email-Log/PostmanEmailLogController.php';
+		new PostmanEmailLogController( $this->rootPluginFilenameAndPath );
+
+		add_action( 'admin_init', array( $this, 'register_log_admin_assets' ), 0 );
+
+		if ( PostmanUtils::isCurrentPagePostmanAdmin( PostmanUtils::POSTMAN_EMAIL_LOG_PAGE_STUB ) ) {
+			add_action( 'in_admin_footer', array(
+				$this,
+				'print_signature',
+			) );
+		}
+	}
+
+	/**
+	 * Register styles/scripts required by the email log screen for log-only users.
+	 */
+	public function register_log_admin_assets() {
+		if ( ! PostmanUtils::canManagePostmanLogs() ) {
+			return;
+		}
+
+		$pluginData = apply_filters( 'postman_get_plugin_metadata', null );
+		wp_register_style( 'postman_style', plugins_url( 'style/postman.css', $this->rootPluginFilenameAndPath ), null, $pluginData['version'] );
+		wp_register_script( 'postman_script', plugins_url( 'script/postman.js', $this->rootPluginFilenameAndPath ), array( 'jquery' ), $pluginData['version'] );
+	}
+
+	/**
 	 * Check for configuration errors and displays messages to the user
 	 */
 	public function check_for_configuration_errors() {
 		$options = PostmanOptions::getInstance();
 		$authToken = PostmanOAuthToken::getInstance();
 
-		// did Postman fail binding to wp_mail()?
-		if ( $this->wpMailBinder->isUnboundDueToException() ) {
-			// this message gets printed on ANY WordPress admin page, as it's a fatal error that
-			// may occur just by activating a new plugin
-			// log the fatal message
-			$this->logger->fatal( 'Postman: wp_mail has been declared by another plugin or theme, so you won\'t be able to use Postman until the conflict is resolved.' );
+		$transport = PostmanTransportRegistry::getInstance()->getCurrentTransport();
+		$scribe = $transport->getScribe();
 
-			if ( PostmanUtils::isAdmin() && is_admin() ) {
-				// on any admin pages, show this error message
-				// I noticed the wpMandrill and SendGrid plugins have the exact same error message here
-				// I've adopted their error message as well, for shits and giggles .... :D
-				$reflFunc = new ReflectionFunction( 'wp_mail' );
+		$virgin = $options->isNew();
+		if ( ! $transport->isConfiguredAndReady() ) {
+			// if the configuration is broken, and the user has started to configure the plugin
+			// show this error message
+			$messages = $transport->getConfigurationMessages();
+			foreach ( $messages as $message ) {
+				if ( $message ) {
+					// log the warning message
+					$this->logger->warn( sprintf( '%s Transport has a configuration problem: %s', $transport->getName(), $message ) );
 
-				$message = __( 'Postman: wp_mail has been declared by another plugin or theme, so you won\'t be able to use Postman until the conflict is resolved.', 'post-smtp' );
-
-				$plugin_full_path = $reflFunc->getFileName();
-
-				if ( strpos( $plugin_full_path, 'plugins' ) !== false ) {
-
-					require_once ABSPATH . '/wp-admin/includes/plugin.php';
-
-					preg_match( '/([a-z]+\/[a-z]+\.php)$/', $plugin_full_path, $output_array );
-
-					$plugin_file = $output_array[1];
-					$plugin_data = get_plugin_data( $plugin_full_path );
-
-					$deactivate_url = '<a href="' . wp_nonce_url( 'plugins.php?action=deactivate&amp;plugin=' . urlencode( $plugin_file ) . '&amp;plugin_status=active&amp;paged=1&amp;s=deactivate-plugin_' . $plugin_file ) . '" aria-label="' . esc_attr( sprintf( _x( 'Deactivate %s', 'plugin' ), $plugin_data['Name'] ) ) . '">' . __( 'Deactivate' ) . '</a><br>';
-					$message .= '<br><strong>Plugin Name:</strong> ' . $plugin_data['Name'];
-					$message .= '<br>' . $deactivate_url;
-				}
-
-				$message .= '<br><strong>More info that may help</strong> - ' . $reflFunc->getFileName() . ':' . $reflFunc->getStartLine();
-
-				// PHPmailer Recommandation
-				ob_start();
-                Postman::getMailerTypeRecommend();
-                $message .= ob_get_clean();
-
-				$this->messageHandler->addError( $message );
-			}
-		} else {
-			$transport = PostmanTransportRegistry::getInstance()->getCurrentTransport();
-			$scribe = $transport->getScribe();
-
-			$virgin = $options->isNew();
-			if ( ! $transport->isConfiguredAndReady() ) {
-				// if the configuration is broken, and the user has started to configure the plugin
-				// show this error message
-				$messages = $transport->getConfigurationMessages();
-				foreach ( $messages as $message ) {
-					if ( $message ) {
-						// log the warning message
-						$this->logger->warn( sprintf( '%s Transport has a configuration problem: %s', $transport->getName(), $message ) );
-
-						if ( PostmanUtils::isAdmin() && PostmanUtils::isCurrentPagePostmanAdmin() ) {
-							// on pages that are Postman admin pages only, show this error message
-							$this->messageHandler->addError( $message );
-						}
+					if ( PostmanUtils::isAdmin() && PostmanUtils::isCurrentPagePostmanAdmin() ) {
+						// on pages that are Postman admin pages only, show this error message
+						$this->messageHandler->addError( $message );
 					}
 				}
 			}
+		}
 
-			// on pages that are NOT Postman admin pages only, show this error message
-			if ( PostmanUtils::isAdmin() && ! PostmanUtils::isCurrentPagePostmanAdmin() && ! $transport->isConfiguredAndReady() ) {
-				// on pages that are *NOT* Postman admin pages only....
-				// if the configuration is broken show this error message
-				add_action( 'admin_notices', array(
-						$this,
-						'display_configuration_required_warning',
-				) );
-			}
+		// on pages that are NOT Postman admin pages only, show this error message
+		if ( PostmanUtils::isAdmin() && ! PostmanUtils::isCurrentPagePostmanAdmin() && ! $transport->isConfiguredAndReady() ) {
+			// on pages that are *NOT* Postman admin pages only....
+			// if the configuration is broken show this error message
+			add_action( 'admin_notices', array(
+					$this,
+					'display_configuration_required_warning',
+			) );
 		}
 	}
 
 	public static function getMailerTypeRecommend() {
-	    ?>
-        <div>
-            <p style="font-size: 18px; font-weight: bold;">Please notice</p>
-            <p style="font-size: 14px; line-height: 1.7;">
-                <?php _e('Post SMTP v2 includes and new feature called: <b>Mailer Type</b>.', 'post-smtp' ); ?><br>
-                <?php _e('I recommend to change it and <strong>TEST</strong> Post SMTP with the value <code>PHPMailer</code>.', 'post-smtp' ); ?><br>
-                <?php _e('<strong>ONLY</strong> if the default mailer type is not working for you.', 'post-smtp' ); ?><br>
-                <a target="_blank" href="<?php echo POST_SMTP_ASSETS; ?>images/gif/mailer-type.gif">
-                    <div>
-                        <img width="300" src="<?php echo POST_SMTP_ASSETS; ?>images/gif/mailer-type.gif" alt="how to set mailer type">
-                        <figcaption><?php _e('click to enlarge image.', 'post-smtp' ); ?></figcaption>
-                    </div>
-                </a>
-            </p>
-        </div>
-        <?php
-    }
+		?>
+		<div>
+			<p style="font-size: 18px; font-weight: bold;">Please notice</p>
+			<p style="font-size: 14px; line-height: 1.7;">
+				<?php _e('Post SMTP v2 includes and new feature called: <b>Mailer Type</b>.', 'post-smtp' ); ?><br>
+				<?php _e('I recommend to change it and <strong>TEST</strong> Post SMTP with the value <code>PHPMailer</code>.', 'post-smtp' ); ?><br>
+				<?php _e('<strong>ONLY</strong> if the default mailer type is not working for you.', 'post-smtp' ); ?><br>
+				<a target="_blank" href="<?php echo POST_SMTP_ASSETS; ?>images/gif/mailer-type.gif">
+					<div>
+						<img width="300" src="<?php echo POST_SMTP_ASSETS; ?>images/gif/mailer-type.gif" alt="how to set mailer type">
+						<figcaption><?php _e('click to enlarge image.', 'post-smtp' ); ?></figcaption>
+					</div>
+				</a>
+			</p>
+		</div>
+		<?php
+	}
 
 	/**
 	 * Returns the plugin version number and name
@@ -429,7 +473,7 @@ class Postman {
 			}
 			$msg = PostmanTransportRegistry::getInstance()->getReadyMessage();
 			$message = sprintf( $msg['message'] );
-			$goToSettings = sprintf( '<a href="%s">%s</a>', PostmanUtils::getSettingsPageUrl(), __( 'Settings', 'post-smtp' ) );
+			$goToSettings = sprintf( '<a href="%s">%s</a>', PostmanUtils::getConfigurationPageUrl(), __( 'Settings', 'post-smtp' ) );
 			$goToEmailLog = sprintf( '%s', _x( 'Email Log', 'The log of Emails that have been delivered', 'post-smtp' ) );
 			if ( PostmanOptions::getInstance()->isMailLoggingEnabled() ) {
 				$goToEmailLog = sprintf( '<a href="%s">%s</a>', PostmanUtils::getEmailLogPageUrl(), $goToEmailLog );
@@ -459,22 +503,10 @@ class Postman {
 			require_once 'PostmanAdminController.php';
 		}
 
-	    $postman_transport_registry = PostmanTransportRegistry::getInstance();
+		$postman_transport_registry = PostmanTransportRegistry::getInstance();
 
-        $postman_transport_registry->registerTransport( new PostmanDefaultModuleTransport( $rootPluginFilenameAndPath ) );
-        $postman_transport_registry->registerTransport( new PostmanSmtpModuleTransport( $rootPluginFilenameAndPath ) );
-        $postman_transport_registry->registerTransport( new PostmanGmailApiModuleTransport( $rootPluginFilenameAndPath ) );
-        $postman_transport_registry->registerTransport( new PostmanMandrillTransport( $rootPluginFilenameAndPath ) );
-        $postman_transport_registry->registerTransport( new PostmanSendGridTransport( $rootPluginFilenameAndPath ) );
-        $postman_transport_registry->registerTransport( new PostmanMailgunTransport( $rootPluginFilenameAndPath ) );
-        $postman_transport_registry->registerTransport( new PostmanSendinblueTransport( $rootPluginFilenameAndPath ) );
-		$postman_transport_registry->registerTransport( new PostmanMailjetTransport( $rootPluginFilenameAndPath ) );
-		$postman_transport_registry->registerTransport( new PostmanSendpulseTransport( $rootPluginFilenameAndPath ) );
-        $postman_transport_registry->registerTransport( new PostmanPostmarkTransport( $rootPluginFilenameAndPath ) );
-        $postman_transport_registry->registerTransport( new PostmanSparkPostTransport( $rootPluginFilenameAndPath ) );
-        $postman_transport_registry->registerTransport( new PostmanElasticEmailTransport( $rootPluginFilenameAndPath ) );
-
-		do_action( 'postsmtp_register_transport', $postman_transport_registry );
+		// Use centralized registration (idempotent — safe if already registered before init).
+		$postman_transport_registry->registerAllTransports( $rootPluginFilenameAndPath );
 	}
 
 	/**
@@ -484,26 +516,6 @@ class Postman {
 	 */
 	function print_signature() {
 		printf( '<a href="https://wordpress.org/plugins/post-smtp/">%s</a> %s<br/>', $this->pluginData ['name'], $this->pluginData ['version'] );
-	}
-
-	/**
-	 * Loads the appropriate language file
-	 */
-	private function loadTextDomain() {
-		// had to hardcode the third parameter, Relative path to WP_PLUGIN_DIR,
-		// because __FILE__ returns the wrong path if the plugin is installed as a symlink
-		$shortLocale = substr( get_locale(), 0, 2 );
-		if ( $shortLocale != 'en' ) {
-			$langDir = 'post-smtp/Postman/languages';
-			$success = load_plugin_textdomain( 'post-smtp', false, $langDir );
-			if ( $this->logger->isDebug() ) {
-				if ( $success ) {
-					$this->logger->debug( sprintf( 'local translation file loaded for locale=%s', get_locale() ) );
-				} else {
-					$this->logger->debug( sprintf( 'failed to load local translation file: locale=%s file=%s/%s-%s.mo', get_locale(), $langDir, 'post-smtp', get_locale() ) );
-				}
-			}
-		}
 	}
 
 	/**

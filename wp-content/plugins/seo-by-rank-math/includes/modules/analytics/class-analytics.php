@@ -13,6 +13,7 @@ namespace RankMath\Analytics;
 use RankMath\KB;
 use RankMath\Helper;
 use RankMath\Helpers\Arr;
+use RankMath\Helpers\Str;
 use RankMath\Helpers\Param;
 use RankMath\Google\Api;
 use RankMath\Module\Base;
@@ -66,13 +67,13 @@ class Analytics extends Base {
 			return;
 		}
 
-		$directory = dirname( __FILE__ );
+		$directory = __DIR__;
 		$this->config(
 			[
 				'id'        => 'analytics',
 				'directory' => $directory,
 				'help'      => [
-					'title' => esc_html__( 'Analytics', 'rank-math' ),
+					'title' => esc_html__( 'Analytics', 'seo-by-rank-math' ),
 					'view'  => $directory . '/views/help.php',
 				],
 			]
@@ -92,10 +93,10 @@ class Analytics extends Base {
 		$this->action( 'wp_helpers_notification_dismissed', 'analytic_first_fetch_dismiss' );
 
 		if ( is_admin() ) {
-			$this->filter( 'rank_math/database/tools', 'add_tools' );
 			$this->filter( 'rank_math/settings/general', 'add_settings' );
 			$this->action( 'admin_init', 'refresh_token_missing', 25 );
 			$this->action( 'admin_init', 'cancel_fetch', 5 );
+			$this->action( 'wp_helpers_notification_dismissed', 'notice_dismissible' );
 
 			new OAuth();
 		}
@@ -127,6 +128,8 @@ class Analytics extends Base {
 			return;
 		}
 
+		$this->maybe_add_cron_notice();
+
 		$tokens = Authentication::tokens();
 		if ( ! empty( $tokens['refresh_token'] ) ) {
 			Helper::remove_notification( 'reconnect' );
@@ -137,7 +140,7 @@ class Analytics extends Base {
 		Helper::add_notification(
 			sprintf(
 				/* translators: Auth URL */
-				'<i class="rm-icon rm-icon-rank-math"></i>' . __( 'It seems like the connection with your Google account & Rank Math needs to be made again. <a href="%s" class="rank-math-reconnect-google">Please click here.</a>', 'rank-math' ),
+				'<i class="rm-icon rm-icon-rank-math"></i>' . __( 'It seems like the connection with your Google account & Rank Math needs to be made again. <a href="%s" class="rank-math-reconnect-google">Please click here.</a>', 'seo-by-rank-math' ),
 				esc_url( Authentication::get_auth_url() )
 			),
 			[
@@ -198,8 +201,8 @@ class Analytics extends Base {
 				/* translators: delete counter */
 				sprintf(
 					'<svg style="vertical-align: middle; margin-right: 5px" viewBox="0 0 462.03 462.03" xmlns="http://www.w3.org/2000/svg" width="20"><g><path d="m462 234.84-76.17 3.43 13.43 21-127 81.18-126-52.93-146.26 60.97 10.14 24.34 136.1-56.71 128.57 54 138.69-88.61 13.43 21z"></path><path d="m54.1 312.78 92.18-38.41 4.49 1.89v-54.58h-96.67zm210.9-223.57v235.05l7.26 3 89.43-57.05v-181zm-105.44 190.79 96.67 40.62v-165.19h-96.67z"></path></g></svg>' .
-					esc_html__( 'Rank Math is importing latest data from connected Google Services, %1$s remaining.', 'rank-math' ) .
-					'&nbsp;<a href="%2$s">' . esc_html__( 'Cancel Fetch', 'rank-math' ) . '</a>',
+					esc_html__( 'Rank Math is importing latest data from connected Google Services, %1$s remaining.', 'seo-by-rank-math' ) .
+					'&nbsp;<a href="%2$s">' . esc_html__( 'Cancel Fetch', 'seo-by-rank-math' ) . '</a>',
 					$this->human_interval( $next_timestamp - gmdate( 'U' ) + $extra_time ),
 					esc_url( wp_nonce_url( add_query_arg( 'cancel-fetch', 1 ), 'rank_math_cancel_fetch' ) )
 				),
@@ -212,6 +215,54 @@ class Analytics extends Base {
 
 			echo $notification;
 		}
+	}
+
+	/**
+	 * Store a value in the options table when CRON notice is dismissed to prevent the site from showing it again.
+	 *
+	 * @param string $notification_id Notification id.
+	 */
+	public function notice_dismissible( $notification_id ) {
+		if ( 'analytics_cron_notice' === $notification_id ) {
+			update_option( 'rank_math_analytics_cron_notice_dismissed', true, false );
+		}
+	}
+
+	/**
+	 * Add Notice on Analytics page when CRON is not working on the site.
+	 */
+	private function maybe_add_cron_notice() {
+		if ( ! $this->page->is_current_page() || get_option( 'rank_math_analytics_cron_notice_dismissed' ) ) {
+			return;
+		}
+
+		if ( Helper::is_cron_enabled() ) {
+			Helper::remove_notification( 'analytics_cron_notice' );
+			return;
+		}
+
+		$message = sprintf(
+			/* translators: constant value */
+			esc_html__( 'Loopback requests to %s are blocked. This may prevent scheduled tasks from running. Please check your server configuration.', 'seo-by-rank-math' ),
+			'<code>wp-cron.php</code>'
+		);
+		if ( defined( 'DISABLE_WP_CRON' ) && DISABLE_WP_CRON ) {
+			$message = sprintf(
+				/* translators: constant value */
+				esc_html__( 'WordPress\'s internal cron system is disabled via %s. Please ensure a real cron job is set up, otherwise scheduled features like Analytics may not work correctly.', 'seo-by-rank-math' ),
+				'<code>DISABLE_WP_CRON</code>'
+			);
+		}
+
+		// Show admin notification.
+		Helper::add_notification(
+			$message,
+			[
+				'type'   => 'warning',
+				'id'     => 'analytics_cron_notice',
+				'screen' => 'rank-math_page_rank-math-analytics',
+			]
+		);
 	}
 
 	/**
@@ -232,47 +283,48 @@ class Analytics extends Base {
 			[
 				'seconds' => YEAR_IN_SECONDS,
 				/* translators: %s: amount of time */
-				'names'   => _n_noop( '%s year', '%s years', 'rank-math' ),
+				'names'   => _n_noop( '%s year', '%s years', 'seo-by-rank-math' ),
 			],
 			[
 				'seconds' => MONTH_IN_SECONDS,
 				/* translators: %s: amount of time */
-				'names'   => _n_noop( '%s month', '%s months', 'rank-math' ),
+				'names'   => _n_noop( '%s month', '%s months', 'seo-by-rank-math' ),
 			],
 			[
 				'seconds' => WEEK_IN_SECONDS,
 				/* translators: %s: amount of time */
-				'names'   => _n_noop( '%s week', '%s weeks', 'rank-math' ),
+				'names'   => _n_noop( '%s week', '%s weeks', 'seo-by-rank-math' ),
 			],
 			[
 				'seconds' => DAY_IN_SECONDS,
 				/* translators: %s: amount of time */
-				'names'   => _n_noop( '%s day', '%s days', 'rank-math' ),
+				'names'   => _n_noop( '%s day', '%s days', 'seo-by-rank-math' ),
 			],
 			[
 				'seconds' => HOUR_IN_SECONDS,
 				/* translators: %s: amount of time */
-				'names'   => _n_noop( '%s hour', '%s hours', 'rank-math' ),
+				'names'   => _n_noop( '%s hour', '%s hours', 'seo-by-rank-math' ),
 			],
 			[
 				'seconds' => MINUTE_IN_SECONDS,
 				/* translators: %s: amount of time */
-				'names'   => _n_noop( '%s minute', '%s minutes', 'rank-math' ),
+				'names'   => _n_noop( '%s minute', '%s minutes', 'seo-by-rank-math' ),
 			],
 			[
 				'seconds' => 1,
 				/* translators: %s: amount of time */
-				'names'   => _n_noop( '%s second', '%s seconds', 'rank-math' ),
+				'names'   => _n_noop( '%s second', '%s seconds', 'seo-by-rank-math' ),
 			],
 		];
 
 		if ( $interval <= 0 ) {
-			return __( 'Now!', 'rank-math' );
+			return __( 'Now!', 'seo-by-rank-math' );
 		}
 
 		$output = '';
 
-		for ( $time_period_index = 0, $periods_included = 0, $seconds_remaining = $interval; $time_period_index < count( $time_periods ) && $seconds_remaining > 0 && $periods_included < $periods_to_include; $time_period_index++ ) { // phpcs:ignore
+		$time_period_count = count( $time_periods );
+		for ( $time_period_index = 0, $periods_included = 0, $seconds_remaining = $interval; $time_period_index < $time_period_count && $seconds_remaining > 0 && $periods_included < $periods_to_include; $time_period_index++ ) {
 
 			$periods_in_interval = floor( $seconds_remaining / $time_periods[ $time_period_index ]['seconds'] );
 
@@ -280,9 +332,9 @@ class Analytics extends Base {
 				if ( ! empty( $output ) ) {
 					$output .= ' ';
 				}
-				$output .= sprintf( _n( $time_periods[ $time_period_index ]['names'][0], $time_periods[ $time_period_index ]['names'][1], $periods_in_interval, 'rank-math' ), $periods_in_interval ); // phpcs:ignore
+				$output            .= sprintf( translate_nooped_plural( $time_periods[ $time_period_index ]['names'], $periods_in_interval, 'seo-by-rank-math' ), $periods_in_interval );
 				$seconds_remaining -= $periods_in_interval * $time_periods[ $time_period_index ]['seconds'];
-				$periods_included++;
+				++$periods_included;
 			}
 		}
 
@@ -301,11 +353,11 @@ class Analytics extends Base {
 			return;
 		}
 
-		Helper::add_json( 'confirmAction', esc_html__( 'Are you sure you want to do this?', 'rank-math' ) );
-		Helper::add_json( 'confirmClearImportedData', esc_html__( 'You are about to delete all the previously imported data.', 'rank-math' ) );
-		Helper::add_json( 'confirmClear90DaysCache', esc_html__( 'You are about to delete your 90 days cache.', 'rank-math' ) );
-		Helper::add_json( 'confirmDisconnect', esc_html__( 'Are you sure you want to disconnect Google services from your site?', 'rank-math' ) );
-		Helper::add_json( 'feedbackCacheDeleted', esc_html__( 'Cache deleted.', 'rank-math' ) );
+		Helper::add_json( 'confirmAction', esc_html__( 'Are you sure you want to do this?', 'seo-by-rank-math' ) );
+		Helper::add_json( 'confirmClearImportedData', esc_html__( 'You are about to delete all the previously imported data.', 'seo-by-rank-math' ) );
+		Helper::add_json( 'confirmClear90DaysCache', esc_html__( 'You are about to delete your 90 days cache.', 'seo-by-rank-math' ) );
+		Helper::add_json( 'confirmDisconnect', esc_html__( 'Are you sure you want to disconnect Google services from your site?', 'seo-by-rank-math' ) );
+		Helper::add_json( 'feedbackCacheDeleted', esc_html__( 'Cache deleted.', 'seo-by-rank-math' ) );
 	}
 
 	/**
@@ -338,12 +390,13 @@ class Analytics extends Base {
 				'wp-date',
 				'wp-api-fetch',
 				'wp-html-entities',
+				'rank-math-components',
 			],
 			rank_math()->version,
 			true
 		);
 
-		wp_set_script_translations( 'rank-math-analytics', 'rank-math', plugin_dir_path(__FILE__) . 'languages/' );
+		wp_set_script_translations( 'rank-math-analytics', 'seo-by-rank-math', plugin_dir_path( __FILE__ ) . 'languages/' );
 
 		$this->action( 'admin_footer', 'dequeue_cmb2' );
 
@@ -407,11 +460,11 @@ class Analytics extends Base {
 					'position'        => true,
 					'positionHistory' => true,
 				],
-				'indexing' => [
-					'index_verdict'            => true,
-					'indexing_state'           => true,
-					'rich_results_items'       => true,
-					'page_fetch_state'         => false,
+				'indexing'        => [
+					'index_verdict'      => true,
+					'indexing_state'     => true,
+					'rich_results_items' => true,
+					'page_fetch_state'   => false,
 				],
 			]
 		);
@@ -463,7 +516,7 @@ class Analytics extends Base {
 
 		$this->page = new Page(
 			'rank-math-analytics',
-			esc_html__( 'Analytics', 'rank-math' ) . '<span class="rm-menu-new update-plugins" style="background: ' . $dot_color . '; margin-left: 5px;min-width: 10px;height: 10px;margin-top: 5px;"><span class="plugin-count"></span></span>',
+			esc_html__( 'Analytics', 'seo-by-rank-math' ) . '<span class="rm-menu-new update-plugins" style="background: ' . $dot_color . '; margin-left: 5px;min-width: 10px;height: 10px;margin-top: 5px;"><span class="plugin-count"></span></span>',
 			[
 				'position'   => 5,
 				'parent'     => 'rank-math',
@@ -491,15 +544,58 @@ class Analytics extends Base {
 	 * @return array
 	 */
 	public function add_settings( $tabs ) {
+		$db_info = \RankMath\Analytics\DB::info();
+		$next_fetch = '';
+		$actions = as_get_scheduled_actions(
+			[
+				'order'  => 'DESC',
+				'hook'   => 'rank_math/analytics/data_fetch',
+				'status' => \ActionScheduler_Store::STATUS_PENDING,
+			]
+		);
+		if ( Authentication::is_authorized() && ! empty( $actions ) ) {
+			$action    = current( $actions );
+			$schedule  = $action->get_schedule();
+			$next_date = $schedule->get_date();
+			if ( $next_date ) {
+				$next_fetch = sprintf(
+					__( 'Next update on %s (in %s)', 'seo-by-rank-math' ),
+					date_i18n( 'd M, Y H:m:i', $next_date->getTimestamp() ),
+					human_time_diff( $next_date->getTimestamp() )
+				);
+			}
+		}
+
 		Arr::insert(
 			$tabs,
 			[
 				'analytics' => [
 					'icon'  => 'rm-icon rm-icon-search-console',
-					'title' => esc_html__( 'Analytics', 'rank-math' ),
+					'title' => esc_html__( 'Analytics', 'seo-by-rank-math' ),
 					/* translators: Link to kb article */
-					'desc'  => sprintf( esc_html__( 'See your Google Search Console, Analytics and AdSense data without leaving your WP dashboard. %s.', 'rank-math' ), '<a href="' . KB::get( 'analytics-settings', 'Options Panel Analytics Tab' ) . '" target="_blank">' . esc_html__( 'Learn more', 'rank-math' ) . '</a>' ),
+					'desc'  => sprintf( esc_html__( 'See your Google Search Console, Analytics and AdSense data without leaving your WP dashboard. %s.', 'seo-by-rank-math' ), '<a href="' . KB::get( 'analytics-settings', 'Options Panel Analytics Tab' ) . '" target="_blank">' . esc_html__( 'Learn more', 'seo-by-rank-math' ) . '</a>' ),
 					'file'  => $this->directory . '/views/options.php',
+					'json'  => apply_filters(
+						'rank_math/analytics/options/data',
+						[
+							'analytics' => \RankMath\Wizard\Search_Console::get_localized_data(),
+							'isSettingsPage' => true,
+							'homeUrl' => home_url(),
+							'fields' => [
+								'console_caching_control' => [
+									'description' => $this->get_description( 'console_caching_control' ),
+								],
+							],
+							'dbInfo' => [
+								'days'    => $db_info['days'] ?? 0,
+								'rows'    => Str::human_number( $db_info['rows'] ?? 0 ),
+								'size'    => size_format( $db_info['size'] ?? 0 ),
+							],
+							'isFetching' => 'fetching' === get_option( 'rank_math_analytics_first_fetch' ),
+							'nextFetch'  => $next_fetch,
+							'isAuthorized' => Authentication::is_authorized(),
+						]
+					),
 				],
 			],
 			9
@@ -509,30 +605,32 @@ class Analytics extends Base {
 	}
 
 	/**
-	 * Add database tools.
+	 * Get the description for a field.
 	 *
-	 * @param array $tools Array of tools.
+	 * @param string $field_id The field ID.
 	 *
-	 * @return array
+	 * @return string
 	 */
-	public function add_tools( $tools ) {
-		Arr::insert(
-			$tools,
-			[
-				'analytics_clear_caches'  => [
-					'title'       => __( 'Purge Analytics Cache', 'rank-math' ),
-					'description' => __( 'Clear analytics cache to re-calculate all the stats again.', 'rank-math' ),
-					'button_text' => __( 'Clear Cache', 'rank-math' ),
-				],
-				'analytics_reindex_posts' => [
-					'title'       => __( 'Rebuild Index for Analytics', 'rank-math' ),
-					'description' => __( 'Missing some posts/pages in the Analytics data? Clear the index and build a new one for more accurate stats.', 'rank-math' ),
-					'button_text' => __( 'Rebuild Index', 'rank-math' ),
-				],
-			],
-			3
-		);
+	public function get_description( $field_id ) {
+		if ( ! $field_id ) {
+			return '';
+		}
 
-		return $tools;
+		$description = '';
+
+		switch ( $field_id ) {
+			case 'console_caching_control':
+				// Translators: placeholder is a link to rankmath.com, with "free version" as the anchor text.
+				$description = sprintf( __( 'Enter the number of days to keep Analytics data in your database. The maximum allowed days are 90 in the %s. Though, 2x data will be stored in the DB for calculating the difference properly.', 'seo-by-rank-math' ), '<a href="' . KB::get( 'pro', 'Analytics DB Option' ) . '" target="_blank" rel="noopener noreferrer">' . __( 'free version', 'seo-by-rank-math' ) . '</a>' );
+				$description = apply_filters_deprecated( 'rank_math/analytics/options/cahce_control/description', [ $description ], '1.0.61.1', 'rank_math/analytics/options/cache_control/description' );
+				$description = apply_filters( 'rank_math/analytics/options/cache_control/description', $description );
+				break;
+			default:
+				$description = apply_filters( 'rank_math/analytics/options/' . $field_id . '/description', '' );
+				break;
+		}
+
+		return $description;
 	}
+
 }

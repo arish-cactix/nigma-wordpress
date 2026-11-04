@@ -41,25 +41,27 @@ class Post extends WP_REST_Controller {
 			'/updateMetaBulk',
 			[
 				'methods'             => WP_REST_Server::CREATABLE,
-				'permission_callback' => function() {
+				'permission_callback' => function () {
 					return \RankMath\Helper::has_cap( 'onpage_general' );
 				},
 				'callback'            => [ $this, 'update_bulk_meta' ],
-				'args'                => $this->get_update_metadata_args(),
+				'args'                => $this->get_update_bulk_meta_args(),
 			]
 		);
 
-		register_rest_field(
-			'page',
-			'rankMath',
-			[
-				'get_callback'        => [ $this, 'get_post_screen_meta' ],
-				'schema'              => null,
-				'permission_callback' => function() {
-					return current_user_can( 'read' );
-				},
-			]
-		);
+		if ( Helper::is_site_editor() ) {
+			register_rest_field(
+				'page',
+				'rankMath',
+				[
+					'get_callback'        => [ $this, 'get_post_screen_meta' ],
+					'schema'              => null,
+					'permission_callback' => function () {
+						return current_user_can( 'read' );
+					},
+				]
+			);
+		}
 	}
 
 	/**
@@ -70,20 +72,16 @@ class Post extends WP_REST_Controller {
 	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
 	 */
 	public function update_bulk_meta( WP_REST_Request $request ) {
-		$rows = $request->get_param( 'rows' );
+		$rows        = $request->get_param( 'rows' );
+		$object_type = $request->get_param( 'objectType' );
 
-		foreach ( $rows as $post_id => $data ) {
-			$post_id = absint( $post_id );
-			if ( ! $post_id ) {
+		foreach ( $rows as $object_id => $data ) {
+			$object_id = absint( $object_id );
+			if ( ! $this->can_process( $object_id, $object_type ) ) {
 				continue;
 			}
 
-			$post_type = get_post_type( $post_id );
-			if ( ! Helper::is_post_type_accessible( $post_type ) && 'attachment' !== $post_type ) {
-				continue;
-			}
-
-			$this->save_row( $post_id, $data );
+			$this->save_row( $object_id, $object_type, $data );
 		}
 
 		return [ 'success' => true ];
@@ -99,61 +97,112 @@ class Post extends WP_REST_Controller {
 	}
 
 	/**
+	 * Whether to process current object.
+	 *
+	 * @param int    $object_id   Object ID.
+	 * @param string $object_type Object type.
+	 *
+	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
+	 */
+	private function can_process( $object_id, $object_type ) {
+		if ( ! $object_id ) {
+			return false;
+		}
+
+		if ( $object_type === 'term' ) {
+			$term = get_term( $object_id );
+			if ( ! $term || is_wp_error( $term ) ) {
+				return false;
+			}
+
+			return (
+				in_array( $term->taxonomy, Helper::get_allowed_taxonomies(), true ) &&
+				current_user_can( get_taxonomy( $term->taxonomy )->cap->edit_terms, $object_id )
+			);
+		}
+
+		$post_type = get_post_type( $object_id );
+		if ( ! Helper::is_post_type_accessible( $post_type ) && 'attachment' !== $post_type ) {
+			return false;
+		}
+
+		// Checks whether the current has permission to edit post.
+		$post_type_obj = get_post_type_object( $post_type );
+		if (
+			is_null( $post_type_obj ) ||
+			(
+				! current_user_can( $post_type_obj->cap->edit_post, $object_id ) &&
+				! current_user_can( $post_type_obj->cap->edit_others_posts )
+			)
+		) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Save single row.
 	 *
-	 * @param int   $post_id Post ID.
-	 * @param array $data    Post data.
+	 * @param int    $object_id    Object ID.
+	 * @param string $object_type Object type.
+	 * @param array  $data         Object data.
 	 */
-	private function save_row( $post_id, $data ) {
+	private function save_row( $object_id, $object_type, $data ) {
 		foreach ( $data as $key => $value ) {
-			$this->save_column( $post_id, $key, $value );
+			$this->save_column( $object_id, $object_type, $key, $value );
 		}
 	}
 
 	/**
 	 * Save row columns.
 	 *
-	 * @param int    $post_id Post ID.
-	 * @param string $column  Column name.
-	 * @param string $value   Column value.
+	 * @param int    $object_id   Object ID.
+	 * @param string $object_type Object type.
+	 * @param string $column      Column name.
+	 * @param string $value       Column value.
 	 */
-	private function save_column( $post_id, $column, $value ) {
+	private function save_column( $object_id, $object_type, $column, $value ) {
 		if ( ! in_array( $column, [ 'focus_keyword', 'title', 'description', 'image_alt', 'image_title' ], true ) ) {
 			return;
 		}
 
 		$sanitizer = Sanitize::get();
 		if ( 'image_title' === $column ) {
-			wp_update_post(
-				[
-					'ID'         => $post_id,
-					'post_title' => $sanitizer->sanitize( 'image_title', $value ),
-				]
-			);
+			if ( 'term' !== $object_type ) {
+				wp_update_post(
+					[
+						'ID'         => $object_id,
+						'post_title' => $sanitizer->sanitize( 'image_title', $value ),
+					]
+				);
+			}
 			return;
 		}
 
 		if ( 'focus_keyword' === $column ) {
-			$focus_keyword    = get_post_meta( $post_id, 'rank_math_' . $column, true );
+			$focus_keyword    = get_post_meta( $object_id, 'rank_math_' . $column, true );
 			$focus_keyword    = explode( ',', $focus_keyword );
 			$focus_keyword[0] = $value;
 			$value            = implode( ',', $focus_keyword );
 		}
 
 		$column = 'image_alt' === $column ? '_wp_attachment_image_alt' : 'rank_math_' . $column;
-		update_post_meta( $post_id, $column, $sanitizer->sanitize( $column, $value ) );
+
+		$method = $object_type === 'term' ? 'update_term_meta' : 'update_post_meta';
+		$method( $object_id, $column, $sanitizer->sanitize( $column, $value ) );
 	}
 
 	/**
-	 * Get update metadta endpoint arguments.
+	 * Get update metadata endpoint arguments.
 	 *
 	 * @return array
 	 */
-	private function get_update_metadata_args() {
+	private function get_update_bulk_meta_args() {
 		return [
 			'rows' => [
 				'required'          => true,
-				'description'       => esc_html__( 'No meta rows found to update.', 'rank-math' ),
+				'description'       => esc_html__( 'Selected posts to update the data for.', 'seo-by-rank-math' ),
 				'validate_callback' => [ '\\RankMath\\Rest\\Rest_Helper', 'is_param_empty' ],
 			],
 		];

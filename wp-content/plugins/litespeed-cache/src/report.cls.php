@@ -1,21 +1,20 @@
 <?php
-
 /**
  * The report class
  *
- *
  * @since      1.1.0
  * @package    LiteSpeed
- * @subpackage LiteSpeed/src
- * @author     LiteSpeed Technologies <info@litespeedtech.com>
  */
 
 namespace LiteSpeed;
 
 defined('WPINC') || exit();
 
-class Report extends Base
-{
+/**
+ * Generates and sends the environment report to the LiteSpeed center server.
+ */
+class Report extends Base {
+
 	const TYPE_SEND_REPORT = 'send_report';
 
 	/**
@@ -24,8 +23,13 @@ class Report extends Base
 	 * @since  1.6.5
 	 * @access public
 	 */
-	public function handler()
-	{
+	public function handler() {
+		// Defer until after `wp_loaded` so 3rd-party appended options (e.g. WooCommerce wc_update_interval / wc_cart_vary) are present in the regenerated report.
+		if (!did_action('wp_loaded')) {
+			add_action('wp_loaded', [ $this, 'handler' ], 5);
+			return;
+		}
+
 		$type = Router::verify_type();
 
 		switch ($type) {
@@ -41,40 +45,77 @@ class Report extends Base
 	}
 
 	/**
-	 * post env report number to ls center server
+	 * Post env report number to ls center server
 	 *
 	 * @since  1.6.5
 	 * @access public
 	 */
-	public function post_env()
-	{
+	public function post_env() {
 		$report_con = $this->generate_environment_report();
 
-		// Generate link
-		$link = !empty($_POST['link']) ? esc_url($_POST['link']) : '';
+		// Generate link.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in Router::verify_type().
+		$link = !empty($_POST['link']) ? esc_url_raw(wp_unslash($_POST['link'])) : '';
 
-		$notes = !empty($_POST['notes']) ? esc_html($_POST['notes']) : '';
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in Router::verify_type().
+		$notes = !empty($_POST['notes']) ? sanitize_textarea_field(wp_unslash($_POST['notes'])) : '';
 
-		$data = array(
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified in Router::verify_type().
+		$php_info   = !empty($_POST['attach_php']) ? sanitize_text_field(wp_unslash($_POST['attach_php'])) : '';
+		$report_php = '1' === $php_info ? $this->generate_php_report() : '';
+
+		if ($report_php) {
+			$report_con .= "\nPHPINFO\n" . $report_php;
+		}
+
+		$data = [
 			'env' => $report_con,
 			'link' => $link,
 			'notes' => $notes,
-		);
+		];
 
 		$json = Cloud::post(Cloud::API_REPORT, $data);
 		if (!is_array($json)) {
 			return;
 		}
 
-		$num = !empty($json['num']) ? $json['num'] : '--';
-		$summary = array(
+		$num     = !empty($json['num']) ? $json['num'] : '--';
+		$summary = [
 			'num' => $num,
 			'dateline' => time(),
-		);
+		];
 
 		self::save_summary($summary);
 
 		return $num;
+	}
+
+	/**
+	 * Gathers the PHP information.
+	 *
+	 * @since 7.0
+	 * @access public
+	 *
+	 * @param int $flags Flags passed to phpinfo().
+	 * @return string
+	 */
+	public function generate_php_report( $flags = INFO_GENERAL | INFO_CONFIGURATION ) {
+		ob_start();
+		phpinfo($flags); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_phpinfo
+		$report = ob_get_clean();
+
+		preg_match('%<style type="text/css">(.*?)</style>.*?<body>(.*?)</body>%s', $report, $report);
+
+		if ( ! isset( $report[2] ) ) {
+			return '';
+		}
+		return preg_replace_callback( '/(<tr\b[^>]*>\s*<td\b[^>]*>)(.*?)(<\/td>)(.*?)(<\/tr>)/is', static function ( $row ) {
+			$directive = html_entity_decode( wp_strip_all_tags( $row[2] ), ENT_QUOTES );
+			if ( preg_match( '/password|secret|token|auth|credential|private|key|session\.save_path|sendmail_path/i', $directive ) ) {
+				$row[4] = preg_replace( '/(<td\b[^>]*>).*?(<\/td>)/is', '$1[redacted]$2', $row[4] );
+			}
+			return $row[1] . $row[2] . $row[3] . $row[4] . $row[5];
+		}, $report[2] );
 	}
 
 	/**
@@ -83,14 +124,16 @@ class Report extends Base
 	 *
 	 * @since 1.0.12
 	 * @access public
+	 *
+	 * @param array|null $options Plugin options to report, or null to load the current options.
+	 * @return string
 	 */
-	public function generate_environment_report($options = null)
-	{
+	public function generate_environment_report( $options = null ) {
 		global $wp_version, $_SERVER;
 		$frontend_htaccess = Htaccess::get_frontend_htaccess();
-		$backend_htaccess = Htaccess::get_backend_htaccess();
-		$paths = array($frontend_htaccess);
-		if ($frontend_htaccess != $backend_htaccess) {
+		$backend_htaccess  = Htaccess::get_backend_htaccess();
+		$paths             = [ $frontend_htaccess ];
+		if ($frontend_htaccess !== $backend_htaccess) {
 			$paths[] = $backend_htaccess;
 		}
 
@@ -103,24 +146,27 @@ class Report extends Base
 			$active_plugins = get_option('active_plugins');
 		}
 
-		if (function_exists('wp_get_theme')) {
-			$theme_obj = wp_get_theme();
-			$active_theme = $theme_obj->get('Name');
-		} else {
-			$active_theme = get_current_theme();
-		}
+		$theme_obj    = wp_get_theme();
+		$active_theme = $theme_obj->get('Name');
 
-		$extras = array(
+		$extras = [
 			'wordpress version' => $wp_version,
 			'siteurl' => get_option('siteurl'),
 			'home' => get_option('home'),
 			'home_url' => home_url(),
 			'locale' => get_locale(),
 			'active theme' => $active_theme,
-		);
+		];
 
 		$extras['active plugins'] = $active_plugins;
-		$extras['cloud'] = Cloud::get_summary();
+		$extras['cloud']          = [];
+		$cloud                    = Cloud::get_summary();
+		// Report only known diagnostic scalars; new cloud fields must not silently expose credentials.
+		foreach ([ 'qc_activated', 'main_domain', 'conf_md5', 'version.dev' ] as $key) {
+			if (isset($cloud[$key]) && is_scalar($cloud[$key])) {
+				$extras['cloud'][$key] = $cloud[$key];
+			}
+		}
 
 		if (is_null($options)) {
 			$options = $this->get_options(true);
@@ -128,7 +174,7 @@ class Report extends Base
 			if (is_multisite()) {
 				$options2 = $this->get_options();
 				foreach ($options2 as $k => $v) {
-					if ($options[$k] !== $v) {
+					if (isset($options[$k]) && $options[$k] !== $v) {
 						$options['[Overwritten] ' . $k] = $v;
 					}
 				}
@@ -152,11 +198,11 @@ class Report extends Base
 			}
 		}
 
-		// Security: Remove cf key in report
-		$secure_fields = array(self::O_CDN_CLOUDFLARE_KEY, self::O_OBJECT_PSWD);
-		foreach ($secure_fields as $v) {
-			if (!empty($options[$v])) {
-				$options[$v] = str_repeat('*', strlen($options[$v]));
+		// Redact both network values and per-site overrides before formatting the report.
+		foreach ($options as $id => $value) {
+			$setting = 0 === strpos($id, '[Overwritten] ') ? substr($id, strlen('[Overwritten] ')) : $id;
+			if ($this->_conf_secret($setting)) {
+				$options[$id] = '' === $value || null === $value || false === $value || [] === $value ? '' : '********';
 			}
 		}
 
@@ -168,16 +214,21 @@ class Report extends Base
 	 * Builds the environment report buffer with the given parameters
 	 *
 	 * @access private
+	 *
+	 * @param array $server         Server variables to include.
+	 * @param array $options        Plugin options to include.
+	 * @param array $extras         Extra WordPress-specific values to include.
+	 * @param array $htaccess_paths Htaccess file paths whose contents are appended.
+	 * @return string
 	 */
-	private function build_environment_report($server, $options, $extras = array(), $htaccess_paths = array())
-	{
-		$server_keys = array(
+	private function build_environment_report( $server, $options, $extras = [], $htaccess_paths = [] ) {
+		$server_keys   = [
 			'DOCUMENT_ROOT' => '',
 			'SERVER_SOFTWARE' => '',
 			'X-LSCACHE' => '',
 			'HTTP_X_LSCACHE' => '',
-		);
-		$server_vars = array_intersect_key($server, $server_keys);
+		];
+		$server_vars   = array_intersect_key($server, $server_keys);
 		$server_vars[] = 'LSWCP_TAG_PREFIX = ' . LSWCP_TAG_PREFIX;
 
 		$server_vars = array_merge($server_vars, $this->cls('Base')->server_vars());
@@ -198,12 +249,28 @@ class Report extends Base
 				continue;
 			}
 
-			$content = file_get_contents($path);
-			if ($content === false) {
+			$content = file_get_contents($path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			if (false === $content) {
 				$buf .= $path . " returned false for file_get_contents.\n";
 				continue;
 			}
-			$buf .= $path . " contents:\n" . $content . "\n\n";
+			$content = preg_replace( '/\\\\\r?\n[ \t]*/', ' ', $content );
+			// Response Header values are public; request-side and server-side values may carry credentials.
+			$content = preg_replace( '/^(\s*(?:SetEnv|SetEnvIf|SetEnvIfNoCase|SetEnvIfExpr|RequestHeader|php_value|php_flag|php_admin_value|php_admin_flag))\b[^\r\n]*$/mi', '$1 [redacted]', $content );
+			$content = preg_replace_callback( '/(\[|,)((?:E|env)=)("[^"]*"|[^,\]\r\n]*)/i', static function ( $matches ) {
+				$entry = trim( $matches[3], '"' );
+				$parts = explode( ':', $entry, 2 );
+				if ( 'noabort:1' === strtolower( $entry ) ) {
+					return $matches[0];
+				}
+				if ( count( $parts ) < 2 || in_array( strtolower( $parts[0] ), [ 'cache-control', 'cache-vary', 'lscache_vary_value', 'lscache_vary_cookie' ], true ) ) {
+					return $matches[0];
+				}
+				$quote = '"' === substr( $matches[3], 0, 1 ) ? '"' : '';
+				return $matches[1] . $matches[2] . $quote . $parts[0] . ':[redacted]' . $quote;
+			}, $content );
+			$content = preg_replace( '/^(\s*RewriteCond\s+%\{HTTP:(?:Authorization|Cookie|[^}]*(?:secret|token|key|auth|sig)[^}]*)\}\s+)[^\r\n]*$/mi', '$1[redacted]', $content );
+			$buf    .= $path . " contents:\n" . $content . "\n\n";
 		}
 		return $buf;
 	}
@@ -213,9 +280,12 @@ class Report extends Base
 	 *
 	 * @since 1.0.12
 	 * @access private
+	 *
+	 * @param string $section_header Section title.
+	 * @param array  $section        Key/value pairs rendered under the section.
+	 * @return string
 	 */
-	private function _format_report_section($section_header, $section)
-	{
+	private function _format_report_section( $section_header, $section ) {
 		$tab = '    '; // four spaces
 
 		if (empty($section)) {
@@ -231,7 +301,7 @@ class Report extends Base
 			}
 
 			if (!is_string($v)) {
-				$v = var_export($v, true);
+				$v = var_export($v, true); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export
 			} else {
 				$v = esc_html($v);
 			}

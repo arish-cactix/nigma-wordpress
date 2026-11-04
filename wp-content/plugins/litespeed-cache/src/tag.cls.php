@@ -1,53 +1,54 @@
 <?php
+// phpcs:ignoreFile
 
 /**
  * The plugin cache-tag class for X-LiteSpeed-Tag
  *
- * @since      	1.1.3
- * @since  		1.5 Moved into /inc
+ * @since       1.1.3
  */
 
 namespace LiteSpeed;
 
 defined('WPINC') || exit();
 
-class Tag extends Root
-{
-	const TYPE_FEED = 'FD';
-	const TYPE_FRONTPAGE = 'F';
-	const TYPE_HOME = 'H';
-	const TYPE_PAGES = 'PGS';
+class Tag extends Root {
+
+	const TYPE_FEED                    = 'FD';
+	const TYPE_FRONTPAGE               = 'F';
+	const TYPE_HOME                    = 'H';
+	const TYPE_PAGES                   = 'PGS';
 	const TYPE_PAGES_WITH_RECENT_POSTS = 'PGSRP';
-	const TYPE_HTTP = 'HTTP.';
-	const TYPE_POST = 'Po.'; // Post. Cannot use P, reserved for litemage.
-	const TYPE_ARCHIVE_POSTTYPE = 'PT.';
-	const TYPE_ARCHIVE_TERM = 'T.'; //for is_category|is_tag|is_tax
-	const TYPE_AUTHOR = 'A.';
-	const TYPE_ARCHIVE_DATE = 'D.';
-	const TYPE_BLOG = 'B.';
-	const TYPE_LOGIN = 'L';
-	const TYPE_URL = 'URL.';
-	const TYPE_WIDGET = 'W.';
-	const TYPE_ESI = 'ESI.';
-	const TYPE_REST = 'REST';
-	const TYPE_LIST = 'LIST';
-	const TYPE_MIN = 'MIN';
-	const TYPE_LOCALRES = 'LOCALRES';
+	const TYPE_HTTP                    = 'HTTP.';
+	const TYPE_POST                    = 'Po.'; // Post. Cannot use P, reserved for litemage.
+	const TYPE_ARCHIVE_POSTTYPE        = 'PT.';
+	const TYPE_ARCHIVE_TERM            = 'T.'; // for is_category|is_tag|is_tax
+	const TYPE_AUTHOR                  = 'A.';
+	const TYPE_ARCHIVE_DATE            = 'D.';
+	const TYPE_BLOG                    = 'B.';
+	const TYPE_LOGIN                   = 'L';
+	const TYPE_URL                     = 'URL.';
+	const TYPE_WIDGET                  = 'W.';
+	const TYPE_ESI                     = 'ESI.';
+	const TYPE_REST                    = 'REST';
+	const TYPE_AJAX                    = 'AJAX.';
+	const TYPE_LIST                    = 'LIST';
+	const TYPE_MIN                     = 'MIN';
+	const TYPE_LOCALRES                = 'LOCALRES';
 
 	const X_HEADER = 'X-LiteSpeed-Tag';
 
-	private static $_tags = array();
-	private static $_tags_priv = array('tag_priv');
+	private static $_tags          = array();
+	private static $_tags_priv     = array( 'tag_priv' );
+	public static $error_code_tags = array( 403, 404, 500 );
 
 	/**
 	 * Initialize
 	 *
 	 * @since 4.0
 	 */
-	public function init()
-	{
+	public function init() {
 		// register recent posts widget tag before theme renders it to make it work
-		add_filter('widget_posts_args', array($this, 'add_widget_recent_posts'));
+		add_filter('widget_posts_args', array( $this, 'add_widget_recent_posts' ));
 	}
 
 	/**
@@ -59,8 +60,7 @@ class Tag extends Root
 	 * @since 1.0.0
 	 * @access public
 	 */
-	public function check_login_cacheable()
-	{
+	public function check_login_cacheable() {
 		if (!$this->conf(Base::O_CACHE_PAGE_LOGIN)) {
 			return;
 		}
@@ -77,7 +77,7 @@ class Tag extends Root
 
 		self::add(self::TYPE_LOGIN);
 
-		// we need to send lsc-cookie manually to make it be sent to all other users when is cacheable
+		// Replay only WordPress's non-personal test cookie on cached login pages.
 		$list = headers_list();
 		if (empty($list)) {
 			return;
@@ -85,7 +85,9 @@ class Tag extends Root
 		foreach ($list as $hdr) {
 			if (strncasecmp($hdr, 'set-cookie:', 11) == 0) {
 				$cookie = substr($hdr, 12);
-				@header('lsc-cookie: ' . $cookie, false);
+				if ( 0 === stripos( $cookie, 'wordpress_test_cookie=' ) ) {
+					@header('lsc-cookie: ' . $cookie, false);
+				}
 			}
 		}
 	}
@@ -96,10 +98,9 @@ class Tag extends Root
 	 *
 	 * @since    1.0.15
 	 * @access   public
-	 * @param array $params [wordpress params for widget_posts_args]
+	 * @param array $params [WordPress params for widget_posts_args]
 	 */
-	public function add_widget_recent_posts($params)
-	{
+	public function add_widget_recent_posts( $params ) {
 		self::add(self::TYPE_PAGES_WITH_RECENT_POSTS);
 		return $params;
 	}
@@ -111,10 +112,9 @@ class Tag extends Root
 	 * @access public
 	 * @param mixed $tags A string or array of cache tags to add to the current list.
 	 */
-	public static function add($tags)
-	{
+	public static function add( $tags ) {
 		if (!is_array($tags)) {
-			$tags = array($tags);
+			$tags = array( $tags );
 		}
 
 		Debug2::debug('💰 [Tag] Add ', $tags);
@@ -132,8 +132,7 @@ class Tag extends Root
 	 * @since 3.0
 	 * @access public
 	 */
-	public static function add_post($pid)
-	{
+	public static function add_post( $pid ) {
 		self::add(self::TYPE_POST . $pid);
 	}
 
@@ -143,8 +142,7 @@ class Tag extends Root
 	 * @since 3.0
 	 * @access public
 	 */
-	public static function add_widget($id)
-	{
+	public static function add_widget( $id ) {
 		self::add(self::TYPE_WIDGET . $id);
 	}
 
@@ -154,8 +152,7 @@ class Tag extends Root
 	 * @since 3.0
 	 * @access public
 	 */
-	public static function add_private_esi($tag)
-	{
+	public static function add_private_esi( $tag ) {
 		self::add_private(self::TYPE_ESI . $tag);
 	}
 
@@ -166,10 +163,9 @@ class Tag extends Root
 	 * @access public
 	 * @param mixed $tags A string or array of cache tags to add to the current list.
 	 */
-	public static function add_private($tags)
-	{
+	public static function add_private( $tags ) {
 		if (!is_array($tags)) {
-			$tags = array($tags);
+			$tags = array( $tags );
 		}
 
 		self::$_tags_priv = array_merge(self::$_tags_priv, $tags);
@@ -181,8 +177,7 @@ class Tag extends Root
 	 * @since 1.1.3
 	 * @access public
 	 */
-	public static function output_tags()
-	{
+	public static function output_tags() {
 		return self::$_tags;
 	}
 
@@ -191,13 +186,12 @@ class Tag extends Root
 	 *
 	 * @since 1.0.12
 	 * @access public
-	 * @param string $uri The uri to get the hash of.
+	 * @param string  $uri The uri to get the hash of.
 	 * @param boolean $ori Return the original url or not
 	 * @return bool|string False on input error, hash otherwise.
 	 */
-	public static function get_uri_tag($uri, $ori = false)
-	{
-		$no_qs = strtok($uri, '?');
+	public static function get_uri_tag( $uri, $ori = false ) {
+		$no_qs = rawurldecode( (string) strtok( $uri, '?' ) );
 		if (empty($no_qs)) {
 			return false;
 		}
@@ -221,9 +215,8 @@ class Tag extends Root
 	 * @access public
 	 * @param boolean $ori Return the original url or not
 	 */
-	public static function build_uri_tag($ori = false)
-	{
-		return self::get_uri_tag(urldecode($_SERVER['REQUEST_URI']), $ori);
+	public static function build_uri_tag( $ori = false ) {
+		return self::get_uri_tag(wp_unslash($_SERVER['REQUEST_URI']), $ori); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The URI is hashed, not rendered.
 	}
 
 	/**
@@ -236,8 +229,7 @@ class Tag extends Root
 	 * @access private
 	 * @return array The list of cache tags to set.
 	 */
-	private static function _build_type_tags()
-	{
+	private static function _build_type_tags() {
 		$tags = array();
 
 		$tags[] = Utility::page_type();
@@ -254,27 +246,37 @@ class Tag extends Root
 		if (isset($wp_query)) {
 			$queried_obj_id = get_queried_object_id();
 			if (is_archive()) {
-				//An Archive is a Category, Tag, Author, Date, Custom Post Type or Custom Taxonomy based pages.
+				// An Archive is a Category, Tag, Author, Date, Custom Post Type or Custom Taxonomy based pages.
 				if (is_category() || is_tag() || is_tax()) {
 					$tags[] = self::TYPE_ARCHIVE_TERM . $queried_obj_id;
-				} elseif (is_post_type_archive() && ($post_type = get_post_type())) {
-					$tags[] = self::TYPE_ARCHIVE_POSTTYPE . $post_type;
+				} elseif (is_post_type_archive()) {
+					foreach ( (array) get_query_var( 'post_type' ) as $post_type ) {
+						if ( is_string( $post_type ) && '' !== $post_type ) {
+							$tags[] = self::TYPE_ARCHIVE_POSTTYPE . $post_type;
+						}
+					}
 				} elseif (is_author()) {
 					$tags[] = self::TYPE_AUTHOR . $queried_obj_id;
 				} elseif (is_date()) {
-					global $post;
-					$date = $post->post_date;
-					$date = strtotime($date);
-					if (is_day()) {
-						$tags[] = self::TYPE_ARCHIVE_DATE . date('Ymd', $date);
-					} elseif (is_month()) {
-						$tags[] = self::TYPE_ARCHIVE_DATE . date('Ym', $date);
-					} elseif (is_year()) {
-						$tags[] = self::TYPE_ARCHIVE_DATE . date('Y', $date);
+					$compact = (string) get_query_var( 'm' );
+					if ( $compact ) {
+						$length = is_day() ? 8 : ( is_month() ? 6 : 4 );
+						$tags[] = self::TYPE_ARCHIVE_DATE . substr( $compact, 0, $length );
+					} else {
+						$year = (int) get_query_var( 'year' );
+						if ( $year ) {
+							if (is_day()) {
+								$tags[] = self::TYPE_ARCHIVE_DATE . sprintf( '%04d%02d%02d', $year, get_query_var( 'monthnum' ), get_query_var( 'day' ) );
+							} elseif (is_month()) {
+								$tags[] = self::TYPE_ARCHIVE_DATE . sprintf( '%04d%02d', $year, get_query_var( 'monthnum' ) );
+							} elseif (is_year()) {
+								$tags[] = self::TYPE_ARCHIVE_DATE . sprintf( '%04d', $year );
+							}
+						}
 					}
 				}
 			} elseif (is_singular()) {
-				//$this->is_singular = $this->is_single || $this->is_page || $this->is_attachment;
+				// $this->is_singular = $this->is_single || $this->is_page || $this->is_attachment;
 				$tags[] = self::TYPE_POST . $queried_obj_id;
 
 				if (is_page()) {
@@ -309,6 +311,11 @@ class Tag extends Root
 			}
 		}
 
+		// Append AJAX action tag
+		if (Router::is_ajax() && !empty($_REQUEST['action'])) {
+			$tags[] = self::TYPE_AJAX . $_REQUEST['action'];
+		}
+
 		return $tags;
 	}
 
@@ -318,13 +325,12 @@ class Tag extends Root
 	 * @access private
 	 * @since 1.1.3
 	 */
-	private static function _finalize()
-	{
+	private static function _finalize() {
 		// run 3rdparty hooks to tag
 		do_action('litespeed_tag_finalize');
 		// generate wp tags
 		if (!defined('LSCACHE_IS_ESI')) {
-			$type_tags = self::_build_type_tags();
+			$type_tags   = self::_build_type_tags();
 			self::$_tags = array_merge(self::$_tags, $type_tags);
 		}
 
@@ -346,8 +352,7 @@ class Tag extends Root
 	 * @access public
 	 * @return string empty string if empty, otherwise the cache tags header.
 	 */
-	public function output($no_finalize = false)
-	{
+	public function output( $no_finalize = false ) {
 		if (defined('LSCACHE_NO_CACHE') && LSCACHE_NO_CACHE) {
 			return;
 		}
@@ -359,6 +364,7 @@ class Tag extends Root
 		$prefix_tags = array();
 		/**
 		 * Only append blog_id when is multisite
+		 *
 		 * @since 2.9.3
 		 */
 		$prefix = LSWCP_TAG_PREFIX . (is_multisite() ? get_current_blog_id() : '') . '_';

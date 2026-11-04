@@ -109,7 +109,7 @@ class PostmanEmailLogController {
 			'DTCols'	=>	array(
 				array( 'data'	=>	'id' ),
 				array( 'data'	=>	'original_subject' ),
-				array( 'data'	=>	'to_header' ),
+				array( 'data'	=>	'original_to' ),
 				array( 'data'	=>	'time' ),
 				array( 'data'	=>	'success' ),
 				array( 'data'	=>	'actions' )
@@ -195,6 +195,10 @@ class PostmanEmailLogController {
 	public function resendMail() {
         check_admin_referer( 'resend', 'security' );
 
+		if ( ! current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
+			wp_send_json_error( array( 'message' => __( 'Sorry, you are not allowed to resend emails.', 'post-smtp' ) ) );
+		}
+
 		// get the email address of the recipient from the HTTP Request
 		$postid = $this->getRequestParameter( 'email' );
 		if ( ! empty( $postid ) ) {
@@ -259,7 +263,7 @@ class PostmanEmailLogController {
 	 */
 	private function getRequestParameter( $parameterName ) {
 		if ( isset( $_POST [ $parameterName ] ) ) {
-			$value = filter_var( $_POST [ $parameterName ], FILTER_SANITIZE_STRING );
+			$value = sanitize_text_field( $_POST [ $parameterName ] );
 			$this->logger->trace( sprintf( 'Found parameter "%s"', $parameterName ) );
 			$this->logger->trace( $value );
 			return $value;
@@ -270,8 +274,7 @@ class PostmanEmailLogController {
 	 * From https://www.skyverge.com/blog/add-custom-bulk-action/
 	 */
 	function handleBulkAction() {
-		// only do this for administrators
-		if ( PostmanUtils::isAdmin() && isset( $_REQUEST ['email_log_entry'] ) ) {
+		if ( current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) && isset( $_REQUEST ['email_log_entry'] ) ) {
 			$this->logger->trace( 'handling bulk action' );
 			if ( wp_verify_nonce( $_REQUEST ['_wpnonce'], 'bulk-email_log_entries' ) ) {
 				$this->logger->trace( sprintf( 'nonce "%s" passed validation', sanitize_text_field($_REQUEST ['_wpnonce']) ) );
@@ -297,8 +300,7 @@ class PostmanEmailLogController {
 	/**
 	 */
 	function delete_log_item() {
-		// only do this for administrators
-		if ( PostmanUtils::isAdmin() ) {
+		if ( current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
 			$this->logger->trace( 'handling delete item' );
 			$postid = absint($_REQUEST ['email']);
 			if ( wp_verify_nonce( $_REQUEST ['_wpnonce'], 'delete_email_log_item_' . $postid ) ) {
@@ -317,17 +319,20 @@ class PostmanEmailLogController {
 	/**
 	 */
 	function view_log_item() {
-		// only do this for administrators
-		if ( PostmanUtils::isAdmin() ) {
-			$this->logger->trace( 'handling view item' );
-			$postid = absint( $_REQUEST ['email'] );
-			$post = get_post( $postid );
+		// Check if user has permission to view email logs
+		if ( ! current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
+			wp_die( __( 'Sorry, you are not allowed to view email logs.', 'post-smtp' ) );
+		}
+		
+		$this->logger->trace( 'handling view item' );
+		$postid = absint( $_REQUEST ['email'] );
+		$post = get_post( $postid );
 
-			if ( $post->post_type !== 'postman_sent_mail' ) {
-			    return;
-            }
+		if ( $post->post_type !== 'postman_sent_mail' ) {
+		    return;
+        }
 
-			$meta_values = PostmanLogFields::get_instance()->get( $postid );
+		$meta_values = PostmanLogFields::get_instance()->get( $postid );
 			// https://css-tricks.com/examples/hrs/
 			print '<html><head><style>body {font-family: monospace;} hr {
     border: 0;
@@ -360,14 +365,13 @@ class PostmanEmailLogController {
 			if ( ! empty( $meta_values ['transport_uri'] [0] ) ) {
 				printf( '<tr><th style="text-align:right">%s:</th><td>%s</td></tr>', _x( 'Delivery-URI', 'What is the unique URI of the configuration?', 'post-smtp' ), esc_html( $meta_values ['transport_uri'] [0] ) );
 			}
-			print '</table>';
-			print '<hr/>';
-			print '<pre>';
-			print $this->sanitize_message( $post->post_content );
-			print '</pre>';
-			print '</body></html>';
-			die();
-		}
+		print '</table>';
+		print '<hr/>';
+		print '<pre>';
+		print $this->sanitize_message( $post->post_content );
+		print '</pre>';
+		print '</body></html>';
+		die();
 	}
 
 	function sanitize_message( $message ) {
@@ -380,12 +384,15 @@ class PostmanEmailLogController {
 	/**
 	 */
 	function view_transcript_log_item() {
-		// only do this for administrators
-		if ( PostmanUtils::isAdmin() ) {
-			$this->logger->trace( 'handling view transcript item' );
-			$postid = absint($_REQUEST ['email']);
-			$post = get_post( $postid );
-			$meta_values = PostmanLogFields::get_instance()->get( $postid );
+		// Check if user has permission to view email logs
+		if ( ! current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
+			wp_die( __( 'Sorry, you are not allowed to view email logs.', 'post-smtp' ) );
+		}
+		
+		$this->logger->trace( 'handling view transcript item' );
+		$postid = absint($_REQUEST ['email']);
+		$post = get_post( $postid );
+		$meta_values = PostmanLogFields::get_instance()->get( $postid );
 			// https://css-tricks.com/examples/hrs/
 			print '<html><head><style>body {font-family: monospace;} hr {
     border: 0;
@@ -401,10 +408,9 @@ class PostmanEmailLogController {
 				/* Translators: Meaning "Not Applicable" */
 				print __( 'n/a', 'post-smtp' );
 			}
-			print '</pre>';
-			print '</body></html>';
-			die();
-		}
+		print '</pre>';
+		print '</body></html>';
+		die();
 	}
 
 	/**
@@ -419,22 +425,27 @@ class PostmanEmailLogController {
 	 * Register the page
 	 */
 	function postmanAddMenuItem() {
-		// only do this for administrators
-		if ( PostmanUtils::isAdmin() ) {
-			$this->logger->trace( 'created PostmanEmailLog admin menu item' );
-			/*
-			Translators where (%s) is the name of the plugin */
-			$pageTitle = sprintf( __( '%s Email Log', 'post-smtp' ), __( 'Post SMTP', 'post-smtp' ) );
-			$pluginName = _x( 'Email Log', 'The log of Emails that have been delivered', 'post-smtp' );
-
-			$page = add_submenu_page( PostmanViewController::POSTMAN_MENU_SLUG, $pageTitle, $pluginName, Postman::MANAGE_POSTMAN_CAPABILITY_LOGS, 'postman_email_log', array( $this, 'postman_render_email_page' ) );
-
-			// When the plugin options page is loaded, also load the stylesheet
-			add_action( 'admin_print_styles-' . $page, array(
-					$this,
-					'postman_email_log_enqueue_resources',
-			) );
+		if ( ! PostmanUtils::canManagePostmanLogs() ) {
+			return;
 		}
+
+		$this->logger->trace( 'created PostmanEmailLog admin menu item' );
+		/*
+		Translators where (%s) is the name of the plugin */
+		$pageTitle = sprintf( __( '%s Email Log', 'post-smtp' ), __( 'Post SMTP', 'post-smtp' ) );
+		$pluginName = _x( 'Email Log', 'The log of Emails that have been delivered', 'post-smtp' );
+
+		if ( PostmanUtils::isAdmin() ) {
+			$page = add_submenu_page( PostmanViewController::POSTMAN_MENU_SLUG, $pageTitle, $pluginName, Postman::MANAGE_POSTMAN_CAPABILITY_LOGS, 'postman_email_log', array( $this, 'postman_render_email_page' ) );
+		} else {
+			$page = add_menu_page( $pageTitle, $pluginName, Postman::MANAGE_POSTMAN_CAPABILITY_LOGS, 'postman_email_log', array( $this, 'postman_render_email_page' ), 'dashicons-email' );
+		}
+
+		// When the plugin options page is loaded, also load the stylesheet
+		add_action( 'admin_print_styles-' . $page, array(
+				$this,
+				'postman_email_log_enqueue_resources',
+		) );
 	}
 
 	/**
@@ -464,6 +475,9 @@ class PostmanEmailLogController {
 	 * it's the way the list tables are used in the WordPress core.
 	 */
 	function postman_render_email_page() {
+		if ( ! current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
+			wp_die( esc_html__( 'Sorry, you are not allowed to access this page.', 'post-smtp' ) );
+		}
 
 		$new_logging = get_option( 'postman_db_version' );
 

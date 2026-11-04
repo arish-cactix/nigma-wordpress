@@ -23,7 +23,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class SEO_Analyzer {
 
-	use Ajax, Hooker;
+	use Ajax;
+	use Hooker;
 
 	/**
 	 * Rank Math SEO Checkup API.
@@ -54,6 +55,13 @@ class SEO_Analyzer {
 	public $results = null;
 
 	/**
+	 * Hold analysis results.
+	 *
+	 * @var null|array
+	 */
+	public $results_data = null;
+
+	/**
 	 * Hold analysis result date.
 	 *
 	 * @var mixed
@@ -65,7 +73,7 @@ class SEO_Analyzer {
 	 *
 	 * @var array
 	 */
-	private $api_error = '';
+	public $api_error = '';
 
 	/**
 	 * Hold local test data.
@@ -81,7 +89,7 @@ class SEO_Analyzer {
 		$this->analyse_url = home_url();
 
 		$this->action( 'init', 'set_url' );
-		$this->maybe_clear_storage();
+		$this->action( 'admin_init', 'maybe_clear_storage' );
 
 		$this->ajax( 'analyze', 'analyze_me' );
 		$this->ajax( 'enable_auto_update', 'enable_auto_update' );
@@ -93,7 +101,6 @@ class SEO_Analyzer {
 	 * @return void
 	 */
 	public function set_url() {
-		update_option( 'rank_math_viewed_seo_analyer', true, false ); // Code to update the viewed value to remove the New label.
 
 		$this->api_url = $this->do_filter( 'seo_analysis/api_endpoint', 'https://rankmath.com/analyze/v2/json/' );
 		if ( ! empty( $_REQUEST['u'] ) && $this->is_allowed_url( Param::request( 'u' ) ) ) { // phpcs:ignore
@@ -115,74 +122,11 @@ class SEO_Analyzer {
 	}
 
 	/**
-	 * Output results.
-	 */
-	public function display() {
-		if ( empty( $this->results ) ) {
-			return;
-		}
-		?>
-		<?php $this->display_graphs(); ?>
-		<?php $this->display_result_filters(); ?>
-		<div class="rank-math-result-tables rank-math-box">
-			<?php $this->display_results(); ?>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Show buttons to filter results: All, Passed Tests, Warnings, Failed Tests.
-	 * Also show the number of tests in each category.
-	 */
-	private function display_result_filters() {
-		$data = $this->get_graph_metrices();
-		extract( $data ); // phpcs:ignore
-
-		?>
-		<div id="analysis-result" class="rank-math-result-filters">
-			<a href="#all" class="rank-math-result-filter rank-math-result-filter-all active" data-filter="all" data-count="<?php echo esc_attr( $total ); ?>">
-				<?php esc_html_e( 'All', 'rank-math' ); ?>
-				<span class="rank-math-result-filter-count"><?php echo esc_html( $total ); ?></span>
-			</a>
-			<a href="#passed" class="rank-math-result-filter rank-math-result-filter-passed" data-filter="ok" data-count="<?php echo esc_attr( $statuses['ok'] ); ?>">
-				<?php esc_html_e( 'Passed Tests', 'rank-math' ); ?>
-				<span class="rank-math-result-filter-count"><?php echo esc_html( $statuses['ok'] ); ?></span>
-			</a>
-			<a href="#warning" class="rank-math-result-filter rank-math-result-filter-warnings" data-filter="warning" data-count="<?php echo esc_attr( $statuses['warning'] ); ?>">
-				<?php esc_html_e( 'Warnings', 'rank-math' ); ?>
-				<span class="rank-math-result-filter-count"><?php echo esc_html( $statuses['warning'] ); ?></span>
-			</a>
-			<a href="#failed" class="rank-math-result-filter rank-math-result-filter-failed" data-filter="fail" data-count="<?php echo esc_attr( $statuses['fail'] ); ?>">
-				<?php esc_html_e( 'Failed Tests', 'rank-math' ); ?>
-				<span class="rank-math-result-filter-count"><?php echo esc_html( $statuses['fail'] ); ?></span>
-			</a>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Output graphs.
-	 */
-	private function display_graphs() {
-		$data = $this->get_graph_metrices();
-		extract( $data ); // phpcs:ignore
-
-		include dirname( __FILE__ ) . '/views/graphs.php';
-	}
-
-	/**
-	 * Output the SERP Preview.
-	 */
-	public function display_serp_preview() {
-		include dirname( __FILE__ ) . '/views/serp-preview.php';
-	}
-
-	/**
-	 * Get graph metrices.
+	 * Get graph metrics.
 	 *
 	 * @return array
 	 */
-	private function get_graph_metrices() {
+	private function get_graph_metrics() {
 		$total       = 0;
 		$percent     = 0;
 		$total_score = 0;
@@ -201,8 +145,8 @@ class SEO_Analyzer {
 				continue;
 			}
 
-			$statuses[ $result->get_status() ]++;
-			$total++;
+			++$statuses[ $result->get_status() ];
+			++$total;
 
 			$total_score = $total_score + $result->get_score();
 
@@ -213,7 +157,7 @@ class SEO_Analyzer {
 			$percent = $percent + $result->get_score();
 		}
 
-		$percent = round( ( $percent / $total_score ) * 100 );
+		$percent = $total_score > 0 ? round( ( $percent / $total_score ) * 100 ) : 0;
 		$grade   = $this->get_graph_grade( $percent );
 
 		return compact( 'total', 'percent', 'statuses', 'grade' );
@@ -226,8 +170,8 @@ class SEO_Analyzer {
 	 *
 	 * @return bool
 	 */
-	private function can_count_result( $result ) {
-		return ( ! is_object( $result ) || 'info' === $result->get_status() || $result->is_excluded() ) ? false : true;
+	public function can_count_result( $result ) {
+		return ! is_object( $result ) ? false : true;
 	}
 
 	/**
@@ -250,80 +194,25 @@ class SEO_Analyzer {
 	}
 
 	/**
-	 * Output results in tables.
-	 */
-	private function display_results() {
-		foreach ( $this->sort_results_by_category() as $category => $results ) :
-			$label = $this->get_category_label( $category );
-			?>
-			<div class="rank-math-result-table rank-math-result-category-<?php echo esc_attr( $category ); ?> <?php echo esc_attr( $this->get_status_class( $results ) ); ?>">
-				<div class="category-title">
-					<?php echo $label; // phpcs:ignore ?>
-				</div>
-				<?php foreach ( $results as $result ) : ?>
-				<div class="table-row rank-math-result-status-<?php echo esc_attr( $result->get_status() ); ?>" data-status="<?php echo esc_attr( $result->get_status() ); ?>">
-					<?php echo $result; // phpcs:ignore ?>
-				</div>
-				<?php endforeach; ?>
-			</div>
-			<?php
-		endforeach;
-	}
-
-	/**
-	 * Get class for the result category wrapper element.
-	 * This is needed for the filter buttons.
-	 *
-	 * @param array $results Results array.
-	 *
-	 * @return string
-	 */
-	private function get_status_class( $results ) {
-		$status_classes = [];
-		foreach ( $results as $result ) {
-			if ( false === $this->can_count_result( $result ) ) {
-				continue;
-			}
-
-			if ( $result->is_hidden() ) {
-				continue;
-			}
-
-			$status_classes[] = $result->get_status();
-		}
-
-		$status_class = implode(
-			' ',
-			array_map(
-				function( $status ) {
-					return 'rank-math-result-statuses-' . $status;
-				},
-				array_unique( $status_classes )
-			)
-		);
-
-		return $status_class;
-	}
-
-	/**
 	 * Get result from storage.
 	 *
 	 * @param string $option Option name.
 	 */
 	public function get_results_from_storage( $option = 'rank_math_seo_analysis' ) {
-		if ( ! is_null( $this->results ) ) {
-			return;
-		}
-
 		$this->results      = get_option( $option . '_results' );
 		$this->results_date = get_option( $option . '_date' );
 
 		$url = get_option( $option . '_url' );
-		if ( false !== $url ) {
+		if ( $url ) {
 			$this->analyse_url = $url;
 		}
 
 		$this->build_results();
+		if ( empty( $this->results ) ) {
+			return [];
+		}
+
+		return $this->get_results();
 	}
 
 	/**
@@ -337,32 +226,45 @@ class SEO_Analyzer {
 		$date = date_i18n( get_option( 'date_format' ), $this->results_date );
 		$time = date_i18n( get_option( 'time_format' ), $this->results_date );
 
-		// translators: 1: Date, 2: Time.
-		return '<span>' . esc_attr__( 'Last checked:', 'rank-math' ) . '</span> ' . sprintf( esc_html__( '%1$s at %2$s', 'rank-math' ), $date, $time );
+		return [
+			'date' => $date,
+			'time' => $time,
+		];
 	}
 
 	/**
 	 * Clear stored results if needed.
 	 */
-	private function maybe_clear_storage() {
-		if ( '1' === Param::request( 'clear_results' ) ) {
-			delete_option( 'rank_math_seo_analysis_results' );
-			delete_option( 'rank_math_seo_analysis_date' );
-			Helper::redirect( Security::remove_query_arg_raw( 'clear_results' ) );
-			exit;
+	public function maybe_clear_storage() {
+		if ( '1' !== Param::request( 'clear_results' ) ) {
+			return;
 		}
+
+		if (
+			! Helper::has_cap( 'site_analysis' ) ||
+			! wp_verify_nonce( Param::request( 'security' ), 'rank-math-ajax-nonce' )
+		) {
+			return;
+		}
+
+		delete_option( 'rank_math_seo_analysis_results' );
+		delete_option( 'rank_math_seo_analysis_date' );
+		Helper::redirect( Security::remove_query_arg_raw( [ 'clear_results', 'security' ] ) );
+		exit;
 	}
 
 	/**
 	 * Convert result into object.
 	 */
-	private function build_results() {
+	public function build_results() {
 		if ( ! is_array( $this->results ) ) {
 			return;
 		}
 
 		$this->move_priority_results_to_top();
 
+		$this->results_data = $this->results;
+		$this->results_date = time();
 		foreach ( $this->results as $id => $result ) {
 			$this->results[ $id ] = new Result( $id, $result, $this->analyse_subpage );
 		}
@@ -384,25 +286,23 @@ class SEO_Analyzer {
 	}
 
 	/**
-	 * Analyze page.
+	 * Run all SEO analysis tests against the configured URL.
+	 *
+	 * Extracted from analyze_me() so the analyzer can be invoked outside
+	 * the AJAX request lifecycle (e.g. by Rank Math abilities).
+	 *
+	 * @param bool $clear_cache Whether to clear cached results before running.
+	 * @return bool True on success, false if the remote API failed AND no local tests ran.
 	 */
-	public function analyze_me() {
-		$success   = true;
-		$directory = dirname( __FILE__ );
-		check_ajax_referer( 'rank-math-ajax-nonce', 'security' );
-		$this->has_cap_ajax( 'site_analysis' );
+	public function run_tests( $clear_cache = true ) {
+		$this->results = null;
 
-		if ( ! $this->analyse_subpage ) {
+		if ( ! $this->analyse_subpage && $clear_cache ) {
 			delete_option( 'rank_math_seo_analysis_results' );
 			delete_option( 'rank_math_seo_analysis_date' );
 		}
 
-		if ( ! $this->run_api_tests() ) {
-			/* translators: API error */
-			echo '<div class="notice notice-error is-dismissible notice-seo-analysis-error rank-math-notice"><p>' . sprintf( __( '<strong>API Error:</strong> %s', 'rank-math' ), $this->api_error  ) . '</p></div>'; // phpcs:ignore
-			$success = false;
-			die;
-		}
+		$remote_ok = $this->run_api_tests();
 
 		if ( ! $this->analyse_subpage ) {
 			$this->run_local_tests();
@@ -411,51 +311,35 @@ class SEO_Analyzer {
 		}
 
 		/**
-		 * Action: 'rank_math/seo_analysis/after_analyze' - Fires after the SEO analysis is done.
+		 * Fires after the SEO analysis has completed.
+		 *
+		 * @see action: rank_math/seo_analysis/after_analyze
 		 */
 		$this->do_action( 'seo_analysis/after_analyze', $this );
-
 		$this->build_results();
-		$this->display();
 
-		die;
+		return $remote_ok || ! empty( $this->results );
 	}
 
 	/**
-	 * Get page score.
+	 * Whether the most recent run_tests() call reached the remote API.
 	 *
-	 * @param  string $url Url to get score for.
-	 *
-	 * @return int
+	 * @return bool
 	 */
-	public function get_page_score( $url ) {
-		$this->analyse_url     = $url;
-		$this->analyse_subpage = true;
-		if ( ! $this->run_api_tests() ) {
-			error_log( __( 'Rank Math SEO Analyzer error: ', 'rank-math' ) . $this->api_error ); // phpcs:ignore
-			return 0;
-		}
+	public function remote_api_succeeded() {
+		return empty( $this->api_error );
+	}
 
-		$this->build_results();
+	/**
+	 * AJAX handler — runs the site SEO audit and returns results to the admin UI.
+	 */
+	public function analyze_me() {
+		check_ajax_referer( 'rank-math-ajax-nonce', 'security' );
+		$this->has_cap_ajax( 'site_analysis' );
 
-		if ( empty( $this->results ) ) {
-			return 0;
-		}
-
-		$total = 0;
-		foreach ( $this->results as $id => $result ) {
-			if (
-				$result->is_hidden() ||
-				'ok' !== $result->get_status() ||
-				false === $this->can_count_result( $result )
-			) {
-				continue;
-			}
-
-			$total = $total + $result->get_score();
-		}
-
-		return $total;
+		$this->set_url();
+		$this->run_tests( true );
+		$this->success( $this->get_results() );
 	}
 
 	/**
@@ -482,7 +366,7 @@ class SEO_Analyzer {
 		}
 
 		$results['auto_update']['status']  = 'ok';
-		$results['auto_update']['message'] = __( 'Rank Math auto-update option is enabled on your site.', 'rank-math' );
+		$results['auto_update']['message'] = __( 'Rank Math auto-update option is enabled on your site.', 'seo-by-rank-math' );
 		update_option( 'rank_math_seo_analysis_results', $results, false );
 	}
 
@@ -491,7 +375,7 @@ class SEO_Analyzer {
 	 *
 	 * @return boolean
 	 */
-	private function run_api_tests() {
+	public function run_api_tests() {
 		$response = $this->get_api_results();
 		if ( false === $response ) {
 			return false;
@@ -547,14 +431,14 @@ class SEO_Analyzer {
 		$status = absint( wp_remote_retrieve_response_code( $request ) );
 		if ( 200 !== $status ) {
 			// Translators: placeholder is a HTTP error code.
-			$this->api_error = sprintf( __( 'HTTP %d error.', 'rank-math' ), $status );
+			$this->api_error = sprintf( __( 'HTTP %d error.', 'seo-by-rank-math' ), $status );
 			return false;
 		}
 
 		$response = wp_remote_retrieve_body( $request );
 		$response = json_decode( $response, true );
 		if ( ! is_array( $response ) ) {
-			$this->api_error = __( 'Unexpected API response.', 'rank-math' );
+			$this->api_error = __( 'Unexpected API response.', 'seo-by-rank-math' );
 			return false;
 		}
 
@@ -591,7 +475,7 @@ class SEO_Analyzer {
 	 */
 	private function is_allowed_url( $url ) {
 		$allowed = true;
-		$home = get_home_url();
+		$home    = get_home_url();
 		if ( strpos( $url, $home ) !== 0 ) {
 			$allowed = false;
 		}
@@ -619,35 +503,66 @@ class SEO_Analyzer {
 			if ( ! isset( $data[ $category ] ) ) {
 				$data[ $category ] = [];
 			}
-			$data[ $category ][ $result->get_id() ] = $result;
+			$data[ $category ][ $result->get_id() ] = $result->get_result();
 		}
 
 		return $data;
 	}
 
 	/**
-	 * Get category label by slug.
+	 * Get SEO Analysis results.
 	 *
-	 * @param  string $category Current category slug.
-	 * @return string
+	 * @return array
 	 */
-	private function get_category_label( $category ) {
-		$category_map = [
-			'priority'    => esc_html__( 'Priority', 'rank-math' ),
-			'advanced'    => esc_html__( 'Advanced SEO', 'rank-math' ),
-			'basic'       => esc_html__( 'Basic SEO', 'rank-math' ),
-			'performance' => esc_html__( 'Performance', 'rank-math' ),
-			'security'    => esc_html__( 'Security', 'rank-math' ),
+	private function get_results() {
+		return [
+			'results'  => $this->sort_results_by_category(),
+			'metrices' => $this->get_graph_metrics(),
+			'date'     => $this->get_last_checked_date(),
+			'serpData' => $this->get_serp_data(),
 		];
-
-		return isset( $category_map[ $category ] ) ? $category_map[ $category ] : '';
 	}
 
 	/**
-	 * Get admin tabs.
+	 * Get SERP Data.
+	 *
+	 * @return array
 	 */
-	public function admin_tabs() {
-		$tabs = new Admin_Tabs();
-		$tabs->display();
+	private function get_serp_data() {
+		$favicon = get_site_icon_url( 128 );
+		if ( is_array( $this->results ) ) {
+			if ( isset( $this->results['title_length'] ) ) {
+				$title_data = $this->results['title_length']->get_result();
+				$title      = $title_data['data'];
+			}
+
+			if ( isset( $this->results['description_length'] ) ) {
+				$description_data = $this->results['description_length']->get_result();
+				$description      = $description_data['data'];
+			}
+		}
+
+		if ( empty( $title ) ) {
+			$title = __( '(No Title)', 'seo-by-rank-math' );
+		}
+		// Cut title to 60 characters.
+		if ( strlen( $title ) > 60 ) {
+			$title = substr( $title, 0, 60 ) . '...';
+		}
+
+		if ( empty( $description ) ) {
+			$description = __( '(No Description)', 'seo-by-rank-math' );
+		}
+		// Cut description to 160 characters.
+		if ( strlen( $description ) > 160 ) {
+			$description = substr( $description, 0, 160 ) . '...';
+		}
+
+		return [
+			'favicon'     => $favicon,
+			'url'         => esc_url( $this->analyse_url ),
+			'title'       => esc_html( $title ),
+			'description' => esc_html( $description ),
+		];
 	}
 }

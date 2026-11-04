@@ -41,7 +41,7 @@ class Admin extends Base {
 	 */
 	public function __construct() {
 
-		$directory = dirname( __FILE__ );
+		$directory = __DIR__;
 		$this->config(
 			[
 				'id'        => 'rich-snippet',
@@ -50,7 +50,7 @@ class Admin extends Base {
 		);
 		parent::__construct();
 
-		$this->action( 'cmb2_admin_init', 'add_kb_links', 50 );
+		$this->action( 'admin_init', 'add_kb_links', 50 );
 		$this->action( 'rank_math/admin/editor_scripts', 'enqueue' );
 		$this->action( 'rank_math/post/column/seo_details', 'display_schema_type', 10, 2 );
 	}
@@ -64,10 +64,10 @@ class Admin extends Base {
 	public function display_schema_type( $post_id, $data ) {
 		$schema = absint( get_option( 'page_for_posts' ) ) !== $post_id ? $this->get_schema_types( $data, $post_id ) : 'CollectionPage';
 		$schema = ! empty( $schema ) ? $schema : $this->get_schema_name( Helper::get_default_schema_type( $post_id, true ) );
-		$schema = $schema ? $schema : esc_html__( 'Off', 'rank-math' );
+		$schema = $schema ? $schema : esc_html__( 'Off', 'seo-by-rank-math' );
 		?>
 			<span class="rank-math-column-display schema-type">
-				<strong><?php esc_html_e( 'Schema', 'rank-math' ); ?>:</strong>
+				<strong><?php esc_html_e( 'Schema', 'seo-by-rank-math' ); ?>:</strong>
 				<?php echo esc_html( Helper::sanitize_schema_title( $schema ) ); ?>
 			</span>
 		<?php
@@ -81,13 +81,12 @@ class Admin extends Base {
 			return;
 		}
 
-		$values = [];
-		$cmb    = $this->get_metabox();
-		if ( false === $cmb ) {
+		$object_id = $this->get_object_id();
+		if ( false === $object_id ) {
 			return;
 		}
 
-		Helper::add_json( 'schemas', $this->get_schema_data( $cmb->object_id() ) );
+		Helper::add_json( 'schemas', $this->get_schema_data( $object_id ) );
 		Helper::add_json( 'customSchemaImage', esc_url( rank_math()->plugin_url() . 'includes/modules/schema/assets/img/custom-schema-builder.jpg' ) );
 
 		wp_enqueue_style( 'rank-math-schema', rank_math()->plugin_url() . 'includes/modules/schema/assets/css/schema.css', [ 'wp-components', 'rank-math-editor' ], rank_math()->version );
@@ -96,7 +95,7 @@ class Admin extends Base {
 		$screen = get_current_screen();
 		if ( 'rank_math_schema' !== $screen->post_type ) {
 			wp_enqueue_script( 'rank-math-schema', rank_math()->plugin_url() . 'includes/modules/schema/assets/js/schema-gutenberg.js', [ 'rank-math-editor' ], rank_math()->version, true );
-			wp_set_script_translations( 'rank-math-schema', 'rank-math' );
+			wp_set_script_translations( 'rank-math-schema', 'seo-by-rank-math' );
 		}
 	}
 
@@ -130,23 +129,25 @@ class Admin extends Base {
 			return [];
 		}
 
+		$post_type   = get_post_type( $post_id );
+		$name        = Helper::get_settings( "titles.pt_{$post_type}_default_snippet_name" );
+		$description = Helper::get_settings( "titles.pt_{$post_type}_default_snippet_desc" );
+
 		$schemas['new-9999'] = [
 			'@type'    => $default_type,
 			'metadata' => [
-				'title'     => Helper::sanitize_schema_title( $default_type ),
-				'type'      => 'template',
-				'shortcode' => uniqid( 's-' ),
-				'isPrimary' => true,
+				'title'       => Helper::sanitize_schema_title( $default_type ),
+				'type'        => 'template',
+				'shortcode'   => uniqid( 's-' ),
+				'isPrimary'   => true,
+				'name'        => $name,
+				'description' => $description,
 			],
 		];
 
 		if ( ! in_array( $default_type, [ 'Article', 'NewsArticle', 'BlogPosting' ], true ) ) {
 			return $schemas;
 		}
-
-		$post_type   = get_post_type( $post_id );
-		$name        = Helper::get_settings( "titles.pt_{$post_type}_default_snippet_name" );
-		$description = Helper::get_settings( "titles.pt_{$post_type}_default_snippet_desc" );
 
 		$schemas['new-9999']['headline']    = $name ? $name : '';
 		$schemas['new-9999']['description'] = $description ? $description : '';
@@ -192,7 +193,7 @@ class Admin extends Base {
 	 */
 	private function enqueue_translation() {
 		if ( function_exists( 'wp_set_script_translations' ) ) {
-			wp_set_script_translations( 'rank-math-schema', 'rank-math', rank_math()->plugin_dir() . 'languages/' );
+			wp_set_script_translations( 'rank-math-schema', 'seo-by-rank-math', rank_math()->plugin_dir() . 'languages/' );
 		}
 	}
 
@@ -228,7 +229,7 @@ class Admin extends Base {
 			$types = array_merge(
 				$types,
 				array_map(
-					function( $type ) {
+					function ( $type ) {
 						return $this->get_schema_name( $type );
 					},
 					$schema['@type']
@@ -264,16 +265,25 @@ class Admin extends Base {
 	}
 
 	/**
-	 * Get a CMB2 instance by the metabox ID.
+	 * Get the current object ID (post or term).
 	 *
-	 * @return bool|CMB2
+	 * @return int|false Object ID or false if not available.
 	 */
-	private function get_metabox() {
+	private function get_object_id() {
+		global $post;
+
+		// For term edit pages.
 		if ( Admin_Helper::is_term_profile_page() ) {
 			return false;
 		}
 
-		return cmb2_get_metabox( 'rank_math_metabox' );
+		// For post edit pages.
+		if ( isset( $post->ID ) ) {
+			return $post->ID;
+		}
+
+		// Try to get from query string.
+		return isset( $_GET['post'] ) ? absint( $_GET['post'] ) : false;
 	}
 
 	/**

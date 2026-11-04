@@ -55,7 +55,7 @@ class Notification_Center {
 	 *
 	 * @param string $storage_key Option name to store notification in.
 	 */
-	public function __construct( $storage_key = 'mythemeshop_notifications' ) {
+	public function __construct( $storage_key = 'rank_math_notifications' ) {
 		$this->storage_key = $storage_key;
 		add_action( 'plugins_loaded', [ $this, 'get_from_storage' ], 5 );
 		add_action( 'all_admin_notices', [ $this, 'display' ] );
@@ -70,7 +70,7 @@ class Notification_Center {
 	 *
 	 * @codeCoverageIgnore
 	 *
-	 * @return array Notification[] Notifications
+	 * @return void
 	 */
 	public function get_from_storage() {
 		if ( $this->retrieved ) {
@@ -193,7 +193,8 @@ class Notification_Center {
 		/**
 		 * Filter: 'wp_helpers_notification_dismissed' - Allows developer to perform action after dismissed.
 		 *
-		 * @param Notification[] $notifications
+		 * @param string  $notification_id
+		 * @param Notification $notifications
 		 */
 		do_action( 'wp_helpers_notification_dismissed', $notification_id, $notification );
 	}

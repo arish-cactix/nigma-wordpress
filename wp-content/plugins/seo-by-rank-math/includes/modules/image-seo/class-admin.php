@@ -42,10 +42,10 @@ class Admin {
 			[
 				'images' => [
 					'icon'  => 'rm-icon rm-icon-images',
-					'title' => esc_html__( 'Images', 'rank-math' ),
+					'title' => esc_html__( 'Images', 'seo-by-rank-math' ),
 					/* translators: Link to kb article */
-					'desc'  => sprintf( esc_html__( 'SEO options related to featured images and media appearing in your post content. %s.', 'rank-math' ), '<a href="' . KB::get( 'image-settings', 'Options Panel Images Tab' ) . '" target="_blank">' . esc_html__( 'Learn more', 'rank-math' ) . '</a>' ),
-					'file'  => dirname( __FILE__ ) . '/options.php',
+					'desc'  => sprintf( esc_html__( 'SEO options related to featured images and media appearing in your post content. %s.', 'seo-by-rank-math' ), '<a href="' . KB::get( 'image-settings', 'Options Panel Images Tab' ) . '" target="_blank">' . esc_html__( 'Learn more', 'seo-by-rank-math' ) . '</a>' ),
+					'file'  => __DIR__ . '/options.php',
 				],
 			],
 			3
@@ -53,5 +53,4 @@ class Admin {
 
 		return $tabs;
 	}
-
 }

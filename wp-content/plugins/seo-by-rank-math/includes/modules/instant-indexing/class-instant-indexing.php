@@ -15,7 +15,9 @@ use RankMath\Module\Base;
 use RankMath\Traits\Hooker;
 use RankMath\Traits\Ajax;
 use RankMath\Admin\Options;
+use RankMath\Admin\Register_Options_Page;
 use RankMath\Helpers\Param;
+use RankMath\Helpers\Sitepress;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -24,7 +26,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class Instant_Indexing extends Base {
 
-	use Hooker, Ajax;
+	use Hooker;
+	use Ajax;
 
 	/**
 	 * API Object.
@@ -41,7 +44,7 @@ class Instant_Indexing extends Base {
 	private $submitted = [];
 
 	/**
-	 * Store previous post status that we can check agains in save_post.
+	 * Store previous post status that we can check against in save_post.
 	 *
 	 * @var array
 	 */
@@ -65,12 +68,11 @@ class Instant_Indexing extends Base {
 	public function __construct() {
 		parent::__construct();
 
-		$this->action( 'admin_enqueue_scripts', 'enqueue', 20 );
-
 		if ( ! $this->is_configured() ) {
 			Api::get()->reset_key();
 		}
 
+		$this->action( 'init', 'register_instant_indexing_settings', 125 );
 		$post_types = $this->get_auto_submit_post_types();
 		if ( ! empty( $post_types ) ) {
 			$this->filter( 'wp_insert_post_data', 'before_save_post', 10, 4 );
@@ -105,7 +107,7 @@ class Instant_Indexing extends Base {
 	 * @return array          New actions.
 	 */
 	public function post_bulk_actions( $actions ) {
-		$actions['rank_math_indexnow'] = esc_html__( 'Instant Indexing: Submit Pages', 'rank-math' );
+		$actions['rank_math_indexnow'] = esc_html__( 'Instant Indexing: Submit Pages', 'seo-by-rank-math' );
 		return $actions;
 	}
 
@@ -141,7 +143,7 @@ class Instant_Indexing extends Base {
 			'rank_math_instant_index_post'
 		);
 
-		$actions['indexnow_submit'] = '<a href="' . esc_url( $link ) . '" class="rm-instant-indexing-action rm-indexnow-submit">' . __( 'Instant Indexing: Submit Page', 'rank-math' ) . '</a>';
+		$actions['indexnow_submit'] = '<a href="' . esc_url( $link ) . '" class="rm-instant-indexing-action rm-indexnow-submit">' . __( 'Instant Indexing: Submit Page', 'seo-by-rank-math' ) . '</a>';
 
 		return $actions;
 	}
@@ -206,28 +208,28 @@ class Instant_Indexing extends Base {
 	/**
 	 * Register admin page.
 	 */
-	public function register_admin_page() {
+	public function register_instant_indexing_settings() {
 		$tabs = [
 			'url-submission' => [
 				'icon'    => 'rm-icon rm-icon-instant-indexing',
-				'title'   => esc_html__( 'Submit URLs', 'rank-math' ),
-				'desc'    => esc_html__( 'Send URLs directly to the IndexNow API.', 'rank-math' ) . ' <a href="' . KB::get( 'instant-indexing', 'Indexing Submit URLs' ) . '" target="_blank">' . esc_html__( 'Learn more', 'rank-math' ) . '</a>',
+				'title'   => esc_html__( 'Submit URLs', 'seo-by-rank-math' ),
+				'desc'    => esc_html__( 'Send URLs directly to the IndexNow API.', 'seo-by-rank-math' ) . ' <a href="' . KB::get( 'instant-indexing', 'Indexing Submit URLs' ) . '" target="_blank">' . esc_html__( 'Learn more', 'seo-by-rank-math' ) . '</a>',
 				'classes' => 'rank-math-advanced-option',
-				'file'    => dirname( __FILE__ ) . '/views/console.php',
+				'file'    => __DIR__ . '/views/console.php',
 			],
 			'settings'       => [
 				'icon'  => 'rm-icon rm-icon-settings',
-				'title' => esc_html__( 'Settings', 'rank-math' ),
+				'title' => esc_html__( 'Settings', 'seo-by-rank-math' ),
 				/* translators: Link to kb article */
-				'desc'  => sprintf( esc_html__( 'Instant Indexing module settings. %s.', 'rank-math' ), '<a href="' . KB::get( 'instant-indexing', 'Indexing Settings' ) . '" target="_blank">' . esc_html__( 'Learn more', 'rank-math' ) . '</a>' ),
-				'file'  => dirname( __FILE__ ) . '/views/options.php',
+				'desc'  => sprintf( esc_html__( 'Instant Indexing module settings. %s.', 'seo-by-rank-math' ), '<a href="' . KB::get( 'instant-indexing', 'Indexing Settings' ) . '" target="_blank">' . esc_html__( 'Learn more', 'seo-by-rank-math' ) . '</a>' ),
+				'file'  => __DIR__ . '/views/options.php',
 			],
 			'history'        => [
 				'icon'    => 'rm-icon rm-icon-htaccess',
-				'title'   => esc_html__( 'History', 'rank-math' ),
-				'desc'    => esc_html__( 'The last 100 IndexNow API requests.', 'rank-math' ),
+				'title'   => esc_html__( 'History', 'seo-by-rank-math' ),
+				'desc'    => esc_html__( 'The last 100 IndexNow API requests.', 'seo-by-rank-math' ),
 				'classes' => 'rank-math-advanced-option',
-				'file'    => dirname( __FILE__ ) . '/views/history.php',
+				'file'    => __DIR__ . '/views/history.php',
 			],
 		];
 
@@ -243,14 +245,14 @@ class Instant_Indexing extends Base {
 		 */
 		$tabs = $this->do_filter( 'settings/instant_indexing', $tabs );
 
-		new Options(
+		new Register_Options_Page(
 			[
 				'key'        => 'rank-math-options-instant-indexing',
-				'title'      => esc_html__( 'Instant Indexing', 'rank-math' ),
-				'menu_title' => esc_html__( 'Instant Indexing', 'rank-math' ),
+				'title'      => esc_html__( 'Instant Indexing', 'seo-by-rank-math' ),
+				'menu_title' => esc_html__( 'Instant Indexing', 'seo-by-rank-math' ),
 				'capability' => 'rank_math_general',
 				'tabs'       => $tabs,
-				'position'   => 100,
+				'position'   => 11,
 			]
 		);
 	}
@@ -284,6 +286,9 @@ class Instant_Indexing extends Base {
 	 * @return void
 	 */
 	public function save_post( $post_id, $post ) {
+		if ( defined( 'RANK_MATH_IMPORTING_CSV' ) && RANK_MATH_IMPORTING_CSV ) {
+			return;
+		}
 		// Check if already submitted.
 		if ( in_array( $post_id, $this->submitted, true ) ) {
 			return;
@@ -320,6 +325,20 @@ class Instant_Indexing extends Base {
 			$url = $this->previous_post_permalinks[ $post_id ];
 		}
 
+		if ( Sitepress::get()->is_active() ) {
+			$url = Sitepress::get()->get_permalink( $post_id );
+
+			$sitepress = Sitepress::get()->get_var();
+			$urls      = $sitepress->get_setting( 'urls' );
+			if ( isset( $urls['directory_for_default_language'] ) && $urls['directory_for_default_language'] ) {
+				$details = apply_filters( 'wpml_post_language_details', null, $post_id );
+				$lang    = $details['language_code'] ?? $sitepress->get_current_language();
+				if ( 0 !== strpos( $url, '/' . $lang ) ) {
+					$url = get_home_url() . $post->post_name;
+				}
+			}
+		}
+
 		/**
 		 * Filter the URL to be submitted to IndexNow.
 		 * Returning false will prevent the URL from being submitted.
@@ -345,34 +364,6 @@ class Instant_Indexing extends Base {
 	 */
 	private function is_configured() {
 		return (bool) Helper::get_settings( 'instant_indexing.indexnow_api_key' );
-	}
-
-	/**
-	 * Enqueue CSS & JS.
-	 *
-	 * @param string $hook Page hook name.
-	 * @return void
-	 */
-	public function enqueue( $hook ) {
-		if ( 'rank-math_page_rank-math-options-instant-indexing' !== $hook && 'rank-math_page_instant-indexing' !== $hook ) {
-			return;
-		}
-
-		$uri = untrailingslashit( plugin_dir_url( __FILE__ ) );
-		wp_enqueue_script( 'rank-math-instant-indexing', $uri . '/assets/js/instant-indexing.js', [ 'jquery' ], rank_math()->version, true );
-		Helper::add_json(
-			'indexNow',
-			[
-				'restUrl'                => rest_url( \RankMath\Rest\Rest_Helper::BASE . '/in' ),
-				'refreshHistoryInterval' => 30000,
-				'i18n'                   => [
-					'submitError'       => esc_html__( 'An error occurred while submitting the URL.', 'rank-math' ),
-					'clearHistoryError' => esc_html__( 'Error: could not clear history.', 'rank-math' ),
-					'getHistoryError'   => esc_html__( 'Error: could not get history.', 'rank-math' ),
-					'noHistory'         => esc_html__( 'No submissions yet.', 'rank-math' ),
-				],
-			]
-		);
 	}
 
 	/**
@@ -448,13 +439,13 @@ class Instant_Indexing extends Base {
 	 */
 	private function add_submit_message_notice( $success, $count ) {
 		$notification_type    = 'error';
-		$notification_message = __( 'Error submitting page to IndexNow.', 'rank-math' );
+		$notification_message = __( 'Error submitting page to IndexNow.', 'seo-by-rank-math' );
 
 		if ( $success ) {
 			$notification_type    = 'success';
 			$notification_message = sprintf(
 				/* translators: %s: Number of pages submitted. */
-				_n( '%s page submitted to IndexNow.', '%s pages submitted to IndexNow.', $count, 'rank-math' ),
+				_n( '%s page submitted to IndexNow.', '%s pages submitted to IndexNow.', $count, 'seo-by-rank-math' ),
 				$count
 			);
 		}
@@ -471,5 +462,4 @@ class Instant_Indexing extends Base {
 		$post_types = Helper::get_settings( 'instant_indexing.bing_post_types', [] );
 		return $post_types;
 	}
-
 }

@@ -11,6 +11,8 @@
 namespace RankMath\Google;
 
 use RankMath\Helper;
+use WP_Error;
+use RankMath\Helpers\Schedule;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -179,7 +181,7 @@ class Request {
 				$this->is_success      = false;
 				$this->last_error      = sprintf(
 					/* translators: reconnect link */
-					wp_kses_post( __( 'There is a problem with the Google auth token. Please <a href="%1$s" class="button button-link rank-math-reconnect-google">reconnect your app</a>', 'rank-math' ) ),
+					wp_kses_post( __( 'There is a problem with the Google auth token. Please <a href="%1$s" class="button button-link rank-math-reconnect-google">reconnect your app</a>', 'seo-by-rank-math' ) ),
 					wp_nonce_url( admin_url( 'admin.php?reconnect=google' ), 'rank_math_reconnect_google' )
 				);
 				$this->log_response( $http_verb, $url, $args, '', '', '', date( 'Y-m-d H:i:s' ) . ': Google auth token has been expired or is invalid' );
@@ -238,13 +240,13 @@ class Request {
 	/**
 	 * Log the response in analytics_debug.log file.
 	 *
-	 * @param string $http_verb          The HTTP verb to use: get, post, put, patch, delete.
-	 * @param string $url                URL to do request.
-	 * @param array  $args               Assoc array of parameters to be passed.
-	 * @param string $response           make_request response.
-	 * @param string $formatted_response Formated response.
-	 * @param array  $params             Parameters.
-	 * @param string $text               Text to append at the end of the response.
+	 * @param string         $http_verb          The HTTP verb to use: get, post, put, patch, delete.
+	 * @param string         $url                URL to do request.
+	 * @param array          $args               Assoc array of parameters to be passed.
+	 * @param array|WP_Error $response           make_request response.
+	 * @param string         $formatted_response Formatted response.
+	 * @param array          $params             Parameters.
+	 * @param string         $text               Text to append at the end of the response.
 	 */
 	private function log_response( $http_verb = '', $url = '', $args = [], $response = [], $formatted_response = '', $params = [], $text = '' ) {
 		do_action( 'rank_math/analytics/log', $http_verb, $url, $args, $response, $formatted_response, $params );
@@ -285,7 +287,7 @@ class Request {
 		} elseif ( isset( $formatted_response['error_description'] ) ) {
 			$message .= '<span class="fail">FAIL</span>' . PHP_EOL;
 			$message .= 'Bad Request' === $formatted_response['error_description'] ?
-			esc_html__( 'Bad request. Please check the code.', 'rank-math' ) : $formatted_response['error_description'];
+			esc_html__( 'Bad request. Please check the code.', 'seo-by-rank-math' ) : $formatted_response['error_description'];
 		} else {
 			$message .= '<span class="pass">PASS</span>' . PHP_EOL;
 		}
@@ -305,7 +307,7 @@ class Request {
 	/**
 	 * Decode the response and format any error messages for debugging
 	 *
-	 * @param array $response The response from the curl request.
+	 * @param array|WP_Error $response The response from the curl request.
 	 *
 	 * @return array|false The JSON decoded into an array
 	 */
@@ -343,11 +345,22 @@ class Request {
 
 		if ( isset( $formatted_response['error_description'] ) ) {
 			$this->last_error = 'Bad Request' === $formatted_response['error_description'] ?
-				esc_html__( 'Bad request. Please check the code.', 'rank-math' ) : $formatted_response['error_description'];
+				esc_html__( 'Bad request. Please check the code.', 'seo-by-rank-math' ) : $formatted_response['error_description'];
 			return;
 		}
 
-		$this->last_error = esc_html__( 'Unknown error, call get_response() to find out what happened.', 'rank-math' );
+		$message = esc_html__( 'Unknown error, call get_response() to find out what happened.', 'seo-by-rank-math' );
+		$body    = wp_remote_retrieve_body( $response );
+		if ( ! empty( $body ) ) {
+			$body = json_decode( $body, true );
+			if ( ! empty( $body['error'] ) && ! empty( $body['error']['message'] ) ) {
+				$message = $body['error']['message'];
+			} elseif ( ! empty( $body['errors'] ) && is_array( $body['errors'] ) && ! empty( $body['errors'][0]['message'] ) ) {
+				$message = $body['errors'][0]['message'];
+			}
+		}
+
+		$this->last_error = $message;
 	}
 
 	/**
@@ -479,7 +492,7 @@ class Request {
 			return;
 		}
 
-		as_schedule_single_action(
+		Schedule::single_action(
 			time() + 60,
 			"rank_math/analytics/get_{$action}_data",
 			[ $start_date ],

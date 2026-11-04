@@ -14,6 +14,7 @@ use RankMath\Post;
 use RankMath\Helper;
 use RankMath\Helpers\Security;
 use RankMath\Helpers\Str;
+use RankMath\OpenGraph\OpenGraph;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -110,31 +111,98 @@ class Singular implements IPaper {
 	/**
 	 * Set post object.
 	 *
-	 * @param WP_Post $object Current post object.
+	 * @param WP_Post $post Current post object.
 	 */
-	public function set_object( $object ) {
-		$this->object = $object;
+	public function set_object( $post ) {
+		$this->object = $post;
+	}
+
+	/**
+	 * Get all SEO metadata for a post as a structured array.
+	 *
+	 * Uses existing Singular and Opengraph methods to ensure frontend fallback logic is applied consistently.
+	 *
+	 * @since 1.0.272
+	 *
+	 * @param int $post_id Post ID.
+	 * @return array
+	 */
+	public function get_seo_meta( int $post_id ): array {
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return [ 'error' => esc_html__( 'Post not found.', 'seo-by-rank-math' ) ];
+		}
+
+		$this->set_object( $post );
+
+		// Set post context so template variables and query-dependent functions resolve correctly.
+		$prev_post       = isset( $GLOBALS['post'] ) ? $GLOBALS['post'] : null;
+		$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+		setup_postdata( $post );
+
+		rank_math()->variables->setup();
+
+		$seo_title       = $this->title();
+		$seo_description = $this->description();
+
+		// Derive canonical from $post_id directly — canonical() depends on the active WP query
+		// and may return get_permalink(0) outside a real frontend request.
+		$canonical_override = Post::get_meta( 'canonical_url', $post_id );
+		$canonical          = ! empty( $canonical_override ) ? $canonical_override : get_permalink( $post_id );
+
+		// Use OpenGraph directly to avoid extra hooks registered by Facebook/Twitter constructors.
+		$facebook          = new OpenGraph();
+		$facebook->network = 'facebook';
+		$facebook->prefix  = 'facebook';
+
+		$twitter          = new OpenGraph();
+		$twitter->network = 'twitter';
+		$twitter->prefix  = Helper::get_post_meta( 'twitter_use_facebook', $post_id, true ) ? 'facebook' : 'twitter';
+
+		$og_title       = $facebook->get_title( $post_id );
+		$og_description = $facebook->get_description( $post_id );
+		$tw_title       = $twitter->get_title( $post_id );
+		$tw_description = $twitter->get_description( $post_id );
+
+		$result = [
+			'post_id'             => $post_id,
+			'title'               => $seo_title,
+			'description'         => $seo_description,
+			'focus_keyword'       => $this->keywords(),
+			'robots'              => array_values( $this->get_effective_robots() ),
+			'canonical'           => (string) $canonical,
+			'og_title'            => $og_title ? $og_title : $seo_title,
+			'og_description'      => $og_description ? $og_description : $seo_description,
+			'twitter_title'       => $tw_title ? $tw_title : $seo_title,
+			'twitter_description' => $tw_description ? $tw_description : $seo_description,
+			'seo_score'           => (int) Post::get_meta( 'seo_score', $post_id ),
+		];
+
+		wp_reset_postdata();
+		$GLOBALS['post'] = $prev_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+
+		return $result;
 	}
 
 	/**
 	 * Get the SEO title set in the post metabox.
 	 *
-	 * @param object|null $object Post object to retrieve the title for.
+	 * @param object|null $post Post object to retrieve the title for.
 	 *
 	 * @return string
 	 */
-	protected function get_post_title( $object = null ) {
-		if ( ! is_object( $object ) ) {
-			return Paper::get_from_options( '404_title', [], esc_html__( 'Page not found', 'rank-math' ) );
+	protected function get_post_title( $post = null ) {
+		if ( ! is_object( $post ) ) {
+			return Paper::get_from_options( '404_title', [], esc_html__( 'Page not found', 'seo-by-rank-math' ) );
 		}
 
-		$title = Post::get_meta( 'title', $object->ID );
+		$title = Post::get_meta( 'title', $post->ID );
 		if ( '' !== $title ) {
 			return $title;
 		}
 
-		$post_type = isset( $object->post_type ) ? $object->post_type : $object->query_var;
-		return Paper::get_from_options( "pt_{$post_type}_title", $object, '%title% %sep% %sitename%' );
+		$post_type = isset( $post->post_type ) ? $post->post_type : $post->query_var;
+		return Paper::get_from_options( "pt_{$post_type}_title", $post, '%title% %sep% %sitename%' );
 	}
 
 	/**
@@ -147,54 +215,54 @@ class Singular implements IPaper {
 	 *     4. Paragraph with the focus keyword
 	 *     5. The First paragraph of the content
 	 *
-	 * @param object|null $object Object to retrieve the description from.
+	 * @param object|null $post Object to retrieve the description from.
 	 *
 	 * @return string The SEO description for the specified object, or queried object if not supplied.
 	 */
-	protected function get_post_description( $object = null ) {
-		if ( ! is_object( $object ) ) {
+	protected function get_post_description( $post = null ) {
+		if ( ! is_object( $post ) ) {
 			return '';
 		}
 
 		// 1. Custom meta description set for the post in SERP field.
-		$description = Post::get_meta( 'description', $object->ID );
+		$description = Post::get_meta( 'description', $post->ID );
 		if ( '' !== $description ) {
 			return $description;
 		}
 
 		// 2. Excerpt
-		if ( ! empty( $object->post_excerpt ) ) {
-			return $object->post_excerpt;
+		if ( ! empty( $post->post_excerpt ) && ! empty( $post->ID ) && ! post_password_required( $post->ID ) ) {
+			return $post->post_excerpt;
 		}
 
 		// 3. Description template set in the Titles & Meta.
-		$post_type = isset( $object->post_type ) ? $object->post_type : $object->query_var;
+		$post_type = isset( $post->post_type ) ? $post->post_type : $post->query_var;
 
-		return Str::truncate( Paper::get_from_options( "pt_{$post_type}_description", $object ), 160 );
+		return Str::truncate( Paper::get_from_options( "pt_{$post_type}_description", $post ), 160 );
 	}
 
 	/**
 	 * Retrieves the robots set in the post metabox.
 	 *
-	 * @param object|null $object Object to retrieve the robots data from.
+	 * @param object|null $post Object to retrieve the robots data from.
 	 *
 	 * @return string The robots for the specified object, or queried object if not supplied.
 	 */
-	protected function get_post_robots( $object = null ) {
-		if ( ! is_object( $object ) ) {
+	protected function get_post_robots( $post = null ) {
+		if ( ! is_object( $post ) ) {
 			return [];
 		}
 
-		$post_type = $object->post_type;
-		$robots    = Paper::robots_combine( Post::get_meta( 'robots', $object->ID ) );
+		$post_type = $post->post_type;
+		$robots    = Paper::robots_combine( Post::get_meta( 'robots', $post->ID ) );
 		if ( empty( $robots ) && Helper::get_settings( "titles.pt_{$post_type}_custom_robots" ) ) {
 			$robots = Paper::robots_combine( Helper::get_settings( "titles.pt_{$post_type}_robots" ), true );
 		}
 
 		// `noindex` these conditions.
-		$noindex_private            = 'private' === $object->post_status;
+		$noindex_private            = 'private' === $post->post_status;
 		$no_index_subpages          = is_paged() && Helper::get_settings( 'titles.noindex_paginated_pages' );
-		$noindex_password_protected = ! empty( $object->post_password ) && Helper::get_settings( 'titles.noindex_password_protected' );
+		$noindex_password_protected = ! empty( $post->post_password ) && Helper::get_settings( 'titles.noindex_password_protected' );
 
 		if ( $noindex_private || $noindex_password_protected || $no_index_subpages ) {
 			$robots['index'] = 'noindex';
@@ -206,11 +274,11 @@ class Singular implements IPaper {
 	/**
 	 * Retrieves the advanced robots set in the post metabox.
 	 *
-	 * @param object|null $object Object to retrieve the robots data from.
+	 * @param object|null $post Object to retrieve the robots data from.
 	 *
 	 * @return string The robots for the specified object, or queried object if not supplied.
 	 */
-	protected function get_post_advanced_robots( $object = null ) {
+	protected function get_post_advanced_robots( $post = null ) {
 		if ( ! is_object( $this->object ) ) {
 			return [];
 		}
@@ -222,5 +290,49 @@ class Singular implements IPaper {
 		}
 
 		return $robots;
+	}
+
+	/**
+	 * Resolve the effective robots directives for the current post.
+	 *
+	 * Applies the same fallback and validation logic as Paper::get_robots().
+	 *
+	 * @return array
+	 */
+	private function get_effective_robots(): array {
+		$robots = $this->robots();
+
+		if ( empty( $robots ) ) {
+			$robots = Paper::robots_combine( Helper::get_settings( 'titles.robots_global' ) );
+		}
+
+		if ( empty( $robots ) || ! is_array( $robots ) ) {
+			return [
+				'index'  => 'index',
+				'follow' => 'follow',
+			];
+		}
+
+		if ( ! isset( $robots['index'] ) ) {
+			$robots = [ 'index' => 'index' ] + $robots;
+		}
+		if ( ! isset( $robots['follow'] ) ) {
+			$robots = [ 'follow' => 'follow' ] + $robots;
+		}
+
+		// Force noindex if the blog is not public.
+		if ( 0 === absint( get_option( 'blog_public' ) ) ) {
+			$robots['index']  = 'noindex';
+			$robots['follow'] = 'nofollow';
+		}
+
+		$allowed = [
+			'index'        => '',
+			'follow'       => '',
+			'noarchive'    => '',
+			'noimageindex' => '',
+			'nosnippet'    => '',
+		];
+		return array_unique( array_intersect_key( $robots, $allowed ) );
 	}
 }

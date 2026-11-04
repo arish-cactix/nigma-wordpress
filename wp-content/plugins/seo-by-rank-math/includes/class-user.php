@@ -36,9 +36,11 @@ class User extends Metadata {
 		if ( is_int( $user ) && 0 === absint( $user ) ) {
 			$user = $GLOBALS['wp_query']->get_queried_object();
 		}
-		if ( is_object( $user ) && isset( $user->ID ) ) {
-			$user = $user->ID;
+
+		if ( is_object( $user ) ) {
+			$user = $user->ID ?? '';
 		}
+
 		if ( empty( $user ) ) {
 			return null;
 		}
@@ -57,18 +59,18 @@ class User extends Metadata {
 	/**
 	 * Get user meta data.
 	 *
-	 * @param string $key  Meta key.
-	 * @param mixed  $user User ID or user object.
-	 * @param string $default Default value to use when metadata does not exists.
+	 * @param string $key           Meta key.
+	 * @param mixed  $user          User ID or user object.
+	 * @param string $default_value Default value to use when metadata does not exists.
 	 * @return mixed
 	 */
-	public static function get_meta( $key, $user = 0, $default = '' ) {
+	public static function get_meta( $key, $user = 0, $default_value = '' ) {
 		$user = self::get( $user );
 
 		if ( is_null( $user ) || ! $user->is_found() ) {
-			return $default;
+			return $default_value;
 		}
 
-		return $user->get_metadata( $key, $default );
+		return $user->get_metadata( $key, $default_value );
 	}
 }

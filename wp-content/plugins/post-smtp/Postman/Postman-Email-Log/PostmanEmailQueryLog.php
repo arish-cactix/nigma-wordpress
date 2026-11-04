@@ -5,6 +5,7 @@ class PostmanEmailQueryLog {
 
     private $db = '';
     public $table = 'post_smtp_logs';
+    public $meta_table = 'post_smtp_logmeta';
     private $query = ''; 
     private $columns = array();
 
@@ -20,6 +21,7 @@ class PostmanEmailQueryLog {
         global $wpdb;
         $this->db = $wpdb;
         $this->table = $this->db->prefix . $this->table;
+        $this->meta_table = $this->db->prefix . $this->meta_table;
 
         
     }
@@ -58,7 +60,8 @@ class PostmanEmailQueryLog {
                 'original_subject',
                 'to_header',
                 'success',
-                'time'
+                'time',
+                'original_to'
             );
 
         }
@@ -141,32 +144,34 @@ class PostmanEmailQueryLog {
 
         // Status Filter
         $clause_for_status = '';
-        if( !empty( $args['status'] ) ) {
+        if( isset( $args['status'] ) && !empty( $args['status'] ) ) {
 
             $clause_for_status = strpos( $this->query, 'WHERE' ) !== FALSE ? ' AND' : ' WHERE';
-
-        }
-        if( $args['status'] == 'success' ) {
-
-            $this->query .= "{$clause_for_status} `success` = 1 ";
-
-        }
-        elseif ( $args['status'] == 'failed' ) {
-
-            $this->query .= "{$clause_for_status} `success` != 1 ";
-
-        }
-        else {
-
-            $this->query .= '';
+            
+            if( $args['status'] == 'success' ) {
+                // Include both regular success (success = 1) and fallback success entries
+                $this->query .= "{$clause_for_status} (`success` = 1 OR `success` = 'Sent ( ** Fallback ** )') ";
+            }
+            elseif ( $args['status'] == 'failed' ) {    
+                // Any entry that is not successful (including primary failures and fallback failures)
+                $this->query .= "{$clause_for_status} (`success` != 1 AND `success` != 'Sent ( ** Fallback ** )') ";
+            }
+            else {
+    
+                $this->query .= '';
+    
+            }
 
         }
 		
 		if( isset( $args['site_id'] ) && $args['site_id'] != -1 ) {
 
             $clause_for_site = ( empty( $args['search'] ) && strpos( $this->query, 'WHERE' ) === false ) ? " WHERE" : " AND";
-			
-            $this->query .= " {$clause_for_site} lm.meta_value = '{$args['site_id']}'";
+			$site_id = sanitize_text_field( (string) $args['site_id'] );
+            $this->query .= $this->db->prepare(
+                " {$clause_for_site} lm.meta_value = %s",
+                $site_id
+            );
 
         }
 
@@ -268,17 +273,24 @@ class PostmanEmailQueryLog {
      * @version 1.0.0
      */
     public function delete_logs( $ids = array() ) {
-        
-        $ids = implode( ',', $ids );
-        $ids = $ids == -1 ? '' : "WHERE id IN ({$ids});";
+		
+		$ids = implode( ',', $ids );	
+		$ids_log = $ids == -1 ? '' : "WHERE id IN ({$ids});";
+		$ids_meta_logs = $ids == -1 ? '' : "WHERE log_id IN ({$ids});";
 
+		$this->db->query( 
+			$this->db->prepare(
+			   "DELETE FROM %i {$ids_meta_logs}",
+				$this->meta_table
+			)
+		);
+		
         return $this->db->query(
             $this->db->prepare(
-                "DELETE FROM %i {$ids}",
+                "DELETE FROM %i {$ids_log}",
                 $this->table
             )
         );
-
     }
 
 
@@ -313,21 +325,48 @@ class PostmanEmailQueryLog {
      * @since 2.5.0
      * @version 1.0.0
      */
-    public function get_log( $id, $columns = array() ) {
+	public function get_log( $id, $columns = array() ) {
 
-        $columns = empty( $columns ) ? '*' : implode( ',', $columns );
+        $allowed_columns = array(
+            'id',
+            'solution',
+            'success',
+            'from_header',
+            'to_header',
+            'cc_header',
+            'bcc_header',
+            'reply_to_header',
+            'transport_uri',
+            'original_to',
+            'original_subject',
+            'original_message',
+            'original_headers',
+            'session_transcript',
+            'time',
+        );        
 
-        return $this->db->get_row(
-            $this->db->prepare(
-                "SELECT {$columns} FROM %i WHERE id = %d",
-                $this->table,
-                $id
-            ),
-            ARRAY_A
-        );
+		// Validate and sanitize columns.
+		if ( empty( $columns ) || ! is_array( $columns ) ) {
+			$columns_sql = '*';
+		} else {
+			$safe_columns = array_intersect( $columns, $allowed_columns );
+			$columns_sql  = ! empty( $safe_columns ) ? implode( ', ', array_map( 'esc_sql', $safe_columns ) ) : '*';
+		}
+
+		// Sanitize table name.
+		$table = esc_sql( $this->table );
+
+		// Prepare and execute the query securely.
+		$query = $this->db->prepare(
+			"SELECT {$columns_sql} FROM %i WHERE id = %d",
+            $table,
+			$id
+		);
+
+		return $this->db->get_row( $query, ARRAY_A );
+	}
 
 
-    }
 
 }
 endif;

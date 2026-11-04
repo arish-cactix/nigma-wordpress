@@ -51,7 +51,7 @@ class Bulk_Image_Alt extends \WP_Background_Process {
 	 */
 	public function start( $data ) {
 		Helper::add_notification(
-			esc_html__( 'Bulk image alt generation started. It might take few minutes to complete the process.', 'rank-math' ),
+			esc_html__( 'Bulk image alt generation started. It might take few minutes to complete the process.', 'seo-by-rank-math' ),
 			[
 				'type'    => 'success',
 				'id'      => 'rank_math_content_ai_posts_started',
@@ -62,7 +62,7 @@ class Bulk_Image_Alt extends \WP_Background_Process {
 		update_option( 'rank_math_content_ai_posts', array_keys( $data['posts'] ) );
 
 		foreach ( $data['posts'] as $post_id => $images ) {
-			$chunks = array_chunk( $images, 20, true );
+			$chunks = array_chunk( $images, 5, true );
 			foreach ( $chunks as $chunk ) {
 				$this->push_to_queue(
 					[
@@ -106,7 +106,7 @@ class Bulk_Image_Alt extends \WP_Background_Process {
 		delete_option( 'rank_math_content_ai_posts_processed' );
 		Helper::add_notification(
 			// Translators: placeholder is the number of modified posts.
-			sprintf( _n( 'Image alt attributes successfully updated in %d post.', 'Image alt attributes successfully updated in %d posts.', count( $posts ), 'rank-math' ), count( $posts ) ),
+			sprintf( _n( 'Image alt attributes successfully updated in %d post.', 'Image alt attributes successfully updated in %d posts.', count( $posts ), 'seo-by-rank-math' ), count( $posts ) ),
 			[
 				'type'    => 'success',
 				'id'      => 'rank_math_content_ai_posts',
@@ -136,7 +136,7 @@ class Bulk_Image_Alt extends \WP_Background_Process {
 
 			// Early bail if API returns and error.
 			if ( ! empty( $api_output['error'] ) ) {
-				$notice = ! empty( $api_output['message'] ) ? $api_output['message'] : esc_html__( 'Bulk image alt generation failed.', 'rank-math' );
+				$notice = ! empty( $api_output['message'] ) ? $api_output['message'] : esc_html__( 'Bulk image alt generation failed.', 'seo-by-rank-math' );
 				Helper::add_notification(
 					$notice,
 					[
@@ -160,31 +160,30 @@ class Bulk_Image_Alt extends \WP_Background_Process {
 
 			$this->update_content_ai_posts_count();
 
-			$credits = ! empty( $api_output['credits'] ) ? $api_output['credits'] : [];
-			if ( isset( $credits['available'] ) ) {
-				$credits = $credits['available'] - $credits['taken'];
-				Helper::update_credits( $credits );
+			if ( ! empty( $api_output['usage']['feature'] ) ) {
+				$usage = $api_output['usage'];
+				Helper::update_feature_usage( $usage['feature'], $usage['used'] ?? 0, $usage['remaining'] ?? null );
+			}
 
-				if ( $credits <= 0 ) {
-					$posts_processed = get_option( 'rank_math_content_ai_posts_processed' );
-					delete_option( 'rank_math_content_ai_posts' );
-					delete_option( 'rank_math_content_ai_posts_processed' );
-					Helper::add_notification(
-						// Translators: placeholder is the number of modified posts.
-						sprintf( esc_html__( 'Image alt attributes successfully updated in %d posts. The process was stopped as you have used all the credits on your site.', 'rank-math' ), $posts_processed ),
-						[
-							'type'    => 'success',
-							'id'      => 'rank_math_content_ai_posts',
-							'classes' => 'rank-math-notice',
-						]
-					);
+			if ( Helper::is_feature_quota_exhausted( 'generate_image_alt_v2' ) ) {
+				$posts_processed = get_option( 'rank_math_content_ai_posts_processed' );
+				delete_option( 'rank_math_content_ai_posts' );
+				delete_option( 'rank_math_content_ai_posts_processed' );
+				Helper::add_notification(
+					// Translators: placeholder is the number of modified posts.
+					sprintf( esc_html__( 'Image alt attributes successfully updated in %d posts. The process was stopped as you have reached the monthly limit for this feature.', 'seo-by-rank-math' ), (int) $posts_processed ),
+					[
+						'type'    => 'success',
+						'id'      => 'rank_math_content_ai_posts',
+						'classes' => 'rank-math-notice',
+					]
+				);
 
-					wp_clear_scheduled_hook( 'wp_bulk_image_alt_cron' );
-				}
+				wp_clear_scheduled_hook( 'wp_bulk_image_alt_cron' );
 			}
 
 			return false;
-		} catch ( Exception $error ) {
+		} catch ( \Exception $error ) {
 			return true;
 		}
 	}
@@ -200,24 +199,119 @@ class Bulk_Image_Alt extends \WP_Background_Process {
 	private function get_image_alts( $data, $is_attachment ) {
 		$connect_data = Admin_Helper::get_registration_data();
 
-		$data = [
-			'images'         => $is_attachment ? $data['images'] : $this->get_urls( $data ),
+		// Convert images to the new format with base64 data.
+		$images     = [];
+		$image_urls = $is_attachment ? $data['images'] : $this->extract_urls_from_tags( $data['images'] );
+
+		foreach ( $image_urls as $image_url ) {
+			$image_id    = $this->get_image_id_from_url( $image_url );
+			$base64_data = $this->convert_image_to_base64( $image_url );
+
+			if ( ! empty( $base64_data ) ) {
+				$images[] = [
+					'id'    => $image_id,
+					'image' => $base64_data,
+				];
+			}
+		}
+
+		if ( empty( $images ) ) {
+			return;
+		}
+
+		$request_data = [
+			'images'         => $images,
 			'username'       => $connect_data['username'],
 			'api_key'        => $connect_data['api_key'],
 			'site_url'       => $connect_data['site_url'],
 			'plugin_version' => rank_math()->version,
+			'language'       => Helper::get_settings( 'general.content_ai_language', Helper::content_ai_default_language() ),
 		];
 
 		return wp_remote_post(
-			CONTENT_AI_URL . '/ai/generate_image_alt',
+			CONTENT_AI_URL . '/ai/generate_image_alt_v2',
 			[
 				'headers' => [
 					'content-type' => 'application/json',
 				],
 				'timeout' => 60000,
-				'body'    => wp_json_encode( $data ),
+				'body'    => wp_json_encode( $request_data ),
 			]
 		);
+	}
+
+	/**
+	 * Extract URLs from image tags.
+	 *
+	 * @param array $image_tags Array of image HTML tags.
+	 * @return array Array of image URLs.
+	 */
+	private function extract_urls_from_tags( $image_tags ) {
+		$urls = [];
+		foreach ( $image_tags as $image_tag ) {
+			$url = $this->get_image_source( $image_tag );
+			if ( ! empty( $url ) ) {
+				$urls[] = $url;
+			}
+		}
+		return $urls;
+	}
+
+	/**
+	 * Convert image URL to base64 encoded data.
+	 *
+	 * @param string $image_url Image URL to convert.
+	 * @return string Base64 encoded image data.
+	 */
+	private function convert_image_to_base64( $image_url ) {
+		// Validate URL.
+		if ( ! filter_var( $image_url, FILTER_VALIDATE_URL ) ) {
+			return '';
+		}
+
+		// Get image content.
+		$response = wp_remote_get( $image_url, [ 'timeout' => 30 ] );
+		if ( is_wp_error( $response ) ) {
+			return '';
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		if ( 200 !== $response_code ) {
+			return '';
+		}
+
+		$image_content = wp_remote_retrieve_body( $response );
+		if ( empty( $image_content ) ) {
+			return '';
+		}
+
+		// Get image info to determine MIME type.
+		$image_info = wp_check_filetype( $image_url );
+		$mime_type  = ! empty( $image_info['type'] ) ? $image_info['type'] : 'image/jpeg';
+
+		// Convert to base64 with proper data URL format.
+		$base64 = base64_encode( $image_content ); // phpcs:ignore -- Verified as safe usage.
+		return 'data:' . $mime_type . ';base64,' . $base64;
+	}
+
+	/**
+	 * Extract filename from image URL.
+	 *
+	 * @param string $image_url Image URL.
+	 * @return string Filename.
+	 */
+	private function get_image_id_from_url( $image_url ) {
+		$url_parts = explode( '/', $image_url );
+		$filename  = end( $url_parts );
+
+		if ( empty( $filename ) ) {
+			$filename = 'image.jpg';
+		}
+
+		// Remove query parameters if present.
+		$filename = strtok( $filename, '?' );
+
+		return $filename;
 	}
 
 	/**
@@ -237,7 +331,7 @@ class Bulk_Image_Alt extends \WP_Background_Process {
 	 * @param array   $data          Data to process.
 	 * @param boolean $is_attachment Whether the current post is attachment.
 	 *
-	 * @return array
+	 * @return void
 	 */
 	private function update_image_alt( $alt_texts, $data, $is_attachment ) {
 		if ( $is_attachment ) {
@@ -246,12 +340,12 @@ class Bulk_Image_Alt extends \WP_Background_Process {
 			return;
 		}
 
-		$alt_keys = array_keys( $alt_texts );
-		$post     = get_post( $data['post_id'] );
+		$post = get_post( $data['post_id'] );
 
 		foreach ( $data['images'] as $image ) {
 			$image_src = $this->get_image_source( $image );
-			$image_alt = ! empty( $alt_texts[ $image_src ] ) ? $alt_texts[ $image_src ] : '';
+			$image_id  = $this->get_image_id_from_url( $image_src );
+			$image_alt = ! empty( $alt_texts[ $image_id ] ) ? $alt_texts[ $image_id ] : '';
 			if ( ! $image_alt ) {
 				continue;
 			}
@@ -266,22 +360,6 @@ class Bulk_Image_Alt extends \WP_Background_Process {
 		}
 
 		wp_update_post( $post );
-	}
-
-	/**
-	 * Get URLs to bulk update the data.
-	 *
-	 * @param array $data Data to process.
-	 *
-	 * @return array
-	 */
-	private function get_urls( $data ) {
-		$urls = [];
-		foreach ( $data['images'] as $image ) {
-			$urls[] = $this->get_image_source( $image );
-		}
-
-		return $urls;
 	}
 
 	/**

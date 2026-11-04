@@ -169,16 +169,17 @@ class PostmanConfigurationController {
 	 * Register the Setup Wizard screen
 	 */
 	public function addSetupWizardSubmenu() {
-		$page = add_submenu_page( 
-			PostmanViewController::POSTMAN_MENU_SLUG, 
-			sprintf( __( '%s Setup', 'post-smtp' ), __( 'Postman SMTP', 'post-smtp' ) ), 
-			__( 'Postman SMTP', 'post-smtp' ), 
-			Postman::MANAGE_POSTMAN_CAPABILITY_NAME, 
-			PostmanConfigurationController::CONFIGURATION_WIZARD_SLUG, 
+		$page = add_submenu_page(
+			' ',
+			sprintf( __( '%s Setup', 'post-smtp' ), __( 'Postman SMTP', 'post-smtp' ) ),
+			__( 'Postman SMTP', 'post-smtp' ),
+			'manage_options',
+			PostmanConfigurationController::CONFIGURATION_WIZARD_SLUG,
 			array(
 				$this,
 				'outputWizardContent',
-		) );
+			)
+		);
 		// When the plugin options page is loaded, also load the stylesheet
 		add_action( 'admin_print_styles-' . $page, array(
 				$this,
@@ -190,18 +191,7 @@ class PostmanConfigurationController {
 	 * Hides submenu 
 	 */
 	public function hide_submenu_item( $submenu_file ) {
-
-		$hidden_submenus = array(
-			PostmanConfigurationController::CONFIGURATION_WIZARD_SLUG => true,
-		);
-
-		// Hide the submenu.
-		foreach ( $hidden_submenus as $submenu => $unused ) {
-			remove_submenu_page( PostmanViewController::POSTMAN_MENU_SLUG, $submenu );
-		}
-
 		return $submenu_file;
-
 	}
 
 	/**
@@ -292,12 +282,36 @@ class PostmanConfigurationController {
 		print '<div id="sendgrid_settings" class="authentication_setting non-basic non-oauth2">';
 		do_settings_sections( PostmanSendGridTransport::SENDGRID_AUTH_OPTIONS );
 		print '</div>';
+		print '<div id="emailit_settings" class="authentication_setting non-basic non-oauth2">';
+		do_settings_sections( PostmanEmailitTransport::EMAILIT_AUTH_OPTIONS );
+		print '</div>';
+		print '<div id="maileroo_settings" class="authentication_setting non-basic non-oauth2">';
+		do_settings_sections( PostmanMailerooTransport::MAILEROO_AUTH_OPTIONS );
+		print '</div>';
+		print '<div id="sweego_settings" class="authentication_setting non-basic non-oauth2">';
+		do_settings_sections( PostmanSweegoTransport::SWEEGO_AUTH_OPTIONS );
+		print '</div>';
+		print '<div id="mailersend_settings" class="authentication_setting non-basic non-oauth2">';
+		do_settings_sections( PostmanMailerSendTransport::MAILERSEND_AUTH_OPTIONS );
+		print '</div>';
 		print '<div id="mailgun_settings" class="authentication_setting non-basic non-oauth2">';
 		do_settings_sections( PostmanMailgunTransport::MAILGUN_AUTH_OPTIONS );
 		print '</div>';
         print '<div id="sendinblue_settings" class="authentication_setting non-basic non-oauth2">';
         do_settings_sections( PostmanSendinblueTransport::SENDINBLUE_AUTH_OPTIONS );
         print '</div>';
+        print '<div id="mailtrap_settings" class="authentication_setting non-basic non-oauth2">';
+        do_settings_sections( PostmanMailtrapTransport::MAILTRAP_AUTH_OPTIONS );
+        print '</div>';
+        print '<div id="resend_settings" class="authentication_setting non-basic non-oauth2">';
+        do_settings_sections( PostmanResendTransport::RESEND_AUTH_OPTIONS );
+        print '</div>';
+		print '<div id="cloudflare_settings" class="authentication_setting non-basic non-oauth2">';
+		do_settings_sections( PostmanCloudflareTransport::CLOUDFLARE_AUTH_OPTIONS );
+		print '</div>';
+		print '<div id="smtpcom_settings" class="authentication_setting non-basic non-oauth2">';
+		do_settings_sections( PostmanSmtpcomTransport::SMTPCOM_AUTH_OPTIONS );
+		print '</div>';
 		print '<div id="mailjet_settings" class="authentication_setting non-basic non-oauth2">';
         do_settings_sections( PostmanMailjetTransport::MAILJET_AUTH_OPTIONS );
 		print '</div>';
@@ -314,6 +328,10 @@ class PostmanConfigurationController {
         do_settings_sections( PostmanElasticEmailTransport::ELASTICEMAIL_AUTH_OPTIONS );
         print '</div>';
 
+		print '<div id="smtp2go_settings" class="authentication_setting non-basic non-oauth2">';
+		do_settings_sections( PostmanSmtp2GoTransport::SMTP2GO_AUTH_OPTIONS );
+		print '</div>';
+
 		do_action( 'post_smtp_settings_sections' );
 
 		print '</section>';
@@ -323,7 +341,7 @@ class PostmanConfigurationController {
         <!-- Fallback Start -->
         <section id="fallback">
             <h2><?php esc_html_e( 'Failed emails fallback', 'post-smtp' ); ?></h2>
-            <p><?php esc_html_e( 'By enable this option, if your email is fail to send Post SMTP will try to use the SMTP service you define here.', 'post-smtp' ); ?></p>
+            <p><?php esc_html_e( 'By enabling this option, if your email has failed to send, Post SMTP will try to use the SMTP service you define here.', 'post-smtp' ); ?></p>
             <table class="form-table">
                 <tr valign="">
                     <th scope="row"><?php esc_html_e( 'Use Fallback?', 'post-smtp' ); ?></th>
@@ -717,19 +735,6 @@ class PostmanConfigurationController {
 					</div>
 					<h4>Pushover</h4>
 				</div>
-				<?php if( !class_exists( 'PostSMTPTwilio' ) ): ?>
-				<a href="https://postmansmtp.com/extensions/twilio-extension-pro/" target="_blank">
-					<div class="ps-notify-radio-outer">
-						<div class="ps-notify-radio pro-container">
-							<label for="ps-notify-twilio-pro">
-								<img src="<?php echo esc_url( POST_SMTP_ASSETS . 'images/icons/pro.png' ) ?>" class="pro-icon" />
-								<img src="<?php echo esc_url( POST_SMTP_ASSETS . 'images/icons/twilio.png' ) ?>" />
-							</label>
-						</div>
-						<h4>Twilio(SMS)</h4>
-					</div>
-				</a>
-				<?php endif; ?>
 			</div>
 			<div id="email_notify" style="display: none;">
 				<input type="text" name="postman_options[notification_email]" value="<?php echo esc_attr( $notification_emails ); ?>" />
@@ -776,7 +781,7 @@ class PostmanConfigurationController {
 					<img src="<?php echo esc_url( POST_SMTP_ASSETS . 'images/logos/chrome-24x24.png' ) ?>" />
 					<?php esc_html_e( 'Download Chrome extension', 'post-smtp' ); ?>
 				</a>
-				<a href="https://postmansmtp.com/post-smtp-1-9-6-new-chrome-extension/" target="_blank"><?php _e( 'Detailed Documentation.', 'post-smtp' ) ?></a>
+				<a href="https://postmansmtp.com/docs/alerts/chrome-extension/" target="_blank"><?php _e( 'Detailed Documentation.', 'post-smtp' ) ?></a>
 				<div>
 					<table>
 						<tr>

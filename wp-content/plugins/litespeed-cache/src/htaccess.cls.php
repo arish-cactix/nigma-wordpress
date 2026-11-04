@@ -1,172 +1,253 @@
 <?php
-
 /**
- * The htaccess rewrite rule operation class
+ * The htaccess rewrite rule operation class.
  *
+ * Responsible for reading, writing, and generating .htaccess rules used by LiteSpeed Cache.
  *
- * @since      1.0.0
  * @package    LiteSpeed
- * @subpackage LiteSpeed/inc
- * @author     LiteSpeed Technologies <info@litespeedtech.com>
+ * @since      1.0.0
  */
 
 namespace LiteSpeed;
 
-defined('WPINC') || exit();
+defined( 'WPINC' ) || exit();
 
-class Htaccess extends Root
-{
+/**
+ * Class Htaccess
+ *
+ * Provides utilities to locate, read, backup, and write .htaccess files for both frontend and backend,
+ * as well as generate and manage LiteSpeed-specific rule blocks.
+ */
+class Htaccess extends Root {
+
+	/**
+	 * Absolute path to the frontend `.htaccess`.
+	 *
+	 * @var string|null
+	 */
 	private $frontend_htaccess = null;
+
+	/**
+	 * Default/auto-detected frontend `.htaccess` path before filters/overrides.
+	 *
+	 * @var string|null
+	 */
 	private $_default_frontend_htaccess = null;
+
+	/**
+	 * Absolute path to the backend `.htaccess`.
+	 *
+	 * @var string|null
+	 */
 	private $backend_htaccess = null;
+
+	/**
+	 * Default/auto-detected backend `.htaccess` path before filters/overrides.
+	 *
+	 * @var string|null
+	 */
 	private $_default_backend_htaccess = null;
-	private $theme_htaccess = null; // Not used yet
+
+	/**
+	 * Whether the frontend `.htaccess` (or its directory) is readable.
+	 *
+	 * @var bool
+	 */
 	private $frontend_htaccess_readable = false;
+
+	/**
+	 * Whether the frontend `.htaccess` (or its directory) is writable.
+	 *
+	 * @var bool
+	 */
 	private $frontend_htaccess_writable = false;
+
+	/**
+	 * Whether the backend `.htaccess` (or its directory) is readable.
+	 *
+	 * @var bool
+	 */
 	private $backend_htaccess_readable = false;
+
+	/**
+	 * Whether the backend `.htaccess` (or its directory) is writable.
+	 *
+	 * @var bool
+	 */
 	private $backend_htaccess_writable = false;
-	private $theme_htaccess_readable = false;
-	private $theme_htaccess_writable = false;
+
+	/**
+	 * Lines that turn on and guard rewrite/module blocks.
+	 *
+	 * @var array<int,string>
+	 */
 	private $__rewrite_on;
 
-	const LS_MODULE_START = '<IfModule LiteSpeed>';
-	const EXPIRES_MODULE_START = '<IfModule mod_expires.c>';
-	const LS_MODULE_END = '</IfModule>';
-	const LS_MODULE_REWRITE_START = '<IfModule mod_rewrite.c>';
-	const REWRITE_ON = 'RewriteEngine on';
-	const LS_MODULE_DONOTEDIT = '## LITESPEED WP CACHE PLUGIN - Do not edit the contents of this block! ##';
-	const MARKER = 'LSCACHE';
-	const MARKER_NONLS = 'NON_LSCACHE';
-	const MARKER_LOGIN_COOKIE = '### marker LOGIN COOKIE';
-	const MARKER_ASYNC = '### marker ASYNC';
-	const MARKER_CRAWLER = '### marker CRAWLER';
-	const MARKER_MOBILE = '### marker MOBILE';
-	const MARKER_NOCACHE_COOKIES = '### marker NOCACHE COOKIES';
-	const MARKER_NOCACHE_USER_AGENTS = '### marker NOCACHE USER AGENTS';
-	const MARKER_CACHE_RESOURCE = '### marker CACHE RESOURCE';
-	const MARKER_BROWSER_CACHE = '### marker BROWSER CACHE';
-	const MARKER_MINIFY = '### marker MINIFY';
-	const MARKER_CORS = '### marker CORS';
-	const MARKER_WEBP = '### marker WEBP';
-	const MARKER_DROPQS = '### marker DROPQS';
-	const MARKER_START = ' start ###';
-	const MARKER_END = ' end ###';
+	/**
+	 * Lines that turn on and guard general rewrite/module blocks.
+	 *
+	 * @var array<int,string>
+	 */
+	private $__rewrite_general;
 
-	const RW_PATTERN_RES = '/.*/[^/]*(responsive|css|js|dynamic|loader|fonts)\.php';
+	const LS_MODULE_START            = '<IfModule LiteSpeed>';
+	const EXPIRES_MODULE_START       = '<IfModule mod_expires.c>';
+	const LS_MODULE_END              = '</IfModule>';
+	const LS_MODULE_REWRITE_START    = '<IfModule mod_rewrite.c>';
+	const REWRITE_ON                 = 'RewriteEngine on';
+	const LS_MODULE_DONOTEDIT        = '## LITESPEED WP CACHE PLUGIN - Do not edit the contents of this block! ##';
+	const MARKER                     = 'LSCACHE';
+	const MARKER_NONLS               = 'NON_LSCACHE';
+	const MARKER_LOGIN_COOKIE        = '### marker LOGIN COOKIE';
+	const MARKER_ASYNC               = '### marker ASYNC';
+	const MARKER_REST_AUTH           = '### marker REST AUTH';
+	const MARKER_POSTPASS            = '### marker POSTPASS';
+	const MARKER_CRAWLER             = '### marker CRAWLER';
+	const MARKER_MOBILE              = '### marker MOBILE';
+	const MARKER_NOCACHE_COOKIES     = '### marker NOCACHE COOKIES';
+	const MARKER_NOCACHE_USER_AGENTS = '### marker NOCACHE USER AGENTS';
+	const MARKER_CACHE_RESOURCE      = '### marker CACHE RESOURCE';
+	const MARKER_BROWSER_CACHE       = '### marker BROWSER CACHE';
+	const MARKER_MINIFY              = '### marker MINIFY';
+	const MARKER_CORS                = '### marker CORS';
+	const MARKER_WEBP                = '### marker WEBP';
+	const MARKER_DROPQS              = '### marker DROPQS';
+	const MARKER_START               = ' start ###';
+	const MARKER_END                 = ' end ###';
+
+	/**
+	 * Allowlists for values written into .htaccess directives: cookie names, `-qs:` keys, regex literals.
+	 *
+	 * @since 7.9.2
+	 */
+	const PATTERN_COOKIE_NAME   = '/^,?[A-Za-z0-9!#&\'*+\-.^_`|~]+\z/';
+	const PATTERN_DROP_QS       = '/^[A-Za-z0-9_.*\-]+\z/';
+	const PATTERN_REGEX_LITERAL = '/^[^\x00-\x1F\x7F"\'\\\\]+\z/';
 
 	/**
 	 * Initialize the class and set its properties.
 	 *
-	 * @since    1.0.7
+	 * @since 1.0.7
 	 */
-	public function __construct()
-	{
+	public function __construct() {
 		$this->_path_set();
 		$this->_default_frontend_htaccess = $this->frontend_htaccess;
-		$this->_default_backend_htaccess = $this->backend_htaccess;
+		$this->_default_backend_htaccess  = $this->backend_htaccess;
 
-		$frontend_htaccess = defined('LITESPEED_CFG_HTACCESS') ? LITESPEED_CFG_HTACCESS : false;
-		if ($frontend_htaccess && substr($frontend_htaccess, -10) === '/.htaccess') {
+		$frontend_htaccess = defined( 'LITESPEED_CFG_HTACCESS' ) ? constant( 'LITESPEED_CFG_HTACCESS' ) : false;
+		if ( $frontend_htaccess && substr( $frontend_htaccess, -10 ) === '/.htaccess' ) {
 			$this->frontend_htaccess = $frontend_htaccess;
 		}
-		$backend_htaccess = defined('LITESPEED_CFG_HTACCESS_BACKEND') ? LITESPEED_CFG_HTACCESS_BACKEND : false;
-		if ($backend_htaccess && substr($backend_htaccess, -10) === '/.htaccess') {
+		$backend_htaccess = defined( 'LITESPEED_CFG_HTACCESS_BACKEND' ) ? constant( 'LITESPEED_CFG_HTACCESS_BACKEND' ) : false;
+		if ( $backend_htaccess && substr( $backend_htaccess, -10 ) === '/.htaccess' ) {
 			$this->backend_htaccess = $backend_htaccess;
 		}
 
-		// Filter for frontend&backend htaccess path
-		$this->frontend_htaccess = apply_filters('litespeed_frontend_htaccess', $this->frontend_htaccess);
-		$this->backend_htaccess = apply_filters('litespeed_backend_htaccess', $this->backend_htaccess);
+		// Filter for frontend & backend htaccess path.
+		$this->frontend_htaccess = apply_filters( 'litespeed_frontend_htaccess', $this->frontend_htaccess );
+		$this->backend_htaccess  = apply_filters( 'litespeed_backend_htaccess', $this->backend_htaccess );
 
 		clearstatcache();
 
-		// frontend .htaccess privilege
-		$test_permissions = file_exists($this->frontend_htaccess) ? $this->frontend_htaccess : dirname($this->frontend_htaccess);
-		if (is_readable($test_permissions)) {
+		// Frontend .htaccess privilege.
+		$test_permissions = file_exists( $this->frontend_htaccess ) ? $this->frontend_htaccess : dirname( $this->frontend_htaccess );
+		if ( is_readable( $test_permissions ) ) {
 			$this->frontend_htaccess_readable = true;
 		}
-		if (is_writable($test_permissions)) {
+		if ( is_writable( $test_permissions ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Checking permissions, not file operations.
 			$this->frontend_htaccess_writable = true;
 		}
 
-		$this->__rewrite_on = array(
-			self::REWRITE_ON,
+		// General Rewrite Rules (Files/Logs protection)
+        $this->__rewrite_general = [
+            self::LS_MODULE_REWRITE_START, // <IfModule mod_rewrite.c>
+            self::REWRITE_ON,              // RewriteEngine on
+            'RewriteRule ' . preg_quote(LITESPEED_DATA_FOLDER) . '/debug/.*\.log$ - [F,L]', // phpcs:ignore WordPress.PHP.PregQuoteDelimiter.Missing
+            'RewriteRule (^|/)\.litespeed_conf\. - [F,L]',
+            self::LS_MODULE_END,           // </IfModule>
+        ];
+		
+		$this->__rewrite_on = [
 			'CacheLookup on',
 			'RewriteRule .* - [E=Cache-Control:no-autoflush]',
-			'RewriteRule ' . preg_quote(LITESPEED_DATA_FOLDER) . '/debug/.*\.log$ - [F,L]',
-			'RewriteRule ' . preg_quote(self::CONF_FILE) . ' - [F,L]',
-		);
+		];
 
-		// backend .htaccess privilege
-		if ($this->frontend_htaccess === $this->backend_htaccess) {
+		// Backend .htaccess privilege.
+		if ( $this->frontend_htaccess === $this->backend_htaccess ) {
 			$this->backend_htaccess_readable = $this->frontend_htaccess_readable;
 			$this->backend_htaccess_writable = $this->frontend_htaccess_writable;
 		} else {
-			$test_permissions = file_exists($this->backend_htaccess) ? $this->backend_htaccess : dirname($this->backend_htaccess);
-			if (is_readable($test_permissions)) {
+			$test_permissions = file_exists( $this->backend_htaccess ) ? $this->backend_htaccess : dirname( $this->backend_htaccess );
+			if ( is_readable( $test_permissions ) ) {
 				$this->backend_htaccess_readable = true;
 			}
-			if (is_writable($test_permissions)) {
+			if ( is_writable( $test_permissions ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- Checking permissions, not file operations.
 				$this->backend_htaccess_writable = true;
 			}
 		}
 	}
 
 	/**
-	 * Get if htaccess file is readable
+	 * Get if htaccess file is readable.
 	 *
 	 * @since 1.1.0
-	 * @return string
+	 *
+	 * @param string $kind 'frontend' or 'backend'.
+	 * @return bool
 	 */
-	private function _readable($kind = 'frontend')
-	{
-		if ($kind === 'frontend') {
+	private function _readable( $kind = 'frontend' ) {
+		if ( 'frontend' === $kind ) {
 			return $this->frontend_htaccess_readable;
 		}
-		if ($kind === 'backend') {
+		if ( 'backend' === $kind ) {
 			return $this->backend_htaccess_readable;
 		}
+		return false;
 	}
 
 	/**
-	 * Get if htaccess file is writable
+	 * Get if htaccess file is writable.
 	 *
 	 * @since 1.1.0
-	 * @return string
+	 *
+	 * @param string $kind 'frontend' or 'backend'.
+	 * @return bool
 	 */
-	public function writable($kind = 'frontend')
-	{
-		if ($kind === 'frontend') {
+	public function writable( $kind = 'frontend' ) {
+		if ( 'frontend' === $kind ) {
 			return $this->frontend_htaccess_writable;
 		}
-		if ($kind === 'backend') {
+		if ( 'backend' === $kind ) {
 			return $this->backend_htaccess_writable;
 		}
+		return false;
 	}
 
 	/**
-	 * Get frontend htaccess path
+	 * Get frontend htaccess path.
 	 *
 	 * @since 1.1.0
+	 *
+	 * @param bool $show_default Whether to return the default/auto-detected path.
 	 * @return string
 	 */
-	public static function get_frontend_htaccess($show_default = false)
-	{
-		if ($show_default) {
+	public static function get_frontend_htaccess( $show_default = false ) {
+		if ( $show_default ) {
 			return self::cls()->_default_frontend_htaccess;
 		}
 		return self::cls()->frontend_htaccess;
 	}
 
 	/**
-	 * Get backend htaccess path
+	 * Get backend htaccess path.
 	 *
 	 * @since 1.1.0
+	 *
+	 * @param bool $show_default Whether to return the default/auto-detected path.
 	 * @return string
 	 */
-	public static function get_backend_htaccess($show_default = false)
-	{
-		if ($show_default) {
+	public static function get_backend_htaccess( $show_default = false ) {
+		if ( $show_default ) {
 			return self::cls()->_default_backend_htaccess;
 		}
 		return self::cls()->backend_htaccess;
@@ -175,30 +256,92 @@ class Htaccess extends Root
 	/**
 	 * Check to see if .htaccess exists starting at $start_path and going up directories until it hits DOCUMENT_ROOT.
 	 *
-	 * As dirname() strips the ending '/', paths passed in must exclude the final '/'
+	 * As dirname() strips the ending '/', paths passed in must exclude the final '/'.
 	 *
 	 * @since 1.0.11
 	 * @access private
+	 *
+	 * @param string $start_path Absolute path to begin searching from (without trailing slash).
+	 * @return string|false The directory containing .htaccess, or false if not found.
 	 */
-	private function _htaccess_search($start_path)
-	{
-		while (!file_exists($start_path . '/.htaccess')) {
-			if ($start_path === '/' || !$start_path) {
+	private function _htaccess_search( $start_path ) {
+		$frontend = Router::frontend_path();
+		while ( true ) {
+			if ( ! File::within( $start_path, ABSPATH ) && ! File::within( $start_path, $frontend ) ) {
+				return false;
+			}
+			if ( file_exists( $start_path . '/.htaccess' ) ) {
+				return $start_path;
+			}
+			if ( '/' === $start_path || ! $start_path ) {
 				return false;
 			}
 
-			if (!empty($_SERVER['DOCUMENT_ROOT']) && wp_normalize_path($start_path) === wp_normalize_path($_SERVER['DOCUMENT_ROOT'])) {
+			$doc_root = ! empty( $_SERVER['DOCUMENT_ROOT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['DOCUMENT_ROOT'] ) ) : '';
+			if ( $doc_root && wp_normalize_path( $start_path ) === wp_normalize_path( $doc_root ) ) {
 				return false;
 			}
 
-			if (dirname($start_path) === $start_path) {
+			if ( dirname( $start_path ) === $start_path ) {
 				return false;
 			}
 
-			$start_path = dirname($start_path);
+			$start_path = dirname( $start_path );
 		}
+	}
 
-		return $start_path;
+	/**
+	 * Find LiteSpeed blocks that v7.9.1 wrote into an ancestor .htaccess outside the WordPress and frontend roots.
+	 *
+	 * Read-only: repeats the v7.9.1 upward search (first existing .htaccess outside the roots, stopping at DOCUMENT_ROOT or `/`); a .htaccess inside the roots does not end it. Never writes outside the proven roots.
+	 *
+	 * @since 7.9.2
+	 * @return array<int,string> Paths of ancestor .htaccess files still holding a LiteSpeed block.
+	 */
+	public function orphan_ancestor_rules() {
+		$frontend = Router::frontend_path();
+		$doc_root = ! empty( $_SERVER['DOCUMENT_ROOT'] ) ? wp_normalize_path( sanitize_text_field( wp_unslash( $_SERVER['DOCUMENT_ROOT'] ) ) ) : '';
+		$found    = [];
+		foreach ( array_unique( [ $frontend, realpath( ABSPATH ) ] ) as $path ) {
+			// An owned .htaccess created later (e.g. by v7.9.2) does not end the search: v7.9.1 may have written to an ancestor before it existed. The first ancestor file outside the roots (the v7.9.1 target) does.
+			while ( $path ) {
+				if ( file_exists( $path . '/.htaccess' ) && ! File::within( $path, ABSPATH ) && ! File::within( $path, $frontend ) ) {
+					$content = File::read( $path . '/.htaccess' );
+					// Accept LF and CRLF line endings.
+					if ( is_string( $content ) && preg_match( '/^[ \t]*# BEGIN (?:' . self::MARKER . '|' . self::MARKER_NONLS . ')[ \t]*\r?$/m', $content ) ) {
+						$found[] = $path . '/.htaccess';
+					}
+					break;
+				}
+				if ( '/' === $path || ( $doc_root && wp_normalize_path( $path ) === $doc_root ) || dirname( $path ) === $path ) {
+					break;
+				}
+				$path = dirname( $path );
+			}
+		}
+		return array_values( array_unique( $found ) );
+	}
+
+	/**
+	 * Ask the administrator to remove LiteSpeed blocks left in an ancestor .htaccess by v7.9.1.
+	 *
+	 * @since 7.9.2
+	 * @param bool $do_echo Echo for the current page instead of storing a pinned notice.
+	 * @return void
+	 */
+	public function notice_orphan_rules( $do_echo = false ) {
+		foreach ( $this->orphan_ancestor_rules() as $file ) {
+			$msg = sprintf(
+				/* translators: %s: .htaccess file path */
+				__( 'LiteSpeed Cache no longer manages %s because it is outside the WordPress directory. Please remove its LiteSpeed Cache blocks (between the "# BEGIN LSCACHE" / "# END LSCACHE" and "# BEGIN NON_LSCACHE" / "# END NON_LSCACHE" lines) manually.', 'litespeed-cache' ),
+				'<code>' . esc_html( $file ) . '</code>'
+			);
+			if ( $do_echo ) {
+				Admin_Display::note( $msg, true );
+			} else {
+				Admin_Display::add_unique_notice( 'note', [ 'htaccess_orphan_' . md5( $file ) => $msg ], true );
+			}
+		}
 	}
 
 	/**
@@ -206,30 +349,35 @@ class Htaccess extends Root
 	 *
 	 * @since 1.0.11
 	 * @access private
+	 * @return void
 	 */
-	private function _path_set()
-	{
-		$frontend = Router::frontend_path();
-		$frontend_htaccess_search = $this->_htaccess_search($frontend); // The existing .htaccess path to be used for frontend .htaccess
-		$this->frontend_htaccess = ($frontend_htaccess_search ?: $frontend) . '/.htaccess';
+	private function _path_set() {
+		$frontend                 = Router::frontend_path();
+		$frontend_htaccess_search = $this->_htaccess_search( $frontend ); // The existing .htaccess path to be used for frontend .htaccess.
 
-		$backend = realpath(ABSPATH); // /home/user/public_html/backend/
-		if ($frontend == $backend) {
+		$this->frontend_htaccess = $frontend;
+		if ( $frontend_htaccess_search ) {
+			$this->frontend_htaccess = $frontend_htaccess_search;
+		}
+		$this->frontend_htaccess .= '/.htaccess';
+
+		$backend = realpath( ABSPATH ); // /home/user/public_html/backend/
+		if ( $frontend === $backend ) {
 			$this->backend_htaccess = $this->frontend_htaccess;
 			return;
 		}
 
-		// Backend is a different path
-		$backend_htaccess_search = $this->_htaccess_search($backend);
-		// Found affected .htaccess
-		if ($backend_htaccess_search) {
+		// Backend is a different path.
+		$backend_htaccess_search = $this->_htaccess_search( $backend );
+		// Found affected .htaccess.
+		if ( $backend_htaccess_search ) {
 			$this->backend_htaccess = $backend_htaccess_search . '/.htaccess';
 			return;
 		}
 
-		// Frontend path is the parent of backend path
-		if (stripos($backend, $frontend . '/') === 0) {
-			// backend use frontend htaccess
+		// Frontend path is the parent of backend path.
+		if ( 0 === stripos( (string) $backend, $frontend . '/' ) ) {
+			// Backend uses frontend htaccess.
 			$this->backend_htaccess = $this->frontend_htaccess;
 			return;
 		}
@@ -238,22 +386,22 @@ class Htaccess extends Root
 	}
 
 	/**
-	 * Get corresponding htaccess path
+	 * Get corresponding htaccess path.
 	 *
 	 * @since 1.1.0
-	 * @param  string $kind Frontend or backend
-	 * @return string       Path
+	 *
+	 * @param string $kind Frontend or backend.
+	 * @return string Path.
 	 */
-	public function htaccess_path($kind = 'frontend')
-	{
-		switch ($kind) {
+	public function htaccess_path( $kind = 'frontend' ) {
+		switch ( $kind ) {
 			case 'backend':
-				$path = $this->backend_htaccess;
+            $path = $this->backend_htaccess;
 				break;
 
 			case 'frontend':
 			default:
-				$path = $this->frontend_htaccess;
+            $path = $this->frontend_htaccess;
 				break;
 		}
 		return $path;
@@ -262,82 +410,93 @@ class Htaccess extends Root
 	/**
 	 * Get the content of the rules file.
 	 *
-	 * NOTE: will throw error if failed
+	 * NOTE: will throw error if failed.
 	 *
 	 * @since 1.0.4
-	 * @since  2.9 Used exception for failed reading
+	 * @since 2.9 Used exception for failed reading.
 	 * @access public
+	 *
+	 * @param string $kind 'frontend' or 'backend'.
+	 * @return string The file content.
+	 * @throws \Exception If the file is not readable or cannot be retrieved.
 	 */
-	public function htaccess_read($kind = 'frontend')
-	{
-		$path = $this->htaccess_path($kind);
+	public function htaccess_read( $kind = 'frontend' ) {
+		$path = $this->htaccess_path( $kind );
 
-		if (!$path || !file_exists($path)) {
+		if ( ! $path || ! file_exists( $path ) ) {
 			return "\n";
 		}
 
-		if (!$this->_readable($kind)) {
-			Error::t('HTA_R');
+		if ( ! $this->_readable( $kind ) ) {
+			Error::t( 'HTA_R' );
 		}
 
-		$content = File::read($path);
-		if ($content === false) {
-			Error::t('HTA_GET');
+		$content = File::read( $path );
+		if ( false === $content ) {
+			Error::t( 'HTA_GET' );
 		}
 
 		// Remove ^M characters.
-		$content = str_ireplace("\x0D", '', $content);
+		$content = str_ireplace( "\x0D", '', $content );
 		return $content;
 	}
 
 	/**
 	 * Try to backup the .htaccess file if we didn't save one before.
 	 *
-	 * NOTE: will throw error if failed
+	 * NOTE: will throw error if failed.
 	 *
 	 * @since 1.0.10
 	 * @access private
+	 *
+	 * @param string $kind 'frontend' or 'backend'.
+	 * @return void
+	 * @throws \Exception If backup fails.
 	 */
-	private function _htaccess_backup($kind = 'frontend')
-	{
-		$path = $this->htaccess_path($kind);
+	private function _htaccess_backup( $kind = 'frontend' ) {
+		$path = $this->htaccess_path( $kind );
 
-		if (!file_exists($path)) {
+		if ( ! file_exists( $path ) ) {
 			return;
 		}
 
-		if (file_exists($path . '.bk')) {
+		if ( file_exists( $path . '.bk' ) ) {
 			return;
 		}
 
-		$res = copy($path, $path . '.bk');
+		$res = copy( $path, $path . '.bk' );
 
-		// Failed to backup, abort
-		if (!$res) {
-			Error::t('HTA_BK');
+		// Failed to backup, abort.
+		if ( ! $res ) {
+			Error::t( 'HTA_BK' );
 		}
 	}
 
 	/**
-	 * Get mobile view rule from htaccess file
+	 * Get mobile view rule from htaccess file.
 	 *
-	 * NOTE: will throw error if failed
+	 * NOTE: will throw error if failed.
 	 *
 	 * @since 1.1.0
+	 *
+	 * @param bool $allow_empty Whether an absent rule is expected after filtering every entry.
+	 * @return string The user agent regex for mobile detection.
+	 * @throws \Exception If the rule cannot be found.
 	 */
-	public function current_mobile_agents()
-	{
-		$rules = $this->_get_rule_by(self::MARKER_MOBILE);
-		if (!isset($rules[0])) {
-			Error::t('HTA_DNF', self::MARKER_MOBILE);
+	public function current_mobile_agents( $allow_empty = false ) {
+		$rules = $this->_get_rule_by( self::MARKER_MOBILE );
+		if ( ! isset( $rules[0] ) ) {
+			if ( $allow_empty ) {
+				return '';
+			}
+			Error::t( 'HTA_DNF', self::MARKER_MOBILE );
 		}
 
-		$rule = trim($rules[0]);
-		// 'RewriteCond %{HTTP_USER_AGENT} ' . Utility::arr2regex( $cfg[ $id ], true ) . ' [NC]';
-		$match = substr($rule, strlen('RewriteCond %{HTTP_USER_AGENT} '), -strlen(' [NC]'));
+		$rule  = trim( $rules[0] );
+		$match = substr( $rule, strlen( 'RewriteCond %{HTTP_USER_AGENT} ' ), -strlen( ' [NC]' ) );
 
-		if (!$match) {
-			Error::t('HTA_DNF', __('Mobile Agent Rules', 'litespeed-cache'));
+		if ( ! $match ) {
+			Error::t( 'HTA_DNF', __( 'Mobile Agent Rules', 'litespeed-cache' ) );
 		}
 
 		return $match;
@@ -346,90 +505,97 @@ class Htaccess extends Root
 	/**
 	 * Parse rewrites rule from the .htaccess file.
 	 *
-	 * NOTE: will throw error if failed
+	 * NOTE: will throw error if failed.
 	 *
 	 * @since 1.1.0
 	 * @access public
+	 *
+	 * @param string $kind 'frontend' or 'backend'.
+	 * @return string The parsed login-cookie vary rule.
+	 * @throws \Exception If the rule cannot be found or is invalid.
 	 */
-	public function current_login_cookie($kind = 'frontend')
-	{
-		$rule = $this->_get_rule_by(self::MARKER_LOGIN_COOKIE, $kind);
+	public function current_login_cookie( $kind = 'frontend' ) {
+		$rule = $this->_get_rule_by( self::MARKER_LOGIN_COOKIE, $kind );
 
-		if (!$rule) {
-			Error::t('HTA_DNF', self::MARKER_LOGIN_COOKIE);
+		if ( ! $rule ) {
+			Error::t( 'HTA_DNF', self::MARKER_LOGIN_COOKIE );
 		}
 
-		if (strpos($rule, 'RewriteRule .? - [E=') !== 0) {
-			Error::t('HTA_LOGIN_COOKIE_INVALID');
+		if ( 0 !== strpos( $rule, 'RewriteRule .? - [E=' ) ) {
+			Error::t( 'HTA_LOGIN_COOKIE_INVALID' );
 		}
 
-		$rule_cookie = substr($rule, strlen('RewriteRule .? - [E='), -1);
+		$rule_cookie = substr( $rule, strlen( 'RewriteRule .? - [E=' ), -1 );
 
-		if (LITESPEED_SERVER_TYPE === 'LITESPEED_SERVER_OLS') {
-			$rule_cookie = trim($rule_cookie, '"');
+		if ( LITESPEED_SERVER_TYPE === 'LITESPEED_SERVER_OLS' ) {
+			$rule_cookie = trim( $rule_cookie, '"' );
 		}
 
-		// Drop `Cache-Vary:`
-		$rule_cookie = substr($rule_cookie, strlen('Cache-Vary:'));
+		// Drop `Cache-Vary:`.
+		$rule_cookie = substr( $rule_cookie, strlen( 'Cache-Vary:' ) );
 
 		return $rule_cookie;
 	}
 
 	/**
-	 * Get rewrite rules based on the marker
+	 * Get rewrite rules based on the marker.
 	 *
-	 * @since  2.0
+	 * @since 2.0
 	 * @access private
+	 *
+	 * @param string $cond Marker constant (e.g. self::MARKER_MOBILE).
+	 * @param string $kind 'frontend' or 'backend'.
+	 * @return string|array<int,string>|false Rule(s) or false if not found.
 	 */
-	private function _get_rule_by($cond, $kind = 'frontend')
-	{
+	private function _get_rule_by( $cond, $kind = 'frontend' ) {
 		clearstatcache();
-		$path = $this->htaccess_path($kind);
-		if (!$this->_readable($kind)) {
+		$path = $this->htaccess_path( $kind );
+		if ( ! $this->_readable( $kind ) ) {
 			return false;
 		}
 
-		$rules = File::extract_from_markers($path, self::MARKER);
-		if (!in_array($cond . self::MARKER_START, $rules) || !in_array($cond . self::MARKER_END, $rules)) {
+		$rules = File::extract_from_markers( $path, self::MARKER );
+		if ( ! in_array( $cond . self::MARKER_START, $rules, true ) || ! in_array( $cond . self::MARKER_END, $rules, true ) ) {
 			return false;
 		}
 
-		$key_start = array_search($cond . self::MARKER_START, $rules);
-		$key_end = array_search($cond . self::MARKER_END, $rules);
-		if ($key_start === false || $key_end === false) {
+		$key_start = array_search( $cond . self::MARKER_START, $rules, true );
+		$key_end   = array_search( $cond . self::MARKER_END, $rules, true );
+		if ( false === $key_start || false === $key_end ) {
 			return false;
 		}
 
-		$results = array_slice($rules, $key_start + 1, $key_end - $key_start - 1);
-		if (!$results) {
+		$results = array_slice( $rules, $key_start + 1, $key_end - $key_start - 1 );
+		if ( ! $results ) {
 			return false;
 		}
 
-		if (count($results) == 1) {
-			return trim($results[0]);
+		if ( count( $results ) === 1 ) {
+			return trim( $results[0] );
 		}
 
-		return array_filter($results);
+		return array_filter( $results );
 	}
 
 	/**
-	 * Generate browser cache rules
+	 * Generate browser cache rules.
 	 *
-	 * @since  1.3
+	 * @since 1.3
 	 * @access private
-	 * @return array Rules set
+	 *
+	 * @param array<string,mixed> $cfg The plugin configuration.
+	 * @return array<int,string> Rules set.
 	 */
-	private function _browser_cache_rules($cfg)
-	{
+	private function _browser_cache_rules( $cfg ) {
 		/**
-		 * Add ttl setting
+		 * Add ttl setting.
+		 *
 		 * @since 1.6.3
 		 */
-		$id = Base::O_CACHE_TTL_BROWSER;
-		$ttl = $cfg[$id];
+		$id    = Base::O_CACHE_TTL_BROWSER;
+		$ttl   = $cfg[ $id ];
 		$rules = array(
 			self::EXPIRES_MODULE_START,
-			// '<FilesMatch "\.(pdf|ico|svg|xml|jpg|jpeg|png|gif|webp|ogg|mp4|webm|js|css|woff|woff2|ttf|eot)(\.gz)?$">',
 			'ExpiresActive on',
 			'ExpiresByType application/pdf A' . $ttl,
 			'ExpiresByType image/x-icon A' . $ttl,
@@ -441,6 +607,7 @@ class Htaccess extends Root
 			'ExpiresByType image/png A' . $ttl,
 			'ExpiresByType image/gif A' . $ttl,
 			'ExpiresByType image/webp A' . $ttl,
+			'ExpiresByType image/avif A' . $ttl,
 			'',
 			'ExpiresByType video/ogg A' . $ttl,
 			'ExpiresByType audio/ogg A' . $ttl,
@@ -462,21 +629,20 @@ class Htaccess extends Root
 			'ExpiresByType font/woff A' . $ttl,
 			'ExpiresByType font/woff2 A' . $ttl,
 			'',
-			// '</FilesMatch>',
 			self::LS_MODULE_END,
 		);
 		return $rules;
 	}
 
 	/**
-	 * Generate CORS rules for fonts
+	 * Generate CORS rules for fonts.
 	 *
-	 * @since  1.5
+	 * @since 1.5
 	 * @access private
-	 * @return array Rules set
+	 *
+	 * @return array<int,string> Rules set.
 	 */
-	private function _cors_rules()
-	{
+	private function _cors_rules() {
 		return array(
 			'<FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|font\.css)$">',
 			'<IfModule mod_headers.c>',
@@ -487,283 +653,384 @@ class Htaccess extends Root
 	}
 
 	/**
-	 * Generate rewrite rules based on settings
+	 * Keep only the entries of a list setting that may be written into a .htaccess directive.
 	 *
-	 * @since  1.3
-	 * @access private
-	 * @param  array $cfg  The settings to be used for rewrite rule
-	 * @return array      Rules array
+	 * @since 7.9.2
+	 * @param mixed  $values  Setting value.
+	 * @param string $pattern Allowlist regex an entry must match in full.
+	 * @param string $id Setting identifier for diagnostics.
+	 * @param bool   $notify Whether to add an admin notice for rejected entries.
+	 * @return array
 	 */
-	private function _generate_rules($cfg)
-	{
-		$new_rules = array();
-		$new_rules_nonls = array();
-		$new_rules_backend = array();
+	public static function filter_list( $values, $pattern, $id, $notify = true ) {
+		$clean   = [];
+		$dropped = false;
+		foreach ( (array) $values as $v ) {
+			if ( is_string( $v ) && preg_match( $pattern, trim( $v ) ) ) {
+				$clean[] = trim( $v );
+			} else {
+				$dropped = true;
+				self::debug( 'Dropped an invalid .htaccess list entry [setting] ' . $id . ' [value] ' . wp_json_encode( $v ) );
+			}
+		}
+		if ( $dropped && $notify ) {
+			Admin_Display::error( sprintf(
+				/* translators: %s: Setting title. */
+				__( 'Some entries in %s cannot be written to .htaccess and were omitted. Review this setting; omitted exclusions do not prevent caching.', 'litespeed-cache' ),
+				esc_html( Lang::title( $id ) )
+			) );
+		}
+		return array_values( array_unique( $clean ) );
+	}
+
+	/**
+	 * Whether any site in the installation has CDN mapping enabled, for the shared CORS font block.
+	 *
+	 * Large networks always get the block: enumerating every site is too costly and the rules only add a wildcard ACAO header to font files.
+	 *
+	 * @since 7.9.2
+	 * @return bool
+	 */
+	private function _any_site_cdn_on() {
+		if ( wp_is_large_network( 'sites', get_main_network_id() ) ) {
+			return true;
+		}
+		$name = Conf::name( Base::O_CDN );
+		foreach ( get_sites( [ 'fields' => 'ids', 'number' => 0 ] ) as $blog_id ) {
+			if ( \get_blog_option( (int) $blog_id, $name, false ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Generate rewrite rules based on settings.
+	 *
+	 * @since 1.3
+	 * @access private
+	 *
+	 * @param array<string,mixed> $cfg The settings to be used for rewrite rule.
+	 * @return array{0:array<int,string>,1:array<int,string>,2:array<int,string>,3:array<int,string>} Rules arrays [frontend_ls, backend_ls, frontend_nonls, backend_nonls].
+	 */
+	private function _generate_rules( $cfg ) {
+		foreach ( [ Base::O_CACHE_MOBILE_RULES => self::PATTERN_REGEX_LITERAL, Base::O_CACHE_EXC_COOKIES => self::PATTERN_REGEX_LITERAL, Base::O_CACHE_EXC_USERAGENTS => self::PATTERN_REGEX_LITERAL, Base::O_CACHE_DROP_QS => self::PATTERN_DROP_QS ] as $list_id => $pattern ) {
+			$cfg[ $list_id ] = $this->filter_list( isset( $cfg[ $list_id ] ) ? $cfg[ $list_id ] : [], $pattern, $list_id );
+		}
+		$new_rules               = array();
+		$new_rules_nonls         = array();
+		$new_rules_backend       = array();
 		$new_rules_backend_nonls = array();
 
-		# continual crawler
-		// $id = Base::O_CRAWLER;
-		// if (!empty($cfg[$id])) {
+		// continual crawler.
 		$new_rules[] = self::MARKER_ASYNC . self::MARKER_START;
 		$new_rules[] = 'RewriteCond %{REQUEST_URI} /wp-admin/admin-ajax\.php';
 		$new_rules[] = 'RewriteCond %{QUERY_STRING} action=async_litespeed';
 		$new_rules[] = 'RewriteRule .* - [E=noabort:1]';
 		$new_rules[] = self::MARKER_ASYNC . self::MARKER_END;
 		$new_rules[] = '';
-		// }
 
-		// mobile agents
+		// Prevent an authenticated REST request from reading an anonymous cache entry before WordPress runs.
+		$rest_prefix = rest_get_url_prefix();
+		$rest_prefix = is_string( $rest_prefix ) && preg_match( '/^[A-Za-z0-9._~-]+(?:\/[A-Za-z0-9._~-]+)*\z/', $rest_prefix ) && ! preg_match( '/(?:^|\/)\.{1,2}(?:\/|$)/', $rest_prefix ) ? $rest_prefix : 'wp-json';
+		$rest_prefix = preg_quote( $rest_prefix, '/' );
+		$new_rules[] = self::MARKER_REST_AUTH . self::MARKER_START;
+		$new_rules[] = 'RewriteCond %{HTTP:Authorization} !^$';
+		$new_rules[] = 'RewriteCond %{REQUEST_URI} /' . $rest_prefix . '(?:/|$) [OR]';
+		$new_rules[] = 'RewriteCond %{QUERY_STRING} (^|&)rest_route=';
+		$new_rules[] = 'RewriteRule .* - [E=Cache-Control:no-cache]';
+		$new_rules[] = self::MARKER_REST_AUTH . self::MARKER_END;
+		$new_rules[] = '';
+		$new_rules[] = self::MARKER_POSTPASS . self::MARKER_START;
+		$new_rules[] = 'RewriteCond %{HTTP_COOKIE} (^|;\\s*)wp-postpass_' . preg_quote( COOKIEHASH, '/' ) . '=';
+		$new_rules[] = 'RewriteRule .* - [E=Cache-Control:no-cache]';
+		$new_rules[] = self::MARKER_POSTPASS . self::MARKER_END;
+		$new_rules[] = '';
+
+		// mobile agents.
 		$id = Base::O_CACHE_MOBILE_RULES;
-		if ((!empty($cfg[Base::O_CACHE_MOBILE]) || !empty($cfg[Base::O_GUEST])) && !empty($cfg[$id])) {
+		if ( ( ! empty( $cfg[ Base::O_CACHE_MOBILE ] ) || ! empty( $cfg[ Base::O_GUEST ] ) ) && ! empty( $cfg[ $id ] ) ) {
 			$new_rules[] = self::MARKER_MOBILE . self::MARKER_START;
-			$new_rules[] = 'RewriteCond %{HTTP_USER_AGENT} ' . Utility::arr2regex($cfg[$id], true) . ' [NC]';
+			$new_rules[] = 'RewriteCond %{HTTP_USER_AGENT} ' . Utility::arr2regex( $cfg[ $id ], true ) . ' [NC]';
 			$new_rules[] = 'RewriteRule .* - [E=Cache-Control:vary=%{ENV:LSCACHE_VARY_VALUE}+ismobile]';
 			$new_rules[] = self::MARKER_MOBILE . self::MARKER_END;
 			$new_rules[] = '';
 		}
 
-		// nocache cookie
+		// nocache cookie.
 		$id = Base::O_CACHE_EXC_COOKIES;
-		if (!empty($cfg[$id])) {
+		if ( ! empty( $cfg[ $id ] ) ) {
 			$new_rules[] = self::MARKER_NOCACHE_COOKIES . self::MARKER_START;
-			$new_rules[] = 'RewriteCond %{HTTP_COOKIE} ' . Utility::arr2regex($cfg[$id], true);
+			$new_rules[] = 'RewriteCond %{HTTP_COOKIE} ' . Utility::arr2regex( $cfg[ $id ], true );
 			$new_rules[] = 'RewriteRule .* - [E=Cache-Control:no-cache]';
 			$new_rules[] = self::MARKER_NOCACHE_COOKIES . self::MARKER_END;
 			$new_rules[] = '';
 		}
 
-		// nocache user agents
+		// nocache user agents.
 		$id = Base::O_CACHE_EXC_USERAGENTS;
-		if (!empty($cfg[$id])) {
+		if ( ! empty( $cfg[ $id ] ) ) {
 			$new_rules[] = self::MARKER_NOCACHE_USER_AGENTS . self::MARKER_START;
-			$new_rules[] = 'RewriteCond %{HTTP_USER_AGENT} ' . Utility::arr2regex($cfg[$id], true) . ' [NC]';
+			$new_rules[] = 'RewriteCond %{HTTP_USER_AGENT} ' . Utility::arr2regex( $cfg[ $id ], true ) . ' [NC]';
 			$new_rules[] = 'RewriteRule .* - [E=Cache-Control:no-cache]';
 			$new_rules[] = self::MARKER_NOCACHE_USER_AGENTS . self::MARKER_END;
 			$new_rules[] = '';
 		}
 
-		// caching php resource
-		$id = Base::O_CACHE_RES;
-		if (!empty($cfg[$id])) {
-			$new_rules[] = $new_rules_backend[] = self::MARKER_CACHE_RESOURCE . self::MARKER_START;
-			$new_rules[] = $new_rules_backend[] = 'RewriteRule ' . LSCWP_CONTENT_FOLDER . self::RW_PATTERN_RES . ' - [E=cache-control:max-age=3600]';
-			$new_rules[] = $new_rules_backend[] = self::MARKER_CACHE_RESOURCE . self::MARKER_END;
-			$new_rules[] = $new_rules_backend[] = '';
+		// check login cookie.
+		$vary_cookies = $cfg[ Base::O_CACHE_VARY_COOKIES ];
+		$id           = Base::O_CACHE_LOGIN_COOKIE;
+		if ( ! empty( $cfg[ $id ] ) ) {
+			$vary_cookies[] = $cfg[ $id ];
 		}
-
-		// check login cookie
-		$vary_cookies = $cfg[Base::O_CACHE_VARY_COOKIES];
-		$id = Base::O_CACHE_LOGIN_COOKIE;
-		if (!empty($cfg[$id])) {
-			$vary_cookies[] = $cfg[$id];
-		}
-		if (LITESPEED_SERVER_TYPE === 'LITESPEED_SERVER_OLS') {
-			// Need to keep this due to different behavior of OLS when handling response vary header @Sep/22/2018
-			if (defined('COOKIEHASH')) {
+		if ( LITESPEED_SERVER_TYPE === 'LITESPEED_SERVER_OLS' ) {
+			// Need to keep this due to different behavior of OLS when handling response vary header @Sep/22/2018.
+			if ( defined( 'COOKIEHASH' ) ) {
 				$vary_cookies[] = ',wp-postpass_' . COOKIEHASH;
 			}
 		}
-		$vary_cookies = apply_filters('litespeed_vary_cookies', $vary_cookies); // todo: test if response vary header can work in latest OLS, drop the above two lines
-		// frontend and backend
-		if ($vary_cookies) {
-			$env = 'Cache-Vary:' . implode(',', $vary_cookies);
-			// if (LITESPEED_SERVER_TYPE === 'LITESPEED_SERVER_OLS') {
-			// }
-			$env = '"' . $env . '"';
-			$new_rules[] = $new_rules_backend[] = self::MARKER_LOGIN_COOKIE . self::MARKER_START;
-			$new_rules[] = $new_rules_backend[] = 'RewriteRule .? - [E=' . $env . ']';
-			$new_rules[] = $new_rules_backend[] = self::MARKER_LOGIN_COOKIE . self::MARKER_END;
-			$new_rules[] = '';
+		$vary_cookies = apply_filters( 'litespeed_vary_cookies', $vary_cookies ); // todo: test if response vary header can work in latest OLS, drop the above two lines.
+		$vary_cookies = $this->filter_list( $vary_cookies, self::PATTERN_COOKIE_NAME, Base::O_CACHE_VARY_COOKIES );
+		// frontend and backend.
+		if ( $vary_cookies ) {
+			$env                 = 'Cache-Vary:' . implode( ',', $vary_cookies );
+			$env                 = '"' . $env . '"';
+			$new_rules[]         = self::MARKER_LOGIN_COOKIE . self::MARKER_START;
+			$new_rules_backend[] = self::MARKER_LOGIN_COOKIE . self::MARKER_START;
+
+			$new_rules[]         = 'RewriteRule .? - [E=' . $env . ']';
+			$new_rules_backend[] = 'RewriteRule .? - [E=' . $env . ']';
+
+			$new_rules[]         = self::MARKER_LOGIN_COOKIE . self::MARKER_END;
+			$new_rules_backend[] = self::MARKER_LOGIN_COOKIE . self::MARKER_END;
+			$new_rules[]         = '';
 		}
 
-		// CORS font rules
-		$id = Base::O_CDN;
-		if (!empty($cfg[$id])) {
+		// CORS font rules: the block is shared by the whole installation, so on multisite it follows every site's stored CDN switch, never the saving site's.
+		$id          = Base::O_CDN;
+		$cdn_enabled = is_multisite() ? $this->_any_site_cdn_on() : ! empty( $cfg[ $id ] );
+		if ( $cdn_enabled ) {
 			$new_rules[] = self::MARKER_CORS . self::MARKER_START;
-			$new_rules = array_merge($new_rules, $this->_cors_rules()); //todo: network
+			$new_rules   = array_merge( $new_rules, $this->_cors_rules() );
 			$new_rules[] = self::MARKER_CORS . self::MARKER_END;
 			$new_rules[] = '';
 		}
 
-		// webp support
+		// webp/next-gen support.
 		$id = Base::O_IMG_OPTM_WEBP;
-		if (!empty($cfg[$id]) || (!empty($cfg[Base::O_GUEST]) && !empty($cfg[Base::O_GUEST_OPTM]))) {
+		if ( ! empty( $cfg[ $id ] ) ) {
+			$next_gen_format = 'webp';
+			if ( 2 === (int) $cfg[ $id ] ) {
+				$next_gen_format = 'avif';
+			}
 			$new_rules[] = self::MARKER_WEBP . self::MARKER_START;
-			$new_rules[] = 'RewriteCond %{HTTP_ACCEPT} "image/webp"';
-			$new_rules[] = 'RewriteRule .* - [E=Cache-Control:vary=%{ENV:LSCACHE_VARY_VALUE}+webp]';
-			$new_rules[] = 'RewriteCond %{HTTP_USER_AGENT} iPhone.*Version/(\d{2}).*Safari';
-			$new_rules[] = 'RewriteCond %1 >13';
+			// Check for WebP/AVIF support via HTTP_ACCEPT.
+			$new_rules[] = 'RewriteCond %{HTTP_ACCEPT} image/' . $next_gen_format . ' [OR]';
+
+			// Match Media's crawler support when page requests omit explicit image types in Accept.
+			$new_rules[] = 'RewriteCond %{HTTP_USER_AGENT} (chrome-lighthouse|googlebot|page\ speed) [NC,OR]';
+
+			// Format-specific browser thresholds must match Media's page-render decision.
+			$iphone_versions = 'avif' === $next_gen_format ? '1[6-9]|[2-9][0-9]|[1-9][0-9]{2,}' : '1[4-9]|[2-9][0-9]|[1-9][0-9]{2,}';
+			$new_rules[]     = 'RewriteCond %{HTTP_USER_AGENT} iPhone\ OS\ (' . $iphone_versions . ')_ [NC,OR]';
+			
+			// AVIF on macOS depends on the OS; require explicit Accept instead of a Safari-only threshold.
+			if ( 'webp' === $next_gen_format ) {
+				$new_rules[] = 'RewriteCond %{HTTP_USER_AGENT} Macintosh.*Version/((1[7-9]|[2-9][0-9]|[1-9][0-9]{2,})|16\.([4-9]|[1-9][0-9])) [NC,OR]';
+			}
+			
+			$firefox_versions = 'avif' === $next_gen_format ? '9[3-9]|[1-9][0-9]{2,}' : '6[5-9]|[7-9][0-9]|[1-9][0-9]{2,}';
+			$new_rules[]      = 'RewriteCond %{HTTP_USER_AGENT} Firefox/(' . $firefox_versions . ') [NC]';
+
+			// Add vary.
 			$new_rules[] = 'RewriteRule .* - [E=Cache-Control:vary=%{ENV:LSCACHE_VARY_VALUE}+webp]';
 			$new_rules[] = self::MARKER_WEBP . self::MARKER_END;
 			$new_rules[] = '';
 		}
 
-		// drop qs support
+		// drop qs support.
 		$id = Base::O_CACHE_DROP_QS;
-		if (!empty($cfg[$id])) {
+		if ( ! empty( $cfg[ $id ] ) ) {
 			$new_rules[] = self::MARKER_DROPQS . self::MARKER_START;
-			foreach ($cfg[$id] as $v) {
+			foreach ( $cfg[ $id ] as $v ) {
 				$new_rules[] = 'CacheKeyModify -qs:' . $v;
 			}
 			$new_rules[] = self::MARKER_DROPQS . self::MARKER_END;
 			$new_rules[] = '';
 		}
 
-		// Browser cache
+		// Browser cache.
 		$id = Base::O_CACHE_BROWSER;
-		if (!empty($cfg[$id])) {
-			$new_rules_nonls[] = $new_rules_backend_nonls[] = self::MARKER_BROWSER_CACHE . self::MARKER_START;
-			$new_rules_nonls = array_merge($new_rules_nonls, $this->_browser_cache_rules($cfg));
-			$new_rules_backend_nonls = array_merge($new_rules_backend_nonls, $this->_browser_cache_rules($cfg));
-			$new_rules_nonls[] = $new_rules_backend_nonls[] = self::MARKER_BROWSER_CACHE . self::MARKER_END;
+		if ( ! empty( $cfg[ $id ] ) ) {
+			$new_rules_nonls[] = self::MARKER_BROWSER_CACHE . self::MARKER_START;
+			$new_rules_nonls   = array_merge( $new_rules_nonls, $this->_browser_cache_rules( $cfg ) );
+			$new_rules_nonls[] = self::MARKER_BROWSER_CACHE . self::MARKER_END;
 			$new_rules_nonls[] = '';
+
+			$new_rules_backend_nonls[] = self::MARKER_BROWSER_CACHE . self::MARKER_START;
+			$new_rules_backend_nonls   = array_merge( $new_rules_backend_nonls, $this->_browser_cache_rules( $cfg ) );
+			$new_rules_backend_nonls[] = self::MARKER_BROWSER_CACHE . self::MARKER_END;
+			$new_rules_backend_nonls[] = '';
 		}
 
-		// Add module wrapper for LiteSpeed rules
-		if ($new_rules) {
-			$new_rules = $this->_wrap_ls_module($new_rules);
+		// Add module wrapper for LiteSpeed rules.
+		if ( $new_rules ) {
+			$new_rules = $this->_wrap_ls_module( $new_rules );
 		}
 
-		if ($new_rules_backend) {
-			$new_rules_backend = $this->_wrap_ls_module($new_rules_backend);
+		if ( $new_rules_backend ) {
+			$new_rules_backend = $this->_wrap_ls_module( $new_rules_backend );
 		}
 
-		return array($new_rules, $new_rules_backend, $new_rules_nonls, $new_rules_backend_nonls);
+		return array( $new_rules, $new_rules_backend, $new_rules_nonls, $new_rules_backend_nonls );
 	}
 
 	/**
-	 * Add LitSpeed module wrapper with rewrite on
+	 * Add LiteSpeed module wrapper with rewrite on.
 	 *
-	 * @since  2.1.1
+	 * @since 2.1.1
 	 * @access private
+	 *
+	 * @param array<int,string> $rules Rules to wrap.
+	 * @return array<int,string> Wrapped rules.
 	 */
-	private function _wrap_ls_module($rules = array())
-	{
-		return array_merge(array(self::LS_MODULE_START), $this->__rewrite_on, array(''), $rules, array(self::LS_MODULE_END));
+	private function _wrap_ls_module( $rules = array() ) {
+		return array_merge( $this->__rewrite_general, array( self::LS_MODULE_START ), $this->__rewrite_on, array( '' ), $rules, array( self::LS_MODULE_END )
+        );
 	}
 
 	/**
-	 * Insert LitSpeed module wrapper with rewrite on
+	 * Insert LiteSpeed module wrapper with rewrite on.
 	 *
-	 * @since  2.1.1
+	 * @since 2.1.1
 	 * @access public
+	 * @return void
 	 */
-	public function insert_ls_wrapper()
-	{
+	public function insert_ls_wrapper() {
 		$rules = $this->_wrap_ls_module();
-		$this->_insert_wrapper($rules);
+		$this->_insert_wrapper( $rules );
 	}
 
 	/**
-	 * wrap rules with module on info
+	 * Wrap rules with do-not-edit markers.
 	 *
-	 * @since  1.1.5
-	 * @param  array  $rules
-	 * @return array        wrapped rules with module info
+	 * @since 1.1.5
+	 *
+	 * @param array<int,string>|false $rules Rules array or false.
+	 * @return array<int,string>|false Wrapped rules, or false if $rules was false.
 	 */
-	private function _wrap_do_no_edit($rules)
-	{
-		// When to clear rules, don't need DONOTEDIT msg
-		if ($rules === false || !is_array($rules)) {
+	private function _wrap_do_no_edit( $rules ) {
+		// When clearing rules, don't need DO NOT EDIT msg.
+		if ( false === $rules || ! is_array( $rules ) ) {
 			return $rules;
 		}
 
-		$rules = array_merge(array(self::LS_MODULE_DONOTEDIT), $rules, array(self::LS_MODULE_DONOTEDIT));
+		$rules = array_merge( array( self::LS_MODULE_DONOTEDIT ), $rules, array( self::LS_MODULE_DONOTEDIT ) );
 
 		return $rules;
 	}
 
 	/**
-	 * Write to htaccess with rules
+	 * Write to htaccess with rules.
 	 *
-	 * NOTE: will throw error if failed
+	 * NOTE: will throw error if failed.
 	 *
-	 * @since  1.1.0
+	 * @since 1.1.0
 	 * @access private
+	 *
+	 * @param array<int,string>|false $rules  Rules to write. Pass false to clear.
+	 * @param string|false            $kind   'frontend' or 'backend'. Defaults to 'frontend'.
+	 * @param string|false            $marker Marker name. Defaults to self::MARKER.
+	 * @return void
+	 * @throws \Exception If write fails.
 	 */
-	private function _insert_wrapper($rules = array(), $kind = false, $marker = false)
-	{
-		if ($kind != 'backend') {
+	private function _insert_wrapper( $rules = array(), $kind = false, $marker = false ) {
+		if ( 'backend' !== $kind ) {
 			$kind = 'frontend';
 		}
 
-		// Default marker is LiteSpeed marker `LSCACHE`
-		if ($marker === false) {
+		// Default marker is LiteSpeed marker `LSCACHE`.
+		if ( false === $marker ) {
 			$marker = self::MARKER;
 		}
 
-		$this->_htaccess_backup($kind);
+		$this->_htaccess_backup( $kind );
 
-		File::insert_with_markers($this->htaccess_path($kind), $this->_wrap_do_no_edit($rules), $marker, true);
+		if ( ! File::insert_with_markers( $this->htaccess_path( $kind ), $this->_wrap_do_no_edit( $rules ), $marker, true ) ) {
+			throw new \Exception( 'Could not update the rewrite rules.' );
+		}
 	}
 
 	/**
-	 * Update rewrite rules based on setting
+	 * Update rewrite rules based on setting.
 	 *
-	 * NOTE: will throw error if failed
+	 * NOTE: will throw error if failed.
 	 *
 	 * @since 1.3
 	 * @access public
+	 *
+	 * @param array<string,mixed> $cfg Plugin configuration.
+	 * @return bool True on success.
+	 * @throws \Exception When automatic update fails (provides manual instructions).
 	 */
-	public function update($cfg)
-	{
-		list($frontend_rules, $backend_rules, $frontend_rules_nonls, $backend_rules_nonls) = $this->_generate_rules($cfg);
+	public function update( $cfg ) {
+		list( $frontend_rules, $backend_rules, $frontend_rules_nonls, $backend_rules_nonls ) = $this->_generate_rules( $cfg );
 
-		// Check frontend content
-		list($rules, $rules_nonls) = $this->_extract_rules();
+		// Check frontend content.
+		list( $rules, $rules_nonls ) = $this->_extract_rules();
 
-		// Check Non-LiteSpeed rules
-		if ($this->_wrap_do_no_edit($frontend_rules_nonls) != $rules_nonls) {
-			Debug2::debug('[Rules] Update non-ls frontend rules');
-			// Need to update frontend htaccess
+		// Check Non-LiteSpeed rules.
+		if ( $this->_wrap_do_no_edit( $frontend_rules_nonls ) !== $rules_nonls ) {
+			Debug2::debug( '[Rules] Update non-ls frontend rules' );
+			// Need to update frontend htaccess.
 			try {
-				$this->_insert_wrapper($frontend_rules_nonls, false, self::MARKER_NONLS);
-			} catch (\Exception $e) {
-				$manual_guide_codes = $this->_rewrite_codes_msg($this->frontend_htaccess, $frontend_rules_nonls, self::MARKER_NONLS);
-				Debug2::debug('[Rules] Update Failed');
-				throw new \Exception($manual_guide_codes);
+				$this->_insert_wrapper( $frontend_rules_nonls, false, self::MARKER_NONLS );
+			} catch ( \Exception $e ) {
+				$manual_guide_codes = $this->_rewrite_codes_msg( $this->frontend_htaccess, $frontend_rules_nonls, self::MARKER_NONLS );
+				Debug2::debug( '[Rules] Update Failed' );
+				throw new \Exception( $manual_guide_codes ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Message is for admin display.
 			}
 		}
 
-		// Check LiteSpeed rules
-		if ($this->_wrap_do_no_edit($frontend_rules) != $rules) {
-			Debug2::debug('[Rules] Update frontend rules');
-			// Need to update frontend htaccess
+		// Check LiteSpeed rules.
+		if ( $this->_wrap_do_no_edit( $frontend_rules ) !== $rules ) {
+			Debug2::debug( '[Rules] Update frontend rules' );
+			// Need to update frontend htaccess.
 			try {
-				$this->_insert_wrapper($frontend_rules);
-			} catch (\Exception $e) {
-				Debug2::debug('[Rules] Update Failed');
-				$manual_guide_codes = $this->_rewrite_codes_msg($this->frontend_htaccess, $frontend_rules);
-				throw new \Exception($manual_guide_codes);
+				$this->_insert_wrapper( $frontend_rules );
+			} catch ( \Exception $e ) {
+				Debug2::debug( '[Rules] Update Failed' );
+				$manual_guide_codes = $this->_rewrite_codes_msg( $this->frontend_htaccess, $frontend_rules );
+				throw new \Exception( $manual_guide_codes ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Message is for admin display.
 			}
 		}
 
-		if ($this->frontend_htaccess !== $this->backend_htaccess) {
-			list($rules, $rules_nonls) = $this->_extract_rules('backend');
+		if ( $this->frontend_htaccess !== $this->backend_htaccess ) {
+			list( $rules, $rules_nonls ) = $this->_extract_rules( 'backend' );
 
-			// Check Non-LiteSpeed rules for backend
-			if ($this->_wrap_do_no_edit($backend_rules_nonls) != $rules_nonls) {
-				Debug2::debug('[Rules] Update non-ls backend rules');
-				// Need to update frontend htaccess
+			// Check Non-LiteSpeed rules for backend.
+			if ( $this->_wrap_do_no_edit( $backend_rules_nonls ) !== $rules_nonls ) {
+				Debug2::debug( '[Rules] Update non-ls backend rules' );
+				// Need to update backend htaccess.
 				try {
-					$this->_insert_wrapper($backend_rules_nonls, 'backend', self::MARKER_NONLS);
-				} catch (\Exception $e) {
-					Debug2::debug('[Rules] Update Failed');
-					$manual_guide_codes = $this->_rewrite_codes_msg($this->backend_htaccess, $backend_rules_nonls, self::MARKER_NONLS);
-					throw new \Exception($manual_guide_codes);
+					$this->_insert_wrapper( $backend_rules_nonls, 'backend', self::MARKER_NONLS );
+				} catch ( \Exception $e ) {
+					Debug2::debug( '[Rules] Update Failed' );
+					$manual_guide_codes = $this->_rewrite_codes_msg( $this->backend_htaccess, $backend_rules_nonls, self::MARKER_NONLS );
+					throw new \Exception( $manual_guide_codes ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Message is for admin display.
 				}
 			}
 
-			// Check backend content
-			if ($this->_wrap_do_no_edit($backend_rules) != $rules) {
-				Debug2::debug('[Rules] Update backend rules');
-				// Need to update backend htaccess
+			// Check backend content.
+			if ( $this->_wrap_do_no_edit( $backend_rules ) !== $rules ) {
+				Debug2::debug( '[Rules] Update backend rules' );
+				// Need to update backend htaccess.
 				try {
-					$this->_insert_wrapper($backend_rules, 'backend');
-				} catch (\Exception $e) {
-					Debug2::debug('[Rules] Update Failed');
-					$manual_guide_codes = $this->_rewrite_codes_msg($this->backend_htaccess, $backend_rules);
-					throw new \Exception($manual_guide_codes);
+					$this->_insert_wrapper( $backend_rules, 'backend' );
+				} catch ( \Exception $e ) {
+					Debug2::debug( '[Rules] Update Failed' );
+					$manual_guide_codes = $this->_rewrite_codes_msg( $this->backend_htaccess, $backend_rules );
+					throw new \Exception( $manual_guide_codes ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Message is for admin display.
 				}
 			}
 		}
@@ -772,60 +1039,67 @@ class Htaccess extends Root
 	}
 
 	/**
-	 * Get existing rewrite rules
+	 * Get existing rewrite rules.
 	 *
-	 * NOTE: will throw error if failed
+	 * NOTE: will throw error if failed.
 	 *
-	 * @since  1.3
+	 * @since 1.3
 	 * @access private
-	 * @param  string $kind Frontend or backend .htaccess file
+	 *
+	 * @param string $kind Frontend or backend .htaccess file.
+	 * @return array{0:array<int,string>,1:array<int,string>} A tuple of [ls_rules, nonls_rules].
+	 * @throws \Exception If file is not readable.
 	 */
-	private function _extract_rules($kind = 'frontend')
-	{
+	private function _extract_rules( $kind = 'frontend' ) {
 		clearstatcache();
-		$path = $this->htaccess_path($kind);
-		if (!$this->_readable($kind)) {
-			Error::t('E_HTA_R');
+		$path = $this->htaccess_path( $kind );
+		if ( ! $this->_readable( $kind ) ) {
+			Error::t( 'HTA_R' );
 		}
 
-		$rules = File::extract_from_markers($path, self::MARKER);
-		$rules_nonls = File::extract_from_markers($path, self::MARKER_NONLS);
+		$rules       = File::extract_from_markers( $path, self::MARKER );
+		$rules_nonls = File::extract_from_markers( $path, self::MARKER_NONLS );
 
-		return array($rules, $rules_nonls);
+		return array( $rules, $rules_nonls );
 	}
 
 	/**
-	 * Output the msg with rules plain data for manual insert
+	 * Output the msg with rules plain data for manual insert.
 	 *
-	 * @since  1.1.5
-	 * @param  string  $file
-	 * @param  array  $rules
-	 * @return string        final msg to output
+	 * @since 1.1.5
+	 *
+	 * @param string            $file   The target file path.
+	 * @param array<int,string> $rules  The rules to be inserted.
+	 * @param string|false      $marker Optional marker name. Defaults to LiteSpeed's marker.
+	 * @return string The final message (HTML) to output.
 	 */
-	private function _rewrite_codes_msg($file, $rules, $marker = false)
-	{
+	private function _rewrite_codes_msg( $file, $rules, $marker = false ) {
 		return sprintf(
-			__('<p>Please add/replace the following codes into the beginning of %1$s:</p> %2$s', 'litespeed-cache'),
-			$file,
-			'<textarea style="width:100%;" rows="10" readonly>' . htmlspecialchars($this->_wrap_rules_with_marker($rules, $marker)) . '</textarea>'
+			/* translators: 1: file path, 2: code block */
+			__( '<p>Please add/replace the following codes into the beginning of %1$s:</p> %2$s', 'litespeed-cache' ),
+			esc_html( $file ),
+			'<textarea style="width:100%;" rows="10" readonly>' . esc_textarea( $this->_wrap_rules_with_marker( $rules, $marker ) ) . '</textarea>'
 		);
 	}
 
 	/**
-	 * Generate rules plain data for manual insert
+	 * Generate rules plain data for manual insert.
 	 *
-	 * @since  1.1.5
+	 * @since 1.1.5
+	 *
+	 * @param array<int,string>|false $rules  Rules to wrap or false.
+	 * @param string|false            $marker Optional marker name. Defaults to LiteSpeed's marker.
+	 * @return string The plain text of the rules with markers.
 	 */
-	private function _wrap_rules_with_marker($rules, $marker = false)
-	{
-		// Default marker is LiteSpeed marker `LSCACHE`
-		if ($marker === false) {
+	private function _wrap_rules_with_marker( $rules, $marker = false ) {
+		// Default marker is LiteSpeed marker `LSCACHE`.
+		if ( false === $marker ) {
 			$marker = self::MARKER;
 		}
 
-		$start_marker = "# BEGIN {$marker}";
-		$end_marker = "# END {$marker}";
-		$new_file_data = implode("\n", array_merge(array($start_marker), $this->_wrap_do_no_edit($rules), array($end_marker)));
+		$start_marker  = "# BEGIN {$marker}";
+		$end_marker    = "# END {$marker}";
+		$new_file_data = implode( "\n", array_merge( array( $start_marker ), $this->_wrap_do_no_edit( $rules ), array( $end_marker ) ) );
 
 		return $new_file_data;
 	}
@@ -835,16 +1109,25 @@ class Htaccess extends Root
 	 *
 	 * @since 1.0.4
 	 * @access public
+	 *
+	 * @return void
+	 * @throws \Exception After attempting every marker, if any write failed.
 	 */
-	public function clear_rules()
-	{
-		$this->_insert_wrapper(false); // Use false to avoid do-not-edit msg
-		// Clear non ls rules
-		$this->_insert_wrapper(false, false, self::MARKER_NONLS);
-
-		if ($this->frontend_htaccess !== $this->backend_htaccess) {
-			$this->_insert_wrapper(false, 'backend');
-			$this->_insert_wrapper(false, 'backend', self::MARKER_NONLS);
+	public function clear_rules() {
+		$failed = [];
+		$kinds  = $this->frontend_htaccess !== $this->backend_htaccess ? [ 'frontend', 'backend' ] : [ 'frontend' ];
+		foreach ( $kinds as $kind ) {
+			foreach ( [ self::MARKER, self::MARKER_NONLS ] as $marker ) {
+				try {
+					$this->_insert_wrapper( false, $kind, $marker );
+				} catch ( \Exception $error ) {
+					$failed[] = $error->getMessage();
+				}
+			}
+		}
+		if ( $failed ) {
+			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Callers escape the aggregate diagnostic at rendering.
+			throw new \Exception( implode( ' ', array_unique( $failed ) ) );
 		}
 	}
 }

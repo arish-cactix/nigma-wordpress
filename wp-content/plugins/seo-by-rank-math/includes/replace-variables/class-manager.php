@@ -25,13 +25,6 @@ defined( 'ABSPATH' ) || exit;
 class Manager extends Post_Variables {
 
 	/**
-	 * Register variable replacements.
-	 *
-	 * @var array
-	 */
-	protected $replacements = [];
-
-	/**
 	 * Removed non replaced variables.
 	 *
 	 * @var bool
@@ -66,51 +59,6 @@ class Manager extends Post_Variables {
 		$action   = is_admin() ? 'admin_enqueue_scripts' : 'wp';
 		$priority = is_admin() ? 5 : 25;
 		$this->action( $action, 'setup', $priority );
-	}
-
-	/**
-	 * Register variables
-	 *
-	 * For developers see rank_math_register_var_replacement().
-	 *
-	 * @param string $id        Uniquer ID of variable, for example custom.
-	 * @param array  $args      Array with additional name, description, variable and example values for the variable.
-	 * @param mixed  $callback  Replacement callback. Should return value, not output it.
-	 *
-	 * @return bool Replacement was registered successfully or not.
-	 */
-	public function register_replacement( $id, $args = [], $callback = false ) {
-		if ( ! $this->is_unique_id( $id ) ) {
-			return false;
-		}
-
-		$variable = Variable::from( $id, $args );
-		$variable->set_callback( $callback );
-
-		$this->replacements[ $id ] = $variable;
-
-		return true;
-	}
-
-	/**
-	 * Check if variable ID is valid and unique before further processing.
-	 *
-	 * @param string $id Variable ID.
-	 *
-	 * @return bool Whether the variable is valid or not.
-	 */
-	private function is_unique_id( $id ) {
-		if ( false === preg_match( '`^[A-Z0-9_-]+$`i', $id ) ) {
-			trigger_error( esc_html__( 'Variable names can only contain alphanumeric characters, underscores and dashes.', 'rank-math' ), E_USER_WARNING );
-			return false;
-		}
-
-		if ( isset( $this->replacements[ $id ] ) ) {
-			trigger_error( esc_html__( 'The variable has already been registered.', 'rank-math' ), E_USER_WARNING );
-			return false;
-		}
-
-		return true;
 	}
 
 	/**
@@ -280,15 +228,15 @@ class Manager extends Post_Variables {
 
 			$name = ucwords( str_replace( [ '_', '-' ], ' ', $taxonomy ) );
 			/* translators: Taxonomy name. */
-			$title = sprintf( __( '%s Title', 'rank-math' ), $name );
+			$title = sprintf( __( '%s Title', 'seo-by-rank-math' ), $name );
 			/* translators: Taxonomy name. */
-			$desc = sprintf( __( '%s Description', 'rank-math' ), $name );
+			$desc = sprintf( __( '%s Description', 'seo-by-rank-math' ), $name );
 
 			$this->register_replacement(
 				"term_{$taxonomy}",
 				[
 					'name'        => $title,
-					'description' => esc_html__( 'Custom Term title.', 'rank-math' ),
+					'description' => esc_html__( 'Custom Term title.', 'seo-by-rank-math' ),
 					'variable'    => "customterm({$taxonomy})",
 					'example'     => $title,
 				],
@@ -299,7 +247,7 @@ class Manager extends Post_Variables {
 				"term_{$taxonomy}_desc",
 				[
 					'name'        => $desc,
-					'description' => esc_html__( 'Custom Term description.', 'rank-math' ),
+					'description' => esc_html__( 'Custom Term description.', 'seo-by-rank-math' ),
 					'variable'    => "customterm_desc({$taxonomy})",
 					'example'     => $desc,
 				],

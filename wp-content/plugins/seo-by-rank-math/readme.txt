@@ -1,165 +1,124 @@
 === Rank Math SEO – AI SEO Tools to Dominate SEO Rankings ===
 Contributors: rankmath
 Plugin link: https://rankmath.com/?utm_source=LP&utm_campaign=WP
-Tags: seo, sitemap, google search console, schema, redirection, WordPress SEO
-Tested up to: 6.7
-Requires at least: 6.3
+Tags: seo, google search console, schema, redirection, xml sitemap
+Tested up to: 7.1
+Requires at least: 6.7
 Requires PHP: 7.4
-Stable tag: 1.0.234
+Stable tag: 1.0.281
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.txt
 
-Rank Math SEO is the best WordPress SEO plugin with the features of many SEO and AI SEO tools in a single package to help multiply your SEO traffic and improve your site's SEO ranking.
+Grow your organic traffic and AI visibility with powerful SEO tools, XML sitemaps, Schema automation, and built-in AI SEO, all in one place.
 
 == Description ==
 
-### Rank Math SEO - Best SEO Plugin for WordPress ###
-**1st WordPress SEO Plugin to use AI (Artificial Intelligence)** 🦾
+### Rank Math SEO – WordPress AI SEO Plugin to Rank Higher 📈 ###
 ★★★★★<br>
 
-**SEO is the most consistent source of traffic for any website.** We created <a href="https://rankmath.com/wordpress/plugin/seo-suite/?utm_source=LP&utm_campaign=WP" target="_blank">**Rank Math, a WordPress SEO plugin**</a> with AI SEO features better than ChatGPT, to help every website owner get access to the SEO tools they need to improve their SEO and attract more traffic to their website.
-## <a href="https://demo.rankmath.com/wp-admin/admin.php?page=rank-math-wizard" target="_blank">Try The FREE Demo of Rank Math</a> ##
+**Rank Math SEO** helps you stay ahead of competitors with **AI-powered SEO tools** built for today's search engines and AI assistants.
+
+The plugin brings **powerful AI SEO tools right into WordPress**. It helps you optimize content, include Schema Markup, add smart internal links, target the right keywords, run SEO checks, and more.
+
+Over 4 million WordPress websites trust Rank Math to grow their organic traffic faster. **If you know you could be doing more for your website's SEO** but don't have the time, **<a href="https://rankmath.com/wordpress/plugin/seo-suite/?utm_source=LP&utm_campaign=WP" target="_blank">Rank Math SEO</a> is exactly what you need**. 
+
+## <a href="https://demo.rankmath.com/wp-admin/admin.php?page=rank-math-wizard" target="_blank">Try the FREE Demo of Rank Math</a> ##
 
 [youtube https://www.youtube.com/watch?v=NgeaqIy2OB0]
 
 <a href="https://rankmath.com/wordpress/plugin/seo-suite/?utm_source=LP&utm_campaign=WP#features" target="_blank">Features</a> | <a href="https://rankmath.com/wordpress/plugin/seo-suite/?utm_source=LP&utm_campaign=WP#reasons" target="_blank">Why Choose Rank Math?</a> | <a href="https://rankmath.com/wordpress/plugin/seo-suite/?utm_source=LP&utm_campaign=WP#comparison" target="_blank">Compare</a> | <a href="https://rankmath.com/wordpress/plugin/seo-suite/?utm_source=LP&utm_campaign=WP#screenshots" target="_blank">Screenshots</a> | <a href="https://rankmath.com/wordpress/plugin/seo-suite/?utm_source=LP&utm_campaign=WP#benefits" target="_blank">Benefits</a>
 
-SEO might be the best and most **consistent source of traffic** for one's website, but it's not without its quirks. The constant process of optimizing your posts for SEO can sometimes take more time than actually writing the content. **If you always feel that you can do more on the SEO** front for your website but don't have the time, then **Rank Math SEO is what you're looking for.**
 
-Its host of **intelligent features** brings top SEO capabilities in your hands that were previously out of reach. The **smart automation** features give you the **power of an entire SEO team** with just a few clicks. A **well-thought-out design, powerful features, and years of development** make Rank Math a game-changing SEO plugin that will level the SEO playing field in your favor to help increase traffic.
+ 
+### [NEW] AI Visibility: Monitor Your Brand Across AI Search ### 
+
+[youtube https://www.youtube.com/watch?v=gS5-DFQrSxs] 
+
+ 
+
+➜ AI Visibility score to monitor your brand’s visibility 
+➜ Track how ChatGPT and Gemini mention your brand 
+➜ Monitor your brand’s sentiment across AI responses 
+➜ See how you compare against your competitors in AI Search 
+➜ Access complete transcripts of AI responses 
+➜ Check your brand’s AI Visibility across different countries 
+
+ 
+**<a href="https://rankmath.com/ai-visibility/?utm_source=LP&utm_campaign=WP" target="_blank">Learn more about AI Visibility ➜</a>**
+
+### [NEW] AI Link Genius: Smart Internal Linking on Autopilot ###
+
+[youtube https://www.youtube.com/watch?v=hsQtwUN4fwo] 
+ 
+➜ View every internal and external link on your site from one dashboard 
+➜ Update hundreds of links at once instead of editing pages one by one 
+➜ Get smart link suggestions as you write, right inside the editor 
+➜ Monitor broken links, redirects, and overall link health 
+➜ Automatically link keyword variations to the right pages 
+➜ Get related post suggestions that keep readers on your site longer 
+➜ Find pages nobody links to and reconnect them to the rest of your site 
+➜ Export your link data for reports or audits 
+
+**<a href="https://rankmath.com/ai-link-genius/?utm_source=LP&utm_campaign=WP" target="_blank">Learn more about AI Link Genius ➜</a>**
+
 
 ### Exclusive Content AI. Write Highly Optimized SEO Content ###
 
-[youtube https://www.youtube.com/watch?v=tm_dhgbIWow]
+[youtube https://www.youtube.com/watch?v=w_BKdKcCnBs]
 
-➜ Use AI SEO to write better than ChatGPT
-➜ Dynamic Suggestions
-➜ Intelligent Recommendations
-➜ Dynamic Keywords
-➜ Intelligent Questions (With Schema Markup)
-➜ Smart Link Suggestions
-➜ Extra Keyword Info
-➜ Related Keywords
+Get Started with Content AI for FREE and enjoy: 
+➜ 40+ AI Tools Built for SEO  
+➜ Use AI SEO to write high-quality content 
+➜ Fix SEO Issues in One Click  
+➜ Generate AI Image Alt Text Instantly  
+➜ Get Instant SEO Help with RankBot 
 ➜ Full Control via Role Manager
 
-### Rank Math beats all of its competitors, hands down. ###
+**<a href="https://rankmath.com/content-ai/?utm_source=LP&utm_campaign=WP" target="_blank">Learn more about Content AI ➜</a>**
 
-See the features which are exclusive to the Rank Math plugin and understand why Rank Math is possibly the **Best SEO Plugin for WordPress**.
+### Rank Math Includes Every SEO Tool You Need to Rank Higher ###
 
-* **Setup Wizard (Easy to follow)**
-Rank Math practically configures itself. Rank Math features a [step-by-step installation and configuration wizard](https://rankmath.com/kb/how-to-setup/?utm_source=LP&utm_campaign=WP) that sets up SEO for WordPress perfectly.
+See the features only Rank Math offers, and find out why it's the **right SEO plugin for you**. 
 
-* **Google Schema Markup aka Rich Snippets Integrated**
-Configuring Google Schema Markup, aka Rich Snippets, is now easy, thanks to Rank Math. With support for [16+ types of Schema Markups, aka Rich Snippets, including the Rating Schema,](https://rankmath.com/kb/rich-snippets/?utm_source=LP&utm_campaign=WP#schema-types-offers-by-rank-math) you'll be able to optimize your posts in just a few clicks. It also includes the [FAQ Schema aka FAQPage Schema Block](https://rankmath.com/blog/faq-schema/?utm_source=LP&utm_campaign=WP) & the [HowTo aka How To Schema Block](https://rankmath.com/blog/howto-schema/?utm_source=LP&utm_campaign=WP) in the plugin.
+✔ Intuitive [Setup Wizard](https://rankmath.com/kb/how-to-setup/?utm_source=LP&utm_campaign=WP) that configures Rank Math automatically for your site 
+✔ [16+ Schema types](https://rankmath.com/kb/rich-snippets/?utm_source=LP&utm_campaign=WP#schema-types-offers-by-rank-math) to add rich results in a few clicks 
+✔ Optimize post for unlimited focus keywords (5 by default, unlimited [with this filter](https://rankmath.com/kb/filters-hooks-api-developer/?utm_source=LP&utm_campaign=WP#unlimited-keywords)) 
+✔ [Content AI](https://rankmath.com/kb/how-to-use-content-ai/?utm_source=LP&utm_campaign=WP) to help you write SEO-friendly content 
+✔ Google Search Console integration 
+✔ Google Analytics Integration 
+✔ LSI keyword suggestions to attract more traffic 
+✔ XML Sitemap with custom post type support 
+✔ Detailed content analysis with actionable SEO recommendations 
+✔ 30+ SEO tests with 1-click 
+✔ Module based system, enable only what you need 
+✔ SEO optimized breadcrumbs with theme support 
+✔ Smart Redirection manager to create redirects at scale 
+✔ Built-in 404 monitor to catch and fix broken links 
+✔ Internal link suggestions 
+✔ Role Manager to control what each team member can access 
+✔ Automatic ALT Text and Title tags for every image 
+✔ WordPress Multisite support 
 
-* **Optimize Unlimited Keywords**
-Unlike other plugins, Rank Math lets you optimize your posts for **unlimited focus keywords** per post. 5 by default. Increase by adding this [filter](https://rankmath.com/kb/filters-hooks-api-developer/#unlimited-keywords).
-
-* **Content AI**
-Rank Math is the FIRST & ONLY SEO plugin that uses AI to help you write content. Your personal AI Assistant for creating SEO friendly content. Our Content AI takes all the hassle out of writing. It ensures that the content you write is not only great for your visitors, but for search engines (SEO) as well. [Learn how to use Content AI for writing SEO optimized content that ranks](https://rankmath.com/kb/how-to-use-content-ai/).
-
-* **Google Search Console Integration**
-Rank Math saves you a ton of time by integrating with Google Search Console and displaying important information about your website right inside WordPress.
-
-* **Google Keyword Ranking**
-With Rank Math Plugin, you can track your keyword rankings in Google.
-
-* **Google Analytics Integration**
-Rank Math offers a one-click solution to install Google Analytics script without pasting anything manually anywhere. You can also exclude the Logged-in users.
-
-* **Optimal Settings Pre-Selected**
-Configuring an SEO plugin takes time, and can be confusing. Rank Math saves you the trouble with its optimal default settings, which are ideal for most websites, and if needed, can be changed.
-
-* **LSI Keyword Tool Integrated**
-Rank Math's integrated LSI keyword tool gives you multiple keyword variations of your focus keyword, which helps you attract more traffic to your posts. Free account needed.
-
-* **Add Overlay Icons On Social Images**
-Rank Math makes social thumbnails click magnets by giving you the option of overlaying a GIF or a video icon on the thumbnail.
-
-* **Advanced SEO Analysis Tool**
-With just a single click, Rank Math can perform an SEO Analyzer of your website.
-
-* **30 Detailed SEO Tests**
-Rank Math is designed to completely supercharge your website's SEO with its 30 detailed SEO tests. Free account needed.
-
-* **Module Based System**
-Rank Math has been designed with a module-based system, each of which can be enabled or disabled as per your needs, giving you extra speed and control.
-
-* **Smart Redirection Manager**
-Rank Math's built-in smart redirection manager will help you create, manage, delete, enable, or disable redirects at scale.
-
-* **Local Business SEO**
-Rank Math is designed to be used by Global websites and local websites alike. With its local SEO features, local sites can stand out in the search engine results like Google's and attract more traffic.
-
-* **SEO Optimized Breadcrumbs**
-Rank Math can display SEO optimized Breadcrumbs on all websites, even if the theme doesn't support Schema.org coding.
-
-* **404 Monitor**
-Rank Math has a built-in 404 error monitor that helps you find and resolve 404 errors for a better user experience.
-
-* **Deep Content Analysis Tests**
-On-Page SEO is no longer a mystery with Rank Math's deep content analysis and precise recommendations.
-
-* **Internal Linking Suggestions**
-Rank Math intelligently suggests other posts from your website for internal linking from your current posts, improving the chances of ranking higher in the SERPs.
-
-* **Role Manager**
-Even if you have multiple employees manage your website, you can precisely control what each of them has to access to in Rank Math with its role manager.
-
-* **Multisite Ready**
-Whether you run a single WordPress website or an entire network of sites - we are ready for you. Rank Math fully supports the WordPress Multiuser project (WPMU).
-
-* **and has lightweight Code compared to slow-loading in other SEO plugins.**
-Even with significantly more features than other plugins, Rank Math loads amazingly fast and keeps your website fast always.
 
 ### Why is Rank Math such a game-changer? ###
 
-* **Auto Configuration** — All you have to do is set a few options, and Rank Math will configure itself perfectly for your website.
 
-* **Super Fast SEO Plugin** — Even after packing so many features, Rank Math has a negligible load on your server, thus making it one of the fastest SEO plugins for WordPress.
-
-* **Automatic Keyword Suggestions from Google** — Get keyword suggestions from Google as you start typing letters in the focus keyword field of Rank Math.
-
-* **New SEO Analyzer** — Rank Math's built-in SEO analysis will give you SEO recommendations that you'd normally spend hundreds of dollars to get.
-
-* **[Elementor SEO](https://rankmath.com/blog/elementor-seo/)** - Deep integration with the Elementor Page builder. Now, you don’t need to go back and forth between tabs to configure your page’s SEO. Everything related to SEO for Elementor can be configured in the visual editor.
-
-* **[Divi SEO](https://rankmath.com/blog/divi-seo/)** - One of its kind integration with the Divi Page Builder and theme. Handle everything related to SEO from the page editor screen without jumping back to the default editor. This helps you optimize your website in real-time for SEO.
-
-* **Page Builder SEO** - The Rank Math plugin's content analysis works perfectly with popular page builders and themes like Oxygen Builder, WPBakery, Avada, Astra, Kadence, Themify, Beaver Builder, Page Builder Framework, Schema theme, Flothemes, OceanWP, etc.
-
-* **Optimize UNLIMITED Keywords At Once** — You can optimize your post for up to 5 different keywords by default with the Rank Math plugin and can use a filter to optimize for unlimited keywords.
-
-* **Image SEO** - With Rank Math's perfect solution to add ALT & Title tags on the fly, to optimize images, showing inside the content, and that too for FREE, there is no reason to choose any other SEO solution that does not provide all the essential SEO features.
-
-* **[WooCommerce SEO](https://rankmath.com/blog/woocommerce-seo/)** - Optimizing your store products is easier with Rank Math. SEO Meta tags and Schema are automatically added but can be customized with total control as well. Rank Math has the most advanced SEO for WooCommerce.
-
-* **Google AMP SEO** - Accelerated Mobile Pages need to be prepared for search engines. What better way to do that than letting Rank Math use your regular SEO details and optimizing AMPs based on that data?
-
-* **bbPress SEO** - User-generated content in bbPress is properly optimized with Rank Math handling all the important SEO aspects. Q&A Schema is added to bbPress topics along with other essential meta tags.
-
-* **BuddyPress SEO** - As with bbPress, SEO for BuddyPress content is done automatically done using Rank Math. You get all the options you need to get higher rankings with your user-generated content.
-
-* **Quick Edit SEO Details** - Go through a lot of posts/pages quickly by ensuring they are optimized for search engines. Quickly edit multiple SEO fields at once using Rank Math.
-
-* **[Instant Indexing for Bing & Yandex](https://rankmath.com/kb/how-to-use-indexnow/)** - Get your content instantly indexed by Bing & Yandex using their IndexNow API.
-
-* **[Instant Indexing for Google](https://rankmath.com/blog/google-indexing-api/)** - Instantly getting indexed by Google used to be reserved to huge brands and large websites. Not anymore. Just about anyone can take advantage of Google’s Instant Indexing feature using Rank Math.
-
-* **[Version Control](https://rankmath.com/kb/version-control/)** - Rollback or try beta versions. Updating and downgrading your plugins is now a matter of few clicks. Automatically update to the latest versions or try out the latest beta builds.
-
-* **Translation Plugins Support** — Rank Math works flawlessly with the top translations plugins like WPML, TranslatePress, Weglot, Polylang (not entirely compatible yet), etc., making it a perfect companion.
-
-* **XML Sitemap** - The Rank Math plugin comes with a fast-loading Sitemap feature that works with different post types, including the custom ones, and provides deep controlling. One can also generate a Locations KML file via filter for Local Sitemap, & a WooCommerce Sitemap.
-
-* **1-Click Import From Yoast** — With a single click of your mouse, Rank Math can import all your settings from Yoast SEO & Yoast SEO Premium to itself. The transfer is instant, and you don't lose any SERP rankings as a result.
-
-* **1-Click Import From AIO SEO** — Rank Math can also import all your settings from AIO SEO & All in One SEO Pack Pro in a single click. The transfer is instant, and you don't lose any SERP rankings as a result.
-
-* **1-Click Import From All in One Schema, SEOPress, and Redirection** —Rank Math allows seamless migration of settings from plugins like All In One Schema Rich Snippets, SEOPress (including Pro), and Redirection with just a single click, ensuring no loss of rankings or data during the transfer.
-
-* **Google Keyword Suggestion** — When deciding on focus keywords, Rank Math can help you discover more keywords by pulling in automatic keyword suggestions from Google.
-
+✔ Fastest SEO plugin with barely any impact  on site speed 
+✔ [WooCommerce SEO](https://rankmath.com/blog/woocommerce-seo/?utm_source=LP&utm_campaign=WP) with automatic Schema and meta tags 
+✔ [Elementor SEO](https://rankmath.com/blog/elementor-seo/?utm_source=LP&utm_campaign=WP) with native integration 
+✔ [Divi SEO](https://rankmath.com/blog/divi-seo/?utm_source=LP&utm_campaign=WP) with native integration 
+✔ [Local SEO](https://rankmath.com/blog/local-seo/?utm_source=LP&utm_campaign=WP) tools to help nearby customers find your business 
+✔ Google AMP SEO with SEO data added automatically to AMP pages 
+✔ bbPress & BuddyPress SEO support with Q&A Schema 
+✔ 1-Click Import from Yoast 
+✔ 1-Click Import from AIO SEO 
+✔ 1-Click Import from SEOPress 
+✔ 1-Click Import from All In One Schema 
+✔ 1-Click Import from Redirection plugin 
+✔ Translation plugins support including WPML, Weglot, TranslatePress and Polylang 
+✔ Theme support including Astra, Kadence, Flothemes, OceanWP, Themify, Schema Theme and more 
+✔ Page builder support including Oxygen, WPBakery, Avada, Beaver Builder, Page Builder Framework and more 
+ 
 ### Who Can Benefit From Rank Math? ###
 
 #### Rank Math Plugin is perfect for: ####
@@ -167,6 +126,7 @@ Even with significantly more features than other plugins, Rank Math loads amazin
 ✔ eCommerce Store Owners
 ✔ Niche Sites
 ✔ Businesses
+✔ Agencies
 ✔ Local Businesses
 ✔ Startups
 ✔ The Real Estate
@@ -176,13 +136,34 @@ Even with significantly more features than other plugins, Rank Math loads amazin
 ✔ Vloggers (Video Bloggers)
 ✔ Or any WordPress Website
 
+### Which Schema Types Does Rank Math Support? ###
+✔ Article Schema
+✔ Book Schema
+✔ Course Schema
+✔ Event Schema
+✔ FAQ Schema
+✔ How To Schema
+✔ Job Posting Schema
+✔ Music Schema
+✔ Person Schema
+✔ Organization Schema
+✔ Local Business Schema
+✔ Product Schema
+✔ Profile Page Schema
+✔ Recipe Schema
+✔ Restaurant Schema
+✔ Service Schema
+✔ Video Schema
+✔ Breadcrumb Schema
+✔ And much more...
+
 ### Take a sneak peek into Rank Math’s features ###
 
 #### Detailed Setup Tutorial ####
 [youtube https://www.youtube.com/watch?v=cQLvCBVev3I]
 
 ### BIG Publications are Raving About Rank Math ###
-**<a href="https://rankmath.com/reviews/" target="_blank">Rank Math Reviews</a>**
+**<a href="https://rankmath.com/reviews/?utm_source=LP&utm_campaign=WP" target="_blank">Rank Math Reviews</a>**
 
 [youtube https://www.youtube.com/watch?v=cFI_jRVOQZk]
 
@@ -197,74 +178,66 @@ Even with significantly more features than other plugins, Rank Math loads amazin
 and many more
 
 
-## Check RANK MATH PRO WHICH MAKES SEO EASIER & FASTER  ##
+## Check Rank Math PRO Which Makes SEO Easier & Faster ##
 [youtube https://www.youtube.com/watch?v=fq8Dnl09W5g]
 
-## <a href="https://rankmath.com/free-vs-pro/" target="_blank">Rank Math FREE VS PRO COMPARISON</a> ##
+## <a href="https://rankmath.com/free-vs-pro/?utm_source=LP&utm_campaign=WP" target="_blank">Rank Math FREE VS PRO COMPARISON</a> ##
 
-## UNIQUE FEATURES OF Rank Math PRO ##
+## Unique Features of Rank Math PRO ##
 
-**Google Analytics & Search Console Integration (The only SEO plugin that provides it)**
-✔ Integrated Google Analytics, AdSense & Search Console Data
-✔ Analyze SEO Performance of Each Post & Page
-✔ See Top Winning/Losing Posts & Keywords
-✔ Keep Track of Position History
-✔ Rank Tracker for Important Keywords
+**AI Link Genius** 
+✔ AI-Powered Internal Link Suggestions 
+✔ Auto-Link Keyword Variations 
+✔ Automatic Link Audits & Monitor Link Health 
+✔ Bulk Link Update Tool
 
-**Schema aka Structured Data aka Rich Snippets. The BEST Schema Generator Available Online**
-✔ 20+ Pre-defined Schema types (more than any other plugin) - 
-✔ Import Schema from Other Websites
-✔ Advanced Schema Builder [Advanced SEOs can use this to create any complex Schema Markup)
-✔ Schema Templates for Automation
-✔ Conditional Schema Markup
+**Google Analytics & Search Console Integration** 
+✔ Integrated Google Analytics, AdSense & Search Console Data 
+✔ Analyze the SEO Performance of Each Post & Page 
+✔ See Top Winning/Losing Posts & Keywords 
+✔ Keep Track of Position History 
+✔ Rank Tracker for Important Keywords 
+
+**Schema aka Structured Data aka Rich Snippets** 
+✔ 20+ Pre-defined Schema types 
+✔ Import Schema from Other Websites 
+✔ Advanced Schema Builder to create any complex Schema Markup 
+✔ Schema Templates for Automation 
+✔ Conditional Schema Markup 
 ✔ Multiple Location Schema On Any Page (using the Shortcode)
 
-**Automation At Its BEST**
-✔ Automated Image SEO
+**SEO Automation** 
+✔ Automated Image SEO 
 ✔ Advanced Filtering for Images [https://i.rankmath.com/zAUHHP]
-✔ Watermark Your images
-✔ Advanced Post filtering
-✔ Bulk Actions [index, noindex, redirect, etc.]
-✔ Quick Edit SEO Details
-✔ <a href="https://www.youtube.com/watch?v=qW_h4cVE1O8" targe="_blank">Bulk Import SEO Meta Details Using CSV file</a>
-✔ Auto Detect Videos and Generate Schema Markup for Them
-✔ Auto Fetch Thumbnail, Duration of YouTube & Vimeo Videos
-✔ Automatically Flush Facebook Thumbnails
-✔ Open External Links in New Tabs
-✔ Nofollow External Links
-✔ `Noindex` Paginated, Archive, Search Result Pages
-✔ Instant Indexing for Bing & Yandex [Also Google using our <a href="https://rankmath.com/blog/google-indexing-api/" target="_blank">Instant Indexing Plugin</a>]
+✔ Watermark Your images 
+✔ Advanced Post filtering 
+✔ Bulk Actions [index, noindex, redirect, etc.] 
+✔ Quick Edit SEO Details 
+✔ [Bulk Import SEO Meta Details Using CSV file](https://www.youtube.com/watch?v=qW_h4cVE1O8) 
+✔ Auto Detect Videos and Generate Schema Markup for Them 
+✔ Auto Fetch Thumbnail, Duration of YouTube & Vimeo Videos 
+✔ Automatically Flush Facebook Thumbnails 
+✔ Open External Links in New Tabs 
+✔ Nofollow External Links 
+✔ Noindex Paginated, Archive, Search Result Pages 
+✔ Instant Indexing for Bing & Yandex [Also Google using our [Instant Indexing Plugin](https://rankmath.com/blog/google-indexing-api/?utm_source=LP&utm_campaign=WP)] 
 
-**WooCommerce SEO**
-✔ Automatic Schema for WooCommerce Products
-✔ Advanced Open Graph Tags for WooCommerce Products
-✔ Automatic NoIndex Hidden Products
-✔ Remove WooCommerce Product and Category Base
-✔ Add Custom Brands to Products
-✔ Add Global Identifier Like GTIN/MPN - Even to Variations
-
-**Workflow Improvements**
-✔ Internal Role Manager
-✔ Inbuilt Google Trends Insights
-✔ Site Audit with 29 Unique Tests
-✔ Import Redirections Using CSV File
-✔ Categorize Redirections for Grouping
-✔ One-Click Redirection for 404s
-✔ Monitor Search Performance of Entire Portfolio
-✔ Easy and Advanced Mode
-
-**Miscellaneous**
-✔ Supports bbPress SEO and BuddyPress SEO
-✔ Version Control - Rollback or Try Beta Versions
+**WooCommerce SEO** 
+✔ Automatic Schema for WooCommerce Products 
+✔ Advanced Open Graph Tags for WooCommerce Products 
+✔ Automatic NoIndex Hidden Products 
+✔ Remove WooCommerce Product and Category Base 
+✔ Add Custom Brands to Products 
+✔ Add Global Identifier Schema Like GTIN/MPN – Even to Variations 
 
 **MANY MORE FEATURES**
-✔ PREMIUM 24x7x365 Dedicated Support Managers
-✔ MOST COMPETITIVE PRICING EVER!
+✔ PREMIUM 24x7x365 Dedicated Support Managers 
+✔ MOST COMPETITIVE PRICING EVER! 
 
-**<a href="https://rankmath.com/pricing/" target="_blank">CHEK ALL THE PREMIUM FEATURES AND PRICING HERE</a>**
+**<a href="https://rankmath.com/pricing/?utm_source=LP&utm_campaign=WP" target="_blank">CHECK ALL THE PREMIUM FEATURES AND PRICING HERE</a>**
 
 
-## CONNECT WITH THE TEAM AND SEO EXPERTS ##
+## Connect with the Team and SEO Experts ##
 
 **<a href="https://www.facebook.com/groups/rankmathseopluginwordpress/?utm_campaign=Rank+Math" target="_blank">JOIN FACEBOOK GROUP COMMUNITY</a>**: The purpose of this Facebook group is to have a collective place where the community can help each other, and we can get some feedback to improve Rank Math as well. Joining the group is also a great way to connect with like-minded people and share your SEO experience.
 
@@ -276,23 +249,6 @@ Rank Math® SEO is a registered trademark. Please use the following format when 
 * rankmath [incorrect]
 * rankMath [incorrect]
 
-= Getting Started: =
-**<a href="https://rankmath.com/kb/how-to-setup/?utm_source=LP&utm_campaign=WP" target="_blank">1. How to Setup Rank Math:</a>** Once you install Rank Math for the first time, you will be greeted with the Setup Wizard, which is discussed in detail here.
-
-**<a href="https://www.facebook.com/groups/rankmathseopluginwordpress/?utm_campaign=Rank+Math">2. Facebook Group:</a>** In this group, you will find the team of Rank Math plugin fairly active and ready to answer your SEO related queries.
-
-**<a href="https://rankmath.com/kb/wordpress/seo-suite/?utm_source=LP&utm_campaign=WP" target="_blank">3. User Documentation:</a>** Although Rank Math is already easy to set up, we've put together tutorials, guides, and some knowledge bases to help you set up and get started with Rank Math.
-
-**<a href="https://translate.wordpress.org/projects/wp-plugins/seo-by-rank-math/?utm_campaign=Rank+Math" target="_blank">4. Contribute (Sharing is caring):</a>** If you are one of those caring hearts that want to help, please check the following resources:
-* [Rank Math's GitHub repository](https://github.com/RankMath/seo-by-rank-math/) - Includes all the uncompressed files.
-* [Content Analyzer Code Files](https://github.com/rankmath/content-analyzer) - Includes all supplementary uncompressed files.
-* [Translation](https://translate.wordpress.org/projects/wp-plugins/seo-by-rank-math/) - If you are looking to translate the plugin into your local language.
-
-**<a href="https://mythemeshop.com/wordpress-errors-fixes/?utm_campaign=Rank+Math" target="_blank">5. Fixing Common Errors:</a>** Sometimes, avoidable or common issues can get you stuck. We’ve created a common guide where we discuss all the common issues and how to fix them.
-
-**<a href="https://support.rankmath.com/?utm_source=LP&utm_campaign=WP" target="_blank">6. Support Ticket Forum:</a>** Our dedicated forum is where you can get support for any issues that you face with Rank Math. In the forum, we'll also try to answer some SEO queries. User experience is important to us, and our aim is to answer all the queries on the forum in a timely manner.
-
-**[7. Frequently Asked Questions:](#faq-header)** Here, we’ve answered the most commonly asked questions about Rank Math. The questions are related to features, pricing, and others.
 
 == Installation ==
 
@@ -308,155 +264,190 @@ Rank Math® SEO is a registered trademark. Please use the following format when 
 2. Activate the Rank Math plugin through the 'Plugins' menu in WordPress
 3. Go to "after activation" below.
 
-= After activation =
+= After Activation =
 
-1. You should see the Rank Math setup wizard.
-2. Go through the setup wizard and set up the plugin for your site.
-3. You're done!
+1. You should see the Rank Math setup wizard. 
+2. Go through the setup wizard and set up the plugin for your site. 
+3. You’re done! 
+
+= Getting Started: =
+**<a href="https://rankmath.com/kb/how-to-setup/?utm_source=LP&utm_campaign=WP" target="_blank">1. How to Set up Rank Math:</a>** Once you install Rank Math for the first time, you will be greeted with the Setup Wizard, which is discussed in detail here.
+
+**<a href="https://rankmath.com/kb/wordpress/seo-suite/?utm_source=LP&utm_campaign=WP" target="_blank">2. User Documentation:</a>** Although Rank Math is already easy to set up, we've put together tutorials, guides, and some knowledge bases to help you set up and get started with Rank Math.
+
+**<a href="https://translate.wordpress.org/projects/wp-plugins/seo-by-rank-math/?utm_campaign=Rank+Math" target="_blank">3. Contribute (Sharing is caring):</a>** If you are one of those caring hearts that want to help, please check the following resources:
+* [Rank Math's GitHub repository](https://github.com/RankMath/seo-by-rank-math/) – Includes all the uncompressed files.
+* [Content Analyzer Code Files](https://github.com/rankmath/content-analyzer) – Includes all supplementary uncompressed files.
+* [Translation](https://translate.wordpress.org/projects/wp-plugins/seo-by-rank-math/) – If you want to translate the plugin into your local language.
+
+**<a href="https://rankmath.com/support/?utm_source=LP&utm_campaign=WP" target="_blank">4. Plugin Support:</a>** We offer support through email for any issues you face with Rank Math. User experience is important to us, and we aim to provide prompt and helpful support whenever you need it. 
+
+**[5. Frequently Asked Questions:](#faq-header)** Here, we’ve answered the most commonly asked questions about Rank Math around its features, pricing, and others. 
 
 == Frequently Asked Questions ==
 
-= Do you guarantee that the traffic will increase? =
-Quite honestly - no one can give you a guarantee that your traffic will increase. If anyone does, they have an agenda, and you should stay as far away from them as possible.
-
-SEO is an ever-changing game, and what works today might not work tomorrow. With that said, we do guarantee that our plugin is the best SEO plugin there is, and it gives you the best chance of ranking higher in Google than any other SEO plugin available right now.
-
-
 = Can I transfer my SEO & Redirection settings from another plugin to Rank Math? =
-Absolutely. Rank Math has a built-in feature to import SEO settings from the most popular SEO plugins like Yoast SEO, Yoast SEO Premium, AIO SEO Pack, All In One Schema Rich Snippets, and Redirection. Once you install Rank Math and run the setup wizard, you'll see a dedicated step where you'll get to import all your SEO settings to Rank Math.
+Yes. Rank Math has a built-in feature to import SEO settings from popular SEO plugins like Yoast SEO, Yoast SEO Premium, AIO SEO Pack, SEOPress, All In One Schema Rich Snippets, and Redirection. Once you install Rank Math and run the setup wizard, you'll see a dedicated step where you'll get to import all your SEO settings to Rank Math.
 
 = What themes does Rank Math support? =
-Rank Math has been tested with many WordPress themes and supports all major WordPress themes. Since we follow WordPress' plugin development guidelines, you can rest assured that Rank Math will work perfectly, no matter what theme you use. If you've installed Rank Math and are facing issues, it might not be because of theme incompatibility. Please get in touch with the support team by opening a support ticket in our support forum, and we will fix it for you.
+Rank Math has been tested with many WordPress themes and supports all major WordPress themes. Rank Math follows WordPress plugin guidelines, so it works perfectly with any theme. If you've installed Rank Math and are facing issues, it might not be because of theme incompatibility. Please contact the support team by opening a support ticket in our support forum, and we will fix it for you.
 
 = What plugins is Rank Math compatible with? =
-Rank Math has been designed using WordPress' strict plugin development guidelines and therefore, is compatible with the majority of plugins. However, if you use another SEO plugin that performs any of the functions that Rank Math does, then you might get unexpected results. We recommend that you disable or delete other SEO plugins for best results.
+Rank Math has been designed using WordPress' strict plugin development guidelines and is compatible with most plugins. Using another SEO plugin alongside Rank Math can cause conflicts if they perform similar functions. For best results, disable or delete any other SEO plugins. 
 
-= Will my website slow down if I Install Rank Math? =
-No. Rank Math's code has been created and optimized for maximum performance. That is why using Rank Math on your website will not slow down your website. On the contrary, there is a good chance that your website will perform better than ever with Rank Math, as it does the job of multiple plugins. Once you remove the unnecessary plugins from your website, your website's performance is sure to get better.
+= Will my website slow down if I install Rank Math? =
+No. Rank Math's code has been created and optimized for maximum performance. That is why using Rank Math on your website will not slow down your website. On the contrary, your website will perform better than ever, as Rank Math does the job of multiple plugins in one. For best results, disable or delete any other SEO plugins.
 
 = Is creating a Rank Math account needed to use the plugin? =
-Absolutely not. Creating a FREE Rank Math account is needed only to utilize our API via which one can get automatic keyword suggestions from Google and can run SEO Site Analysis inside WordPress. <a href="https://rankmath.com/kb/free-account-benefits/" target="_blank">You can read more about that here.</a>
+Not at all. Creating a FREE Rank Math account is needed only to utilize our API, which allows you to get automatic keyword suggestions from Google and run SEO Site Analysis inside WordPress. <a href="https://rankmath.com/kb/free-account-benefits/?utm_source=LP&utm_campaign=WP" target="_blank">You can read more about that here.</a>
 
 = Will you set up Rank Math on my website? =
-Rank Math is pretty easy to set up on your website. Apart from detailed instructions on how to install Rank Math on our website, we've built in a user-friendly setup wizard that will help you set up and configure Rank Math perfectly for your website. If you face any issues even after using the setup wizard, please get in touch with the support team by sending an email to support@rankmath.com
+Rank Math is pretty easy to set up on your website. Apart from detailed instructions on installing Rank Math on our website, we've built a user-friendly setup wizard that will help you set up and configure Rank Math ideally for your website. If you face any issues even after using the setup wizard, please get in touch with the support team by sending an email to support@rankmath.com
 
 = Do I have to remove other SEO plugins if I install Rank Math? =
-That is recommended. Rank Math is designed to be an all-in-one SEO plugin that takes care of everything SEO-related. If you use other SEO plugins with Rank Math on your website, not only will the performance of your website be negatively affected, but both plugins working together can produce unexpected SEO results.
+It is recommended to remove other SEO plugins. Rank Math is designed to be an all-rounder SEO plugin that handles everything SEO-related. Using other SEO plugins alongside Rank Math can hurt your website's performance and cause conflicting SEO results. 
 
 = I already use an SEO plugin. Can I use Rank Math on top of that plugin? =
-You can, but we do not recommend it. Rank Math has all the functionalities that you would need in an SEO plugin. If you still prefer using another plugin for a specific feature, you can do that. But, we would recommend that you turn off that functionality of Rank Math to avoid potential conflicts/issues.
+We do not recommend it. Rank Math has all the functionalities you need in an SEO plugin. You can do that if you still prefer using another plugin for a specific feature. However, we recommend that you turn off that functionality in Rank Math to avoid potential conflicts or issues. 
 
 = Will I lose my rankings if I switch to Rank Math? =
-No, you won't. When you install Rank Math, it will seamlessly import your settings from your current SEO plugin. Once the process is complete, the search engines won't even notice a change on your website.
+No, you won't. When you install Rank Math, it will seamlessly import your settings from your current SEO plugin. Once the process is complete, the search engines won't notice a change on your website.
 
-If you set up Rank Math from scratch, then your search engine rankings will depend on how you configure it. But please be advised that Google and other search engines prefer good, useful content over anything else.
+If you set up Rank Math from scratch, your search engine rankings will depend on how you configure it. But please be advised that Google and other search engines prefer good, helpful content over anything else.
 
-= What are the technical requirements for using Rank Math? =
-Rank Math requires at least PHP 7.2, cURL lib, cron jobs, to be installed and enabled on the server. Those things are mostly installed on every good hosting server. When you initiate Rank Math's setup process, Rank Math will also perform a compatibility check to confirm if your server can run Rank Math. If your server has a lower configuration of any Software, please ask your hosting to update it to the latest version.
+= Where do I report security bugs found in this plugin? =
+
+Please report security bugs found in the source code of the Rank Math SEO plugin through the [Patchstack Vulnerability Disclosure  Program](https://patchstack.com/database/vdp/9e5fb4c0-23d7-4a55-9a5c-256a4c6daf1e). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin.
 
 = Can I use Rank Math on a WordPress.com website? =
-Yes, as the plugin is provided through WordPress.org, it is available on WordPress.com as well. However, you might be required to opt for the Business plan of WordPress.com
+Yes, as the plugin is provided through WordPress.org, it is available on WordPress.com. However, you might be required to opt for the business plan on WordPress.com.
 
-= Which Schema type is best for coupon websites? =
-There’s no real Schema Markup designed specifically for separate discount codes. We would suggest not to use any Schema Markup and choose the ‘None’ option for coupon codes because not doing so might get your site penalized.
+= I have further questions; how do I contact you? =
+Please drop us an email at support@rankmath.com, and we will be more than happy to assist you.
 
-= Why are my images not getting indexed? =
-It is completely normal for Google not to index your submitted images. Sometimes, not even a single submitted image is indexed by Google.
+== External Services ==
 
-Google is almost never willing to index all the pages and images available on a site. The number of pages and images that get indexed is based on the site's reputation and the quality of the content among others.
+Rank Math SEO connects to several external services to provide its features. Below is a full disclosure of each service, what data is sent, and when.
 
-= How do I noindex inner paginated posts of a website? =
+= Rank Math Keyword Suggestions API (api.rankmath.com) =
 
-Rank Math makes it extremely simple and easy to NoIndex the paginated series’ of your homepage, archives, or single posts.
+Used to provide live keyword suggestions as you type in the Focus Keyword field in the post editor.
 
-Head over to WordPress Dashboard > Rank Math > Titles & Meta > Misc. Pages.
+* **Keyword suggestions:** Each time you type in the Focus Keyword field, the keyword and your site's locale are sent to api.rankmath.com to retrieve related keyword suggestions. This call is made directly from your browser. No account or login is required for this feature.
 
-Scroll down a bit and you will see the `NoIndex Paginated Pages` option.
+Service provider: Rank Math (ONE.COM INDIA PRIVATE LIMITED)
+Privacy policy: https://rankmath.com/privacy-policy/
+Terms of service: https://rankmath.com/terms-of-service/
 
-Enable it and you are good to good. Here is a screenshot for reference: https://i.rankmath.com/xPTxfq
+= Rank Math API (rankmath.com) =
 
-Now, your paginated pages like `/page/2` etc. will no longer appear in Search Engines.
+Used for site registration, license verification, and the SEO Analysis feature.
 
-= The tag "rel=canonical" appears more than once in the document =
-That must be coming from the theme's code or some other SEO/AMP plugin as the Rank Math plugin adds only one canonical URL per page.
+* **Site registration / account connection:** Sends your site URL, Rank Math username, and API key when you connect your Rank Math account. This is required to activate API-based features.
+* **Site disconnection:** Sends your site URL, username, and API key when you disconnect your account to remove the registration from Rank Math's servers.
+* **SEO Analysis:** Sends your site URL, target keyword, and language when you run an SEO site analysis. Results are returned as a scored report.
+* **Dashboard widget:** Fetches the latest Rank Math blog posts to display in the WordPress admin dashboard widget. No personal data is sent. Results are cached for 12 hours.
 
-You should try disabling all other plugins and/or switch to a different theme and check.
+Service provider: Rank Math (ONE.COM INDIA PRIVATE LIMITED)
+Privacy policy: https://rankmath.com/privacy-policy/
+Terms of service: https://rankmath.com/terms-of-service/
 
-= What's the difference between various Schema tags? =
-There are mainly two types of Schema entities, Article and BlogPosting. Article Schema is mainly used for articles as the name suggests. It can also be used for pieces of investigative reports, newspaper articles, magazine articles, research papers, etc.
+= Rank Math OAuth Connector (oauth.rankmath.com) =
 
-On the contrary, BlogPosting Schema is used for blog posts. They can be personal or commercial in nature. Most of the non-professional blogs you see online use this Schema type.
+Used to connect your site to Google services (Search Console, Google Analytics) via OAuth.
 
-= Why is Google not showing the Schema data? =
-For the Rich Snippet data, Rank Math plugin adds the necessary markup for rich snippets. It may take some time before they show up in the search results. Please allow a few days for Google to pick up the new information.
+* **OAuth token exchange:** When you authorize Google services, your browser is redirected through oauth.rankmath.com to exchange the authorization code for access and refresh tokens. The authorization code is sent to this service; it returns OAuth tokens for use on your site.
+* **Token refresh:** Sends your Google refresh token to obtain a new access token when the current one expires.
 
-Google WILL NOT necessarily show the Schema data though. They check a few things first and may choose not to show your rich schema. For instance, they check the overall quality of the site, and if the Schema content is representative of the main content of the page or not.
+Service provider: Rank Math (ONE.COM INDIA PRIVATE LIMITED)
+Privacy policy: https://rankmath.com/privacy-policy/
+Terms of service: https://rankmath.com/terms-of-service/
 
-Here is a quote from one of Google's help articles:
-`We perform algorithmic and manual quality checks to ensure that structured data meets relevancy standards. In cases where we see structured data that does not comply with these standards, we reserve the right to disable rich snippets for a site in order to maintain a high-quality search experience for our users. Read our webmaster guidelines for more details.`
+= Rank Math Content AI (cai.rankmath.com) =
 
-Link: <a href="https://developers.google.com/search/docs/appearance/structured-data/sd-policies/" target="_blank">https://developers.google.com/search/docs/appearance/structured-data/sd-policies</a>
+Used to power AI-based content features. Only active when the Content AI module is enabled and you have a connected Rank Math account.
 
-= Why is the Carousel or Data Highlighter Not Working? =
-Google can actually extract content from your pages and display it as a rich carousel (AMP or not).
+* **Keyword research:** Sends the target keyword, language, and country to fetch keyword suggestions and metrics.
+* **Bulk SEO meta generation:** Sends post title and content to generate SEO titles and descriptions in bulk.
+* **Bulk image alt text generation:** Sends image data (base64-encoded) to generate descriptive alt text for images.
+* **Default prompts sync:** Sends your site URL, username, API key, and plugin version daily to keep AI prompt templates up to date.
+* **Credits/wallet check:** Sends your username, API key, and site URL to check remaining Content AI usage credits.
 
-But to make it easier, the best you can do is to use the Data Highlighter option in your Search Appearance tab in Webmaster Tools for your important pages (especially the pillar posts) but not on all content types. Rank Math makes it extremely convenient to do so.
+Service provider: Rank Math (ONE.COM INDIA PRIVATE LIMITED)
+Privacy policy: https://rankmath.com/privacy-policy/
+Terms of service: https://rankmath.com/terms-of-service/
 
-To learn more about using this feature, visit <a href="https://support.google.com/webmasters/answer/2692911" target="_blank">https://support.google.com/webmasters/answer/2692911?</a>
+= Rank Math AI Visibility (ai-visibility.rankmath.com) =
 
-= How to enter Meta Keywords in the plugin? =
-Google does not use the keyword meta tag in web ranking. Here's a video supporting that:
-https://youtu.be/jK7IPbnmvVU
-Bing also mentioned the following statement
-Today, it's pretty clear the meta keyword tag is dead in terms of SEO value. Sure, it might have value for contextual ad systems or serve as a signal to bots plying the web looking for topics to target, but as far as search goes, that tag flatlined years ago as a booster.
+Used to track how your brand appears in responses from AI platforms. Only active when the AI Visibility module is enabled and you have a connected Rank Math account.
 
-Because of these reasons, we do not have an option to add Meta Keywords to your posts. But, this is for your benefit as it has absolutely no effect on your SERPs or SERP rankings.
+* **Authentication:** Every request includes your Rank Math username, API key, and site URL to verify your account.
+* **Brand tracking setup:** Sends your brand's name, website URL, description, language, and country, along with the AI platforms you selected and the analysis frequency you chose. This is used to set up and run AI visibility analyses for your brand.
+* **Trial activation:** Sends your Rank Math username and API key to `rankmath.com/site-checkout-cai` to activate your AI Visibility trial.
+* **Upgrade checkout:** When you choose to upgrade from within the plugin, your Rank Math username and API key are sent to rankmath.com/site-checkout-cai to get a one-time checkout token.
 
-= Why am I getting a 'Not Found' Error on my Sitemaps? =
+Service provider: Rank Math (ONE.COM INDIA PRIVATE LIMITED)
+Privacy policy: https://rankmath.com/privacy-policy/
+Terms of service: https://rankmath.com/terms-of-service/
 
-We are extremely sorry that you are facing this issue.
+= Google APIs (googleapis.com, google.com) =
 
-Please try the following and see if it helps:
-1. Head over to WP Dashboard >> Settings >> Permalinks (wp-admin/options-permalink.php) and click on the 'Save Changes' button without making any change to the settings.
-2. Make sure you have at least one piece of content published and you haven't excluded it from being included in the Sitemap.
+Used by the Analytics module to retrieve website performance data. Only active when you have connected Google Analytics via the Rank Math Analytics module.
 
-You can read more about the possible Sitemap errors and the solutions on this page: <a href="https://rankmath.com/kb/fix-sitemap-issues/?utm_source=LP&utm_campaign=WP" target="_blank">Sitemap Errors & Fixes</a>
+* **Google Analytics data:** Sends your OAuth access token to fetch data like traffic, keyword, impressions, etc for your site from the Google Analytics API.
+* **Token verification:** Sends your OAuth access token to verify its validity and authorized scopes.
+* **Google Tag Manager script (googletagmanager.com):** When a Google Analytics / Google Tag property ID is configured, the Google Tag (gtag.js) script is loaded from googletagmanager.com on your site's front end.
+* **AMP analytics (cdn.ampproject.org):** When AMP is active and a Google Analytics property is configured, the AMP analytics component script is loaded from cdn.ampproject.org.
 
-These steps will sort your issue in 9 out of 10 cases. If not, please open a new support ticket here: <a href="https://support.rankmath.com/?utm_source=LP&utm_campaign=WP" target="_blank">https://support.rankmath.com/</a>
+Service provider: Google LLC
+Privacy policy: https://policies.google.com/privacy
+Terms of service: https://policies.google.com/terms
 
-You do not need to register separately and can even use your free account to open a ticket.
+= IndexNow API (api.indexnow.org) =
 
-We look forward to helping you.
+Used by the Instant Indexing module to notify search engines of new or updated content. Only active when the Instant Indexing module is enabled.
 
-= I have further questions, how do I contact you? =
-Please drop us an email at support@rankmath.com and we would be more than happy to assist.
+* Sends a list of URLs, your site URL, and your IndexNow API key to api.indexnow.org each time content is published or updated (or manually triggered).
+
+Service provider: Microsoft (Bing)
+Privacy policy: https://privacy.microsoft.com/en-us/privacystatement
+Terms of service: https://www.indexnow.org/faq
+
+= Facebook Graph API (graph.facebook.com) =
+
+Used to refresh Facebook's cached preview when a post is updated. Only active when a Facebook App ID and App Secret are configured in Rank Math's Social settings.
+
+* Sends the post's public URL and your Facebook App credentials to trigger a re-scrape of the page by Facebook.
+
+Service provider: Meta Platforms, Inc.
+Privacy policy: https://www.facebook.com/privacy/policy/
+Terms of service: https://developers.facebook.com/terms/
 
 == Screenshots ==
 
 1. Exclusive AI Assistant for creating content that ranks.
-2. Fully integrated with the Gutenberg aka Block Editor.
-3. Optimize Content without any hassle and works with the Classic Editor.
+2. Fully integrated with the Gutenberg, aka Block Editor.
+3. Optimize Content without any hassle and work with the Classic Editor.
 4. Analyze your website's SEO with one click and fix the issues.
 5. Simple Setup Wizard with 1-Click Importer.
 6. Support for 15+ Rich Snippet types.
-7. No need to pay for any service when you can track keyword ranking change from our own Search Console.
+7. No need to pay for any service when you can track keyword ranking changes from our own Search Console.
 8. Comes with in-built options for social media optimization.
-9. Rank Math Comes with a 404 monitor and easy-to-use Redirection Manager.
-10. Ground Breaking Integration with Elementor Page Builder.
+9. Rank Math Comes with a 404 monitor and an easy-to-use Redirection Manager.
+10. Ground-breaking Integration with Elementor Page Builder.
 11. Powerful XML Sitemap.
 12. Role Manager gives you full control. Useful for multi-author sites.
 13. Rank Math Comes with 15+ FREE modules.
 
 == Changelog ==
 
-= 1.0.234 [Dec 11, 2024] =
-- Added: [New filter](https://rankmath.com/kb/filters-hooks-api-developer/#update-404-pages-hook) to change the hook used for monitoring the 404 page
-- Updated: [Swedish Power Words](https://rankmath.com/blog/power-words/#swedish)
-- Improved: [Placeholder for the Address fields in Local SEO settings](https://rankmath.com/kb/local-seo/#address) to clarify the required value for the Country field
-- Fixed: [Missing Locations Sitemap](https://rankmath.com/kb/kml-sitemap/) issue that occurred after the last update
-- Fixed: Duplicate Schema data displayed on the frontend when the [Review location](https://rankmath.com/kb/event-schema/#review-location) was not set to Custom shortcode
-- Fixed: Default Open Graph image was not added to the Twitter tag on Taxonomy pages when the [Use Data from Facebook Tab option](https://rankmath.com/kb/meta-box-social-tab/#use-data-from-facebook-tab) was enabled
-- Fixed: UI issues on the [Content AI page](https://rankmath.com/kb/how-to-use-content-ai-tools/) in WordPress 6.7
+= 1.0.281 [Nov 03, 2026] =
+- Added support for third-party heading blocks (e.g. GenerateBlocks Headline) in the [Table of Contents Block](https://rankmath.com/kb/table-of-contents-block/) via the new `rank_math/schema/toc/heading_blocks` [filter](https://rankmath.com/kb/filters-hooks-api-developer/#headings-block-toc).
+- Fixed [Sitemaps](https://rankmath.com/kb/configure-sitemaps/) and [llms.txt](https://rankmath.com/kb/llms-txt/) URLs returning 404 errors when rewrite rules were flushed during a WordPress Heartbeat request.
+- Fixed [Schema](https://rankmath.com/kb/rich-snippets/) `ImageObject` showing a hardcoded width and height of `200` when the primary image was taken from the post content.
+- Fixed translated WooCommerce product category pages returning 404 errors with [Polylang](https://rankmath.com/kb/polylang-compatibility/) when the Remove category base option was enabled.
+- Fixed the SEO meta save routine so that clearing a field only removes Rank Math's own metadata.
+- Removed the bundled WordPress MCP Adapter package to avoid conflicts with other plugins. [MCP Tools](https://rankmath.com/kb/mcp-tools/) now require the official [MCP Adapter plugin](https://wordpress.org/plugins/mcp-adapter/).
 
 
 Full changelog can be found here - **[Rank Math changelog](https://rankmath.com/changelog/?utm_source=Plugin&utm_medium=Changelog&utm_campaign=WP)**

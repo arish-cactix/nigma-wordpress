@@ -16,6 +16,7 @@ use RankMath\Runner;
 use RankMath\Traits\Hooker;
 use RankMath\Helpers\Security;
 use RankMath\Helpers\Param;
+use RankMath\Helpers\DB as DB_Helper;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -34,7 +35,7 @@ class Post_Filters implements Runner {
 	}
 
 	/**
-	 * Intialize.
+	 * Initialize.
 	 */
 	public function init() {
 		if ( ! Helper::has_cap( 'general' ) ) {
@@ -165,12 +166,12 @@ class Post_Filters implements Runner {
 		}
 
 		$options = [
-			''          => esc_html__( 'Rank Math', 'rank-math' ),
-			'great-seo' => esc_html__( 'SEO Score: Good', 'rank-math' ),
-			'good-seo'  => esc_html__( 'SEO Score: Ok', 'rank-math' ),
-			'bad-seo'   => esc_html__( 'SEO Score: Bad', 'rank-math' ),
-			'empty-fk'  => esc_html__( 'Focus Keyword Not Set', 'rank-math' ),
-			'noindexed' => esc_html__( 'Articles noindexed', 'rank-math' ),
+			''          => esc_html__( 'Rank Math', 'seo-by-rank-math' ),
+			'great-seo' => esc_html__( 'SEO Score: Good', 'seo-by-rank-math' ),
+			'good-seo'  => esc_html__( 'SEO Score: Ok', 'seo-by-rank-math' ),
+			'bad-seo'   => esc_html__( 'SEO Score: Bad', 'seo-by-rank-math' ),
+			'empty-fk'  => esc_html__( 'Focus Keyword Not Set', 'seo-by-rank-math' ),
+			'noindexed' => esc_html__( 'Articles noindexed', 'seo-by-rank-math' ),
 		];
 
 		$options = $this->do_filter( 'manage_posts/seo_filter_options', $options, $post_type );
@@ -216,7 +217,7 @@ class Post_Filters implements Runner {
 				]
 			),
 			$current,
-			esc_html__( 'Pillar Content', 'rank-math' ),
+			esc_html__( 'Pillar Content', 'seo-by-rank-math' ),
 			number_format_i18n( count( $pillars ) )
 		);
 
@@ -367,7 +368,7 @@ class Post_Filters implements Runner {
 		);
 
 		$meta_query = $meta_query->get_sql( 'post', $wpdb->posts, 'ID' );
-		return $wpdb->get_col( "SELECT {$wpdb->posts}.ID FROM $wpdb->posts {$meta_query['join']} WHERE 1=1 {$meta_query['where']} AND {$wpdb->posts}.post_type = '$screen->post_type' AND ({$wpdb->posts}.post_status = 'publish') AND {$wpdb->posts}.post_title NOT LIKE CONCAT( '%', SUBSTRING_INDEX( {$wpdb->postmeta}.meta_value, ',', 1 ), '%' )" ); // phpcs:ignore
+		return DB_Helper::get_col( "SELECT {$wpdb->posts}.ID FROM $wpdb->posts {$meta_query['join']} WHERE 1=1 {$meta_query['where']} AND {$wpdb->posts}.post_type = '$screen->post_type' AND ({$wpdb->posts}.post_status = 'publish') AND REPLACE({$wpdb->posts}.post_title, '&amp;', '&') NOT LIKE CONCAT( '%', SUBSTRING_INDEX( {$wpdb->postmeta}.meta_value, ',', 1 ), '%' )" );
 	}
 
 	/**

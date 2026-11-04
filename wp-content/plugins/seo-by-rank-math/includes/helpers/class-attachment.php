@@ -123,7 +123,7 @@ class Attachment {
 	 * @return int The Post ID belonging to the attachment, 0 if not found.
 	 */
 	private static function url_to_postid( $url ) {
-		$cache_key = sprintf( 'mythemeshop_attachment_url_post_id_%s', md5( $url ) );
+		$cache_key = sprintf( 'rank_math_attachment_url_post_id_%s', md5( $url ) );
 
 		// Set the ID based on the hashed url in the cache.
 		$id = wp_cache_get( $cache_key );
@@ -141,12 +141,12 @@ class Attachment {
 		$id = attachment_url_to_postid( $url );
 
 		if ( empty( $id ) ) {
-			wp_cache_set( $cache_key, 'not_found', 'default', ( 12 * HOUR_IN_SECONDS + mt_rand( 0, ( 4 * HOUR_IN_SECONDS ) ) ) );
+			wp_cache_set( $cache_key, 'not_found', 'default', ( 12 * HOUR_IN_SECONDS + wp_rand( 0, ( 4 * HOUR_IN_SECONDS ) ) ) );
 			return 0;
 		}
 
 		// We have the Post ID, but it's not in the cache yet. We do that here and return.
-		wp_cache_set( $cache_key, $id, 'default', ( 24 * HOUR_IN_SECONDS + mt_rand( 0, ( 12 * HOUR_IN_SECONDS ) ) ) );
+		wp_cache_set( $cache_key, $id, 'default', ( 24 * HOUR_IN_SECONDS + wp_rand( 0, ( 12 * HOUR_IN_SECONDS ) ) ) );
 
 		return $id;
 	}

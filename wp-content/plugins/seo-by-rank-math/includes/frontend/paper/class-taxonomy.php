@@ -28,7 +28,7 @@ class Taxonomy implements IPaper {
 	public function title() {
 		$object = get_queried_object();
 		if ( ! is_object( $object ) ) {
-			return Paper::get_from_options( '404_title', [], esc_html__( 'Page not found', 'rank-math' ) );
+			return Paper::get_from_options( '404_title', [], esc_html__( 'Page not found', 'seo-by-rank-math' ) );
 		}
 
 		$title = Term::get_meta( 'title', $object, $object->taxonomy );
@@ -128,22 +128,22 @@ class Taxonomy implements IPaper {
 	/**
 	 * Whether to noindex empty terms.
 	 *
-	 * @param object $object Current taxonomy term object.
+	 * @param object $term Current taxonomy term object.
 	 *
 	 * @return bool
 	 */
-	private function noindex_term( $object ) {
+	private function noindex_term( $term ) {
 		if ( Term::is_multiple_terms_query() ) {
 			return true;
 		}
 
-		if ( is_object( $object ) && 0 === $object->count && Helper::get_settings( 'titles.noindex_empty_taxonomies' ) ) {
+		if ( is_object( $term ) && 0 === $term->count && Helper::get_settings( 'titles.noindex_empty_taxonomies' ) ) {
 			$children = get_terms(
-				$object->taxonomy,
 				[
-					'parent' => $object->term_id,
-					'number' => 1,
-					'fields' => 'ids',
+					'taxonomy' => $term->taxonomy,
+					'parent'   => $term->term_id,
+					'number'   => 1,
+					'fields'   => 'ids',
 				]
 			);
 

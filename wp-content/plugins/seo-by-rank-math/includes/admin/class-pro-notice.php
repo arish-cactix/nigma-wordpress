@@ -22,7 +22,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class Pro_Notice {
 
-	use Hooker, Ajax;
+	use Hooker;
+	use Ajax;
 
 	/**
 	 * Now.
@@ -49,7 +50,7 @@ class Pro_Notice {
 	 * Constructor method.
 	 */
 	public function __construct() {
-		$this->current_time = current_time( 'timestamp' );
+		$this->current_time = Helper::get_current_time();
 		$this->record_date  = strtotime( $this->record_date );
 		$this->install_date = get_option( 'rank_math_install_date' );
 		if ( false === $this->install_date ) {
@@ -210,38 +211,38 @@ class Pro_Notice {
 			case 1:
 				$message = '<p><strong>';
 
-				$message .= esc_html__( 'Rank Your Content With the Power of PRO & A.I.', 'rank-math' );
+				$message .= esc_html__( 'Rank Your Content With the Power of PRO & A.I.', 'seo-by-rank-math' );
 				$message .= '</strong></p>';
 				$message .= '<ul>
-								<li>' . esc_html__( 'Unlimited Websites', 'rank-math' ) . '</li>
-								<li>' . esc_html__( 'Content A.I. (Artificial Intelligence)', 'rank-math' ) . '</li>
-								<li>' . esc_html__( 'Keyword Rank Tracker', 'rank-math' ) . '</li>
-								<li>' . esc_html__( 'Powerful Schema Generator', 'rank-math' ) . '</li>
-								<li>' . esc_html__( '24x7 Premium Support', 'rank-math' ) . '</li>
-								<li>' . esc_html__( 'SEO Email Reports', 'rank-math' ) . '</li>
-								<li>' . esc_html__( 'and Many More…', 'rank-math' ) . '</li>
+								<li>' . esc_html__( 'Unlimited Websites', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( 'Content A.I. (Artificial Intelligence)', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( 'Keyword Rank Tracker', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( 'Powerful Schema Generator', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( '24x7 Premium Support', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( 'SEO Email Reports', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( 'and Many More…', 'seo-by-rank-math' ) . '</li>
 							</ul>';
 				$message .= '<p>
-								<a href="' . KB::get( 'pro', 'Upgrade Notice 2 New Yes' ) . '" class="button rank-math-dismiss-pro-notice rank-math-upgrade-action" target="_blank" rel="noopener noreferrer"><strong>' . esc_html__( 'Yes, I want to learn more', 'rank-math' ) . '</strong></a><a href="#" class="rank-math-dismiss-pro-notice rank-math-already-upgraded-action">' . esc_html__( 'No, I don\'t want it', 'rank-math' ) . '</a><a href="#" class="rank-math-dismiss-pro-notice rank-math-already-upgraded-action">' . esc_html__( 'I already upgraded', 'rank-math' ) . '</a>
+								<a href="' . KB::get( 'pro', 'Upgrade Notice 2 New Yes' ) . '" class="button rank-math-dismiss-pro-notice rank-math-upgrade-action" target="_blank" rel="noopener noreferrer"><strong>' . esc_html__( 'Yes, I want to learn more', 'seo-by-rank-math' ) . '</strong></a><a href="#" class="rank-math-dismiss-pro-notice rank-math-already-upgraded-action">' . esc_html__( 'No, I don\'t want it', 'seo-by-rank-math' ) . '</a><a href="#" class="rank-math-dismiss-pro-notice rank-math-already-upgraded-action">' . esc_html__( 'I already upgraded', 'seo-by-rank-math' ) . '</a>
 							</p>';
 				break;
 
 			default:
 				$message = '<p><strong>';
 
-				$message .= esc_html__( 'Rank Your Content With the Power of PRO & A.I.', 'rank-math' );
+				$message .= esc_html__( 'Rank Your Content With the Power of PRO & A.I.', 'seo-by-rank-math' );
 				$message .= '</strong></p><p>';
 				$message .= '<ul>
-								<li>' . esc_html__( 'Unlimited Websites', 'rank-math' ) . '</li>
-								<li>' . esc_html__( 'Content A.I. (Artificial Intelligence)', 'rank-math' ) . '</li>
-								<li>' . esc_html__( 'Keyword Rank Tracker', 'rank-math' ) . '</li>
-								<li>' . esc_html__( 'Powerful Schema Generator', 'rank-math' ) . '</li>
-								<li>' . esc_html__( '24x7 Premium Support', 'rank-math' ) . '</li>
-								<li>' . esc_html__( 'SEO Email Reports', 'rank-math' ) . '</li>
-								<li>' . esc_html__( 'and Many More…', 'rank-math' ) . '</li>
+								<li>' . esc_html__( 'Unlimited Websites', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( 'Content A.I. (Artificial Intelligence)', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( 'Keyword Rank Tracker', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( 'Powerful Schema Generator', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( '24x7 Premium Support', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( 'SEO Email Reports', 'seo-by-rank-math' ) . '</li>
+								<li>' . esc_html__( 'and Many More…', 'seo-by-rank-math' ) . '</li>
 							</ul>';
 				$message .= '<p>
-						<a href="' . KB::get( 'pro', 'Upgrade Notice 1 New Yes' ) . '" class="button rank-math-dismiss-pro-notice rank-math-upgrade-action" target="_blank" rel="noopener noreferrer"><strong>' . esc_html__( 'Yes, I want better SEO', 'rank-math' ) . '</strong></a><a href="#" class="rank-math-dismiss-pro-notice rank-math-maybe-later-action">' . esc_html__( 'No, maybe later', 'rank-math' ) . '</a><a href="#" class="rank-math-dismiss-pro-notice rank-math-already-upgraded-action">' . esc_html__( 'I already purchased', 'rank-math' ) . '</a>
+						<a href="' . KB::get( 'pro', 'Upgrade Notice 1 New Yes' ) . '" class="button rank-math-dismiss-pro-notice rank-math-upgrade-action" target="_blank" rel="noopener noreferrer"><strong>' . esc_html__( 'Yes, I want better SEO', 'seo-by-rank-math' ) . '</strong></a><a href="#" class="rank-math-dismiss-pro-notice rank-math-maybe-later-action">' . esc_html__( 'No, maybe later', 'seo-by-rank-math' ) . '</a><a href="#" class="rank-math-dismiss-pro-notice rank-math-already-upgraded-action">' . esc_html__( 'I already purchased', 'seo-by-rank-math' ) . '</a>
 					</p>';
 				break;
 		}
@@ -262,7 +263,7 @@ class Pro_Notice {
 
 		// If it has already been delayed once then dismiss it forever.
 		if ( get_option( 'rank_math_pro_notice_delayed' ) ) {
-			update_option( 'rank_math_already_upgraded', current_time( 'timestamp' ) );
+			update_option( 'rank_math_already_upgraded', Helper::get_current_time() );
 			return;
 		}
 
@@ -301,8 +302,8 @@ class Pro_Notice {
 		check_ajax_referer( 'rank-math-ajax-nonce', 'security' );
 		$this->has_cap_ajax( 'onpage_general' );
 
-		update_option( 'rank_math_already_upgraded', current_time( 'timestamp' ) );
-		update_option( 'rank_math_already_reviewed', current_time( 'timestamp' ) );
+		update_option( 'rank_math_already_upgraded', Helper::get_current_time() );
+		update_option( 'rank_math_already_reviewed', Helper::get_current_time() );
 
 		$this->success( 'success' );
 	}

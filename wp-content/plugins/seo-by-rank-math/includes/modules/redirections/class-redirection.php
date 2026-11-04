@@ -13,6 +13,7 @@ namespace RankMath\Redirections;
 use RankMath\Helper;
 use RankMath\Helpers\Url;
 use RankMath\Helpers\Param;
+use RankMath\Helpers\DB as DB_Helper;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -356,8 +357,8 @@ class Redirection {
 			'https://www.' . $domain,
 			'www.' . $domain,
 		];
-		$url    = str_replace( $search, '', $url );
-		$url    = preg_replace( '/^' . preg_quote( $domain, '/' ) . '/s', '', $url );
+		$url      = str_replace( $search, '', $url );
+		$url      = preg_replace( '/^' . preg_quote( $domain, '/' ) . '/s', '', $url );
 
 		// Empty url.
 		// External domain.
@@ -389,7 +390,7 @@ class Redirection {
 		// Check if it's a valid pattern.
 		if ( @preg_match( '@' . $pattern . '@', '' ) === false ) { // phpcs:ignore
 			/* translators: source pattern */
-			Helper::add_notification( sprintf( __( 'Invalid regex pattern: %s', 'rank-math' ), $pattern ), [ 'type' => 'error' ] );
+			Helper::add_notification( sprintf( __( 'Invalid regex pattern: %s', 'seo-by-rank-math' ), $pattern ), [ 'type' => 'error' ] );
 			return false;
 		}
 
@@ -416,7 +417,7 @@ class Redirection {
 		}
 
 		// Check for term.
-		$terms = $wpdb->get_results( $wpdb->prepare( "SELECT term_id FROM $wpdb->terms WHERE slug = %s", $slug ) );
+		$terms = DB_Helper::get_results( $wpdb->prepare( "SELECT term_id FROM $wpdb->terms WHERE slug = %s", $slug ) );
 		if ( $terms ) {
 			foreach ( $terms as $term ) {
 				$this->cache[] = [

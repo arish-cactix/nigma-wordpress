@@ -11,12 +11,16 @@
 namespace RankMath\Analytics;
 
 use WP_REST_Request;
+use RankMath\Helpers\DB as DB_Helper;
+use RankMath\Google\Console;
 use RankMath\Analytics\Stats;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Keywords class.
+ *
+ * @method get_analytics_data()
  */
 class Keywords extends Posts {
 
@@ -26,6 +30,10 @@ class Keywords extends Posts {
 	 * @return array
 	 */
 	public function get_recent_keywords() {
+		if ( ! Console::is_console_connected() ) {
+			return [];
+		}
+
 		global $wpdb;
 
 		$query = $wpdb->prepare(
@@ -36,7 +44,7 @@ class Keywords extends Posts {
 			Stats::get()->start_date,
 			Stats::get()->end_date
 		);
-		$data = $wpdb->get_results( $query ); // phpcs:ignore
+		$data  = DB_Helper::get_results( $query );
 
 		return $data;
 	}
@@ -90,6 +98,29 @@ class Keywords extends Posts {
 	 * @return object
 	 */
 	public function get_top_keywords() {
+		if ( ! Console::is_console_connected() ) {
+			return [
+				'top3'          => [
+					'total'      => 0,
+					'difference' => 0,
+				],
+				'top10'         => [
+					'total'      => 0,
+					'difference' => 0,
+				],
+				'top50'         => [
+					'total'      => 0,
+					'difference' => 0,
+				],
+				'top100'        => [
+					'total'      => 0,
+					'difference' => 0,
+				],
+				'ctr'           => 0,
+				'ctrDifference' => 0,
+			];
+		}
+
 		global $wpdb;
 
 		$cache_key = $this->get_cache_key( 'top_keywords', $this->days . 'days' );
@@ -120,7 +151,7 @@ class Keywords extends Posts {
 			$this->start_date,
 			$this->end_date
 		);
-		$data  = $wpdb->get_results( $query ); // phpcs:ignore
+		$data  = DB_Helper::get_results( $query );
 
 		// Get compare keywords count filtered by position range.
 		$query   = $wpdb->prepare(
@@ -143,7 +174,7 @@ class Keywords extends Posts {
 			$this->compare_start_date,
 			$this->compare_end_date
 		);
-		$compare = $wpdb->get_results( $query ); // phpcs:ignore
+		$compare = DB_Helper::get_results( $query );
 
 		$positions = [
 			'top3'          => [
@@ -207,11 +238,15 @@ class Keywords extends Posts {
 			return $cache;
 		}
 
-		// Step1. Get splitted date intervals for graph within selected date range.
+		if ( ! Console::is_console_connected() ) {
+			return $cache;
+		}
+
+		// Step1. Get split date intervals for graph within selected date range.
 		$intervals     = $this->get_intervals();
 		$sql_daterange = $this->get_sql_date_intervals( $intervals );
 
-		// Step2. Get most recent days for each splitted date intervals.
+		// Step2. Get most recent days for each split date intervals.
 		// phpcs:disable
 		$query = $wpdb->prepare(
 			"SELECT MAX(DATE(created)) as date, {$sql_daterange}
@@ -221,7 +256,7 @@ class Keywords extends Posts {
 			$this->start_date,
 			$this->end_date
 		);
-		$position_dates = $wpdb->get_results( $query, ARRAY_A );
+		$position_dates = DB_Helper::get_results( $query, ARRAY_A );
 		// phpcs:enable
 
 		if ( count( $position_dates ) === 0 ) {
@@ -254,7 +289,7 @@ class Keywords extends Posts {
 			$this->start_date,
 			$this->end_date
 		);
-		$position_data = $wpdb->get_results( $query );
+		$position_data = DB_Helper::get_results( $query );
 		// phpcs:enable
 
 		// Construct return data.
