@@ -117,6 +117,9 @@ services:
   wpcli:
     image: wordpress:cli-php8.3
     profiles: ["tools"]
+    # Run `wp` directly: the image's own entrypoint tries to guess whether the first argument is a
+    # wp-cli command by loading WordPress, which fails once core is present (found by a real-host test).
+    entrypoint: ["wp"]
     user: "${CODE_UID:-1000}:${WEB_GID:-33}"
     working_dir: /var/www/nigma
     environment:
