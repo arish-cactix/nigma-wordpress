@@ -108,6 +108,12 @@ Not version controlled:
 - cache
 - backups
 
+## Landing Pages
+
+- **Home lift campaign page** (static HTML + Eloqua form): `/var/www/homelift/` (`index.html`, `thank-you/index.html`), served by a separate OpenLiteSpeed virtual host, `marketing`, with **PHP disabled**. Currently reachable only on the test domain `https://7898.cactixcloud.com/homelift/` (`noindex`; its own Let's Encrypt certificate `marketing-test`).
+- It is **not in git** and is not touched by the deploy pipeline. A master copy should be committed (for example under a dedicated folder) before further edits.
+- Going live on `marketing.nigma.ae` still needs the client to add the DNS record, a certificate, and a mapping for that hostname on both listeners.
+
 ## Operational Principles
 
 - Production is the source of truth for runtime state.
