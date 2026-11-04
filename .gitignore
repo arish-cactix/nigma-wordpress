@@ -102,6 +102,9 @@
 # ------------------------------------------------------------------------------
 *.sql
 *.sql.gz
+
+# LiteSpeed Cache ships small table-schema fragments as .sql files; they are plugin source, not dumps
+!wp-content/plugins/litespeed-cache/src/data_structure/*.sql
 *.zip
 *.tar
 *.tar.gz
