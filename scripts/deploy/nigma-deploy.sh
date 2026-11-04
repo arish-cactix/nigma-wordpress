@@ -51,6 +51,7 @@ if [ "$RUNTIME" = "docker" ]; then
     _domains="$(grep -E '^SITE_DOMAINS=' /etc/nigma/.env | cut -d= -f2- | tr ',' '\n' | sed 's/ //g')"
     SITE_HOST="$(printf '%s\n' "$_domains" | grep -m1 '^www\.' || printf '%s\n' "$_domains" | head -1)"
     _p="$(grep -E '^HTTPS_PORT=' /etc/nigma/.env | cut -d= -f2-)"; [ -n "$_p" ] && HTTPS_PORT="$_p"
+    _b="$(grep -E '^GIT_BRANCH=' /etc/nigma/.env | cut -d= -f2-)"; [ -n "$_b" ] && BRANCH="$_b"   # docker hosts follow GIT_BRANCH
   fi
 fi
 
