@@ -67,6 +67,8 @@ Do **not** deploy:
 
 ## How Deploys Work (pull-based)
 
+> Step-by-step procedures (deploy, verify, roll back, update plugins, certificates, troubleshooting) are in [runbook.md](runbook.md).
+
 Production pulls its own code; GitHub does not push to it.
 
 1. A change is merged to `main`.
@@ -214,4 +216,5 @@ Planned enhancements:
 - repository-architecture.md
 - local-development.md
 - production-environment.md
+- runbook.md
 - architecture-decisions.md

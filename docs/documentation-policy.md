@@ -49,6 +49,7 @@ Every significant change should follow this workflow:
 | Repository structure | `docs/repository-architecture.md` |
 | Local Docker workflow | `docs/local-development.md` |
 | Deployment or CI/CD | `docs/deployment.md` |
+| Operational procedures (deploy, rollback, updates, certificates) | `docs/runbook.md` |
 | Coding conventions | `docs/coding-standards.md` |
 | Security policy | `docs/security.md` |
 | New troubleshooting knowledge | `docs/troubleshooting.md` |
@@ -123,4 +124,5 @@ Potential enhancements include:
 - docs/project-overview.md
 - docs/architecture-decisions.md
 - docs/deployment.md
+- docs/runbook.md
 - docs/coding-standards.md

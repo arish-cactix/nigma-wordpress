@@ -28,6 +28,7 @@ Then read additional documents depending on the task:
 | Production or server changes | `docs/production-environment.md` |
 | Docker or local setup | `docs/local-development.md` |
 | Deployment or CI/CD | `docs/deployment.md` |
+| Running production (deploy, rollback, updates, certificates) | `docs/runbook.md` |
 | Security-sensitive changes | `docs/security.md` |
 | Troubleshooting | `docs/troubleshooting.md` |
 | Architectural decisions | `docs/architecture-decisions.md` |
@@ -155,6 +156,7 @@ If the task affects any of the following, update the relevant document in the sa
 | Repository layout | `docs/repository-architecture.md` |
 | Local Docker workflow | `docs/local-development.md` |
 | Deployment or CI/CD | `docs/deployment.md` |
+| Operational procedures | `docs/runbook.md` |
 | Coding conventions | `docs/coding-standards.md` |
 | Security policy | `docs/security.md` |
 | New troubleshooting knowledge | `docs/troubleshooting.md` |
@@ -320,6 +322,7 @@ When reporting work, summarize:
 - `docs/repository-architecture.md`
 - `docs/local-development.md`
 - `docs/deployment.md`
+- `docs/runbook.md`
 - `docs/coding-standards.md`
 - `docs/security.md`
 - `docs/documentation-policy.md`
