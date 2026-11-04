@@ -93,7 +93,7 @@ class Admin_Helper {
 		$args       = wp_parse_args( $args, [ 'public' => true ] );
 		$taxonomies = wp_filter_object_list( $wp_taxonomies, $args, 'and', 'label' );
 
-		return empty( $taxonomies ) ? false : [ 'off' => esc_html__( 'None', 'rank-math' ) ] + $taxonomies;
+		return empty( $taxonomies ) ? false : [ 'off' => esc_html__( 'None', 'seo-by-rank-math' ) ] + $taxonomies;
 	}
 
 	/**
@@ -151,12 +151,12 @@ class Admin_Helper {
 
 			// Ask the user to reconnect.
 			Helper::add_notification(
-				__( 'Unable to validate Rank Math SEO registration data.', 'rank-math' ) .
-				' <a href="' . esc_url( self::get_activate_url() ) . '">' . __( 'Please try reconnecting.', 'rank-math' ) . '</a> ' .
+				__( 'Unable to validate Rank Math SEO registration data.', 'seo-by-rank-math' ) .
+				' <a href="' . esc_url( self::get_activate_url() ) . '">' . __( 'Please try reconnecting.', 'seo-by-rank-math' ) . '</a> ' .
 				sprintf(
 					/* translators: KB Link */
-					__( 'If the issue persists, please try the solution described in our Knowledge Base article: %s', 'rank-math' ),
-					'<a href="' . KB::get( 'unable-to-encrypt', 'Registration Data' ) . '" target="_blank">' . __( '[3. Unable to Encrypt]', 'rank-math' ) . '</a>'
+					__( 'If the issue persists, please try the solution described in our Knowledge Base article: %s', 'seo-by-rank-math' ),
+					'<a href="' . KB::get( 'unable-to-encrypt', 'Registration Data' ) . '" target="_blank">' . __( '[3. Unable to Encrypt]', 'seo-by-rank-math' ) . '</a>'
 				),
 				[ 'type' => 'error' ]
 			);
@@ -169,7 +169,7 @@ class Admin_Helper {
 		 */
 		$do_url_check = apply_filters( 'rank_math/registration/do_url_check', ! get_option( 'rank_math_siteurl_mismatch_notice_dismissed' ) );
 		if ( $do_url_check && isset( $options['site_url'] ) && Helper::get_home_url() !== $options['site_url'] ) {
-			$message = esc_html__( 'Seems like your site URL has changed since you connected to Rank Math.', 'rank-math' ) . ' <a href="' . self::get_activate_url() . '">' . esc_html__( 'Click here to reconnect.', 'rank-math' ) . '</a>';
+			$message = esc_html__( 'Seems like your site URL has changed since you connected to Rank Math.', 'seo-by-rank-math' ) . ' <a href="' . self::get_activate_url() . '">' . esc_html__( 'Click here to reconnect.', 'seo-by-rank-math' ) . '</a>';
 			Helper::add_notification(
 				$message,
 				[
@@ -292,6 +292,17 @@ class Admin_Helper {
 	}
 
 	/**
+	 * Check if current page is term create/term listing.
+	 *
+	 * @return bool
+	 */
+	public static function is_term_listing() {
+		global $pagenow;
+
+		return 'edit-tags.php' === $pagenow;
+	}
+
+	/**
 	 * Check if current page is user create/edit screen.
 	 *
 	 * @return bool
@@ -311,51 +322,6 @@ class Admin_Helper {
 		global $pagenow;
 
 		return self::is_term_edit() || self::is_user_edit();
-	}
-
-	/**
-	 * Get Social Share buttons.
-	 *
-	 * @codeCoverageIgnore
-	 */
-	public static function get_social_share() {
-		if ( Helper::is_whitelabel() ) {
-			return;
-		}
-
-		$tw_link = KB::get( 'logo', 'Setup Wizard Tweet Button' );
-		$fb_link = rawurlencode( KB::get( 'logo', 'Facebook' ) );
-		/* translators: sitename */
-		$tw_message = rawurlencode( sprintf( esc_html__( 'I just installed @RankMathSEO #WordPress Plugin. It looks great! %s', 'rank-math' ), $tw_link ) );
-		/* translators: sitename */
-		$fb_message = rawurlencode( esc_html__( 'I just installed Rank Math SEO WordPress Plugin. It looks promising!', 'rank-math' ) );
-
-		$tweet_url = Security::add_query_arg(
-			[
-				'text'     => $tw_message,
-				'hashtags' => 'SEO',
-			],
-			'https://twitter.com/intent/tweet'
-		);
-
-		$fb_share_url = Security::add_query_arg(
-			[
-				'u'       => $fb_link,
-				'quote'   => $fb_message,
-				'caption' => esc_html__( 'SEO by Rank Math', 'rank-math' ),
-			],
-			'https://www.facebook.com/sharer/sharer.php'
-		);
-		?>
-		<span class="wizard-share">
-			<a href="#" onclick="window.open('<?php echo esc_url( $tweet_url ); ?>', 'sharewindow', 'resizable,width=600,height=300'); return false;" class="share-twitter">
-				<span class="dashicons dashicons-twitter"></span> <?php esc_html_e( 'Tweet', 'rank-math' ); ?>
-			</a>
-			<a href="#" onclick="window.open('<?php echo esc_url( $fb_share_url ); ?>', 'sharewindow', 'resizable,width=600,height=300'); return false;" class="share-facebook">
-				<span class="dashicons dashicons-facebook-alt"></span> <?php esc_html_e( 'Share', 'rank-math' ); ?>
-			</a>
-		</span>
-		<?php
 	}
 
 	/**
@@ -455,10 +421,10 @@ class Admin_Helper {
 				<?php
 				printf(
 					// Translators: 1 is "WordPress Address (URL)", 2 is "Site Address (URL)", 3 is a link to the General Settings, with "WordPress General Settings" as anchor text.
-					esc_html__( 'Rank Math cannot be connected because your site URL doesn\'t appear to be a valid URL. If the domain name contains special characters, please make sure to use the encoded version in the %1$s &amp; %2$s fields on the %3$s page.', 'rank-math' ),
-					'<strong>' . esc_html__( 'WordPress Address (URL)', 'rank-math' ) . '</strong>',
-					'<strong>' . esc_html__( 'Site Address (URL)', 'rank-math' ) . '</strong>',
-					'<a href="' . esc_url( admin_url( 'options-general.php' ) ) . '">' . esc_html__( 'WordPress General Settings', 'rank-math' ) . '</a>'
+					esc_html__( 'Rank Math cannot be connected because your site URL doesn\'t appear to be a valid URL. If the domain name contains special characters, please make sure to use the encoded version in the %1$s &amp; %2$s fields on the %3$s page.', 'seo-by-rank-math' ),
+					'<strong>' . esc_html__( 'WordPress Address (URL)', 'seo-by-rank-math' ) . '</strong>',
+					'<strong>' . esc_html__( 'Site Address (URL)', 'seo-by-rank-math' ) . '</strong>',
+					'<a href="' . esc_url( admin_url( 'options-general.php' ) ) . '">' . esc_html__( 'WordPress General Settings', 'seo-by-rank-math' ) . '</a>'
 				);
 				?>
 			</p>

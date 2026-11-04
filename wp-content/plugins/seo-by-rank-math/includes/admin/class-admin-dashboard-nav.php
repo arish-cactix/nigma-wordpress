@@ -83,32 +83,32 @@ class Admin_Dashboard_Nav {
 	}
 
 	/**
-	 * Get dashbaord navigation links
+	 * Get dashboard navigation links
 	 *
 	 * @return array
 	 */
 	private function get_nav_links() {
 		$links = [
-			'modules'       => [
+			'modules' => [
 				'id'    => 'modules',
 				'url'   => '',
 				'args'  => 'view=modules',
 				'cap'   => 'manage_options',
-				'title' => esc_html__( 'Modules', 'rank-math' ),
+				'title' => esc_html__( 'Modules', 'seo-by-rank-math' ),
 			],
-			'help'          => [
+			'help'    => [
 				'id'    => 'help',
 				'url'   => '',
 				'args'  => 'view=help',
 				'cap'   => 'manage_options',
-				'title' => esc_html__( 'Help', 'rank-math' ),
+				'title' => esc_html__( 'Help', 'seo-by-rank-math' ),
 			],
-			'wizard'        => [
+			'wizard'  => [
 				'id'    => 'wizard',
 				'url'   => 'wizard',
 				'args'  => '',
 				'cap'   => 'manage_options',
-				'title' => esc_html__( 'Setup Wizard', 'rank-math' ),
+				'title' => esc_html__( 'Setup Wizard', 'seo-by-rank-math' ),
 			],
 		];
 
@@ -118,7 +118,7 @@ class Admin_Dashboard_Nav {
 				'url'   => 'status',
 				'args'  => 'view=import_export',
 				'cap'   => 'install_plugins',
-				'title' => esc_html__( 'Import &amp; Export', 'rank-math' ),
+				'title' => esc_html__( 'Import &amp; Export', 'seo-by-rank-math' ),
 			];
 		}
 

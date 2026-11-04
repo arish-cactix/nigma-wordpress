@@ -203,7 +203,7 @@ class Link_Attributes {
 	}
 
 	/**
-	 * Set External attributs
+	 * Set External attributes
 	 *
 	 * @since 1.0.44.2
 	 *
@@ -230,7 +230,7 @@ class Link_Attributes {
 			}
 		}
 
-		if ( $this->new_window_link && ! isset( $attrs['target'] ) ) {
+		if ( $this->new_window_link && ! isset( $attrs['target'] ) && $this->do_filter( 'target_blank/domain', Url::get_domain( $attrs['href'] ) ) ) {
 			$this->is_dirty  = true;
 			$attrs['target'] = '_blank';
 		}

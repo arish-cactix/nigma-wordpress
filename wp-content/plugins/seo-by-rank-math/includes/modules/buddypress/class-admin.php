@@ -37,15 +37,15 @@ class Admin {
 	 */
 	public function add_title_settings( $tabs ) {
 		$tabs['buddypress'] = [
-			'title' => esc_html__( 'BuddyPress:', 'rank-math' ),
-			'type'  => 'seprator',
+			'title' => esc_html__( 'BuddyPress:', 'seo-by-rank-math' ),
+			'type'  => 'separator',
 		];
 
 		$tabs['buddypress-groups'] = [
 			'icon'  => 'rm-icon rm-icon-users',
-			'title' => esc_html__( 'Groups', 'rank-math' ),
-			'desc'  => esc_html__( 'This tab contains SEO options for BuddyPress Group pages.', 'rank-math' ),
-			'file'  => dirname( __FILE__ ) . '/views/options-titles.php',
+			'title' => esc_html__( 'Groups', 'seo-by-rank-math' ),
+			'desc'  => esc_html__( 'This tab contains SEO options for BuddyPress Group pages.', 'seo-by-rank-math' ),
+			'file'  => __DIR__ . '/views/options-titles.php',
 		];
 
 		return $tabs;

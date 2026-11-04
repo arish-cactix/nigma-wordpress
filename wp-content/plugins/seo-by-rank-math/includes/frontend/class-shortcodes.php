@@ -23,7 +23,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class Shortcodes {
 
-	use Hooker, Shortcode;
+	use Hooker;
+	use Shortcode;
 
 	/**
 	 * The Constructor.
@@ -73,7 +74,7 @@ class Shortcodes {
 	}
 
 	/**
-	 * Contact info shortcode, displays nicely formatted contact informations.
+	 * Contact info shortcode, displays nicely formatted contact information.
 	 *
 	 * @param  array $args Optional. Shortcode arguments - currently only 'show'
 	 *                     parameter, which is a comma-separated list of elements to show.
@@ -165,7 +166,7 @@ class Shortcodes {
 			return;
 		}
 
-		$hash = [
+		$hash   = [
 			'streetAddress'   => 'address',
 			'addressLocality' => 'locality',
 			'addressRegion'   => 'region',
@@ -173,9 +174,9 @@ class Shortcodes {
 			'addressCountry'  => 'country',
 		];
 		$format = nl2br( Helper::get_settings( 'titles.local_address_format' ) );
-		$data = self::get_address( $hash, $address, $format );		
+		$data   = self::get_address( $hash, $address, $format );
 		?>
-		<label><?php esc_html_e( 'Address:', 'rank-math' ); ?></label>
+		<label><?php esc_html_e( 'Address:', 'seo-by-rank-math' ); ?></label>
 		<address><?php echo wp_kses_post( $data ); ?></address>
 		<?php
 	}
@@ -192,7 +193,7 @@ class Shortcodes {
 		$combined = $this->get_hours_combined( $hours );
 		$format   = Helper::get_settings( 'titles.opening_hours_format' );
 		?>
-		<label><?php esc_html_e( 'Hours:', 'rank-math' ); ?></label>
+		<label><?php esc_html_e( 'Hours:', 'seo-by-rank-math' ); ?></label>
 		<div class="rank-math-contact-hours-details">
 			<?php
 			foreach ( $combined as $time => $days ) {
@@ -227,7 +228,7 @@ class Shortcodes {
 				continue;
 			}
 
-			$combined[ trim( $hour['time'] ) ][] = $this->get_localized_day( $hour['day'] );
+			$combined[ trim( $hour['time'] ) ][] = $this->get_localized_day( $hour['day'] ?? 'Monday' );
 		}
 
 		return $combined;
@@ -272,11 +273,12 @@ class Shortcodes {
 			}
 
 			$number = esc_html( $phone['number'] );
-			$label  = isset( $choices[ $phone['type'] ] ) ? $choices[ $phone['type'] ] : ''
+			$type   = $phone['type'] ?? 'customer support';
+			$label  = isset( $choices[ $type ] ) ? $choices[ $type ] : ''
 			?>
-			<div class="rank-math-phone-number type-<?php echo sanitize_html_class( $phone['type'] ); ?>">
+			<div class="rank-math-phone-number type-<?php echo sanitize_html_class( $type ); ?>">
 				<label><?php echo esc_html( $label ); ?>:</label>
-				<span><?php echo isset( $phone['number'] ) ? '<a href="tel://' . esc_attr( $number ) . '">' . esc_html( $number ) . '</a>' : ''; ?></span>
+				<span><?php echo isset( $phone['number'] ) ? '<a href="tel:' . esc_attr( $number ) . '">' . esc_html( $number ) . '</a>' : ''; ?></span>
 			</div>
 			<?php
 		endforeach;
@@ -291,9 +293,9 @@ class Shortcodes {
 			return;
 		}
 		?>
-			<div class="rank-math-phone-numberx">
-				<label><?php echo esc_html__( 'Telephone', 'rank-math' ); ?>:</label>
-				<span><a href="tel://<?php echo esc_attr( $phone ); ?>"><?php echo esc_html( $phone ); ?></a></span>
+			<div class="rank-math-phone-numbers">
+				<label><?php echo esc_html__( 'Telephone', 'seo-by-rank-math' ); ?>:</label>
+				<span><a href="tel:<?php echo esc_attr( $phone ); ?>"><?php echo esc_html( $phone ); ?></a></span>
 			</div>
 		<?php
 	}
@@ -351,7 +353,7 @@ class Shortcodes {
 		}
 		?>
 		<div class="rank-math-email">
-			<label><?php esc_html_e( 'Email:', 'rank-math' ); ?></label>
+			<label><?php esc_html_e( 'Email:', 'seo-by-rank-math' ); ?></label>
 			<a href="mailto:<?php echo esc_attr( $email ); ?>"><?php echo esc_html( $email ); ?></a>
 		</div>
 		<?php
@@ -367,7 +369,7 @@ class Shortcodes {
 		}
 		?>
 		<div class="rank-math-organization-description">
-			<label><?php esc_html_e( 'Description:', 'rank-math' ); ?></label>
+			<label><?php esc_html_e( 'Description:', 'seo-by-rank-math' ); ?></label>
 			<p><?php echo esc_html( $description ); ?></p>
 		</div>
 		<?php
@@ -388,9 +390,11 @@ class Shortcodes {
 			if ( empty( $property['value'] ) ) {
 				continue;
 			}
+
+			$type = $property['type'] ?? 'legalName';
 			?>
 			<div class="rank-math-organization-additional-details">
-				<label><?php echo esc_html( $choices[ $property['type'] ] ); ?>:</label>
+				<label><?php echo esc_html( $choices[ $type ] ); ?>:</label>
 				<span><?php echo esc_html( $property['value'] ); ?></span>
 			</div>
 			<?php
@@ -446,10 +450,9 @@ class Shortcodes {
 	/**
 	 * Yoast map compatibility functionality.
 	 *
-	 * @param  array $args Array of arguments.
 	 * @return string
 	 */
-	public function yoast_map( $args ) {
+	public function yoast_map() {
 		return $this->contact_info(
 			[
 				'show'  => 'map',
@@ -461,10 +464,9 @@ class Shortcodes {
 	/**
 	 * Yoast opening hours compatibility functionality.
 	 *
-	 * @param  array $args Array of arguments.
 	 * @return string
 	 */
-	public function yoast_opening_hours( $args ) {
+	public function yoast_opening_hours() {
 		return $this->contact_info(
 			[
 				'show'  => 'hours',
@@ -475,7 +477,7 @@ class Shortcodes {
 
 	/**
 	 * Get address
-	 * 
+	 *
 	 * @param array  $hash   Hash of tags.
 	 * @param array  $address Address data.
 	 * @param string $format Address format.

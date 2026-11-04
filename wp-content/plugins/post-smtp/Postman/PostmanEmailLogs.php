@@ -4,6 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 require 'Postman-Email-Log/PostmanEmailQueryLog.php';
+$purifier = dirname(__DIR__) . '/includes/libs/HTMLPurifier/HTMLPurifier.auto.php';
+if ( file_exists( $purifier ) ) {
+    require_once $purifier;
+}
 
 class PostmanEmailLogs {
 
@@ -55,6 +59,11 @@ class PostmanEmailLogs {
             isset( $_GET['log_id'] ) && !empty( $_GET['log_id'] )
         ) {
 
+            // Check if user has permission to view email logs
+            if ( ! current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
+                wp_die( __( 'Sorry, you are not allowed to access this page.', 'post-smtp' ) );
+            }
+
             // Print
             if( isset( $_GET['print'] ) && $_GET['print'] == 1  ) {
 
@@ -65,18 +74,158 @@ class PostmanEmailLogs {
             $id = sanitize_text_field( $_GET['log_id'] );
             $email_query_log = new PostmanEmailQueryLog();
             $log = $email_query_log->get_log( $id, '' );
-            $header = $log['original_headers'];
-            $msg = $log['original_message'];
-            $msg = preg_replace( "/<script\b[^>]*>(.*?)<\/script>/s", '', $msg );
+            $header = isset( $log['original_headers'] ) ? $log['original_headers'] : '';
+            $msg    = isset( $log['original_message'] ) ? $log['original_message'] : '';
+            $is_html_message = $this->log_message_is_html( $msg, is_string( $header ) ? $header : '' );
 
-            echo ( isset ( $header ) && strpos( $header, "text/html" ) ) ? $msg : '<pre>' . $msg . '</pre>' ;
+            if ( $is_html_message ) {
+                $msg = $this->extract_html_message_body( $msg );
+			    $msg = $this->purify_html( $msg );
+            }
 
+        	echo $is_html_message ? $msg : '<pre>' . esc_html( $msg ) . '</pre>';
             die;
 
         }
 
     }
+	
+    /**
+     * 
+     * Purifies and sanitizes HTML content using HTMLPurifier.
+     *
+     * @param string $html_content The potentially unsafe HTML content.
+     * @return string The purified and sanitized HTML content.
+     * @since 3.1.2
+     * @version 1.0.0
+     * 
+     */
+	public function purify_html( $html_content ) {
+		// Configure HTMLPurifier.
+		$config = HTMLPurifier_Config::createDefault();
+		$config->set('Core.Encoding', 'UTF-8');
+		$config->set('HTML.Doctype', 'XHTML 1.0 Transitional');
+		
+		// ✅ Allow all standard email template elements		
+		$config->set('HTML.AllowedElements', null);
 
+		// ✅ Allow all attributes except JavaScript-based ones
+		$config->set('HTML.AllowedAttributes', null);
+        $config->set('CSS.AllowedProperties', 'border-radius, background');
+    
+		// ❌ Block JavaScript-based attacks
+		$config->set( 'HTML.ForbiddenElements', ['script'] );
+		
+		$config->set( 'HTML.ForbiddenAttributes', ['on*'] );
+		// ❌ Prevent JavaScript in links and images.
+		$config->set('URI.AllowedSchemes', [
+			'http'  => true,
+			'https' => true,
+			'mailto' => true,
+			'tel'   => true,
+		]); 
+        
+		$config->set( 'URI.SafeIframeRegexp', '' );
+		// ✅ Allow inline styles but prevent unsafe styles
+		$config->set( 'CSS.Trusted', false ); // Block dangerous inline styles.
+		$config->set( 'CSS.AllowedProperties', null ); // NULL means allow all CSS properties.
+        $config->set( 'CSS.MaxImgLength', null );
+        // this library is removing display:flex how can we fix it?
+        $config->set( 'CSS.AllowTricky', true );
+
+		// Initialize HTMLPurifier.
+		$purifier = new HTMLPurifier( $config);
+
+		// Purify the dirty HTML.
+		return $purifier->purify( $html_content );
+	}
+
+    /**
+     * Detect whether a logged message should render as HTML in the email log iframe.
+     *
+     * With SMTP, {@see PostsmtpMailer} stores the raw wp_mail() body and headers; Content-Type
+     * is often set only inside PHPMailer, so headers may omit text/html while the body is a full
+     * HTML document (DOCTYPE/html or meta Content-Type), which the old check missed.
+     *
+     * @param string $message     Logged message body.
+     * @param string $headers_raw Headers from DB (may be serialized PHP).
+     * @return bool
+     */
+    private function log_message_is_html( $message, $headers_raw ) {
+        if ( ! is_string( $message ) || '' === trim( $message ) ) {
+            return false;
+        }
+
+        if ( is_string( $headers_raw ) && '' !== $headers_raw && false !== stripos( $headers_raw, 'text/html' ) ) {
+            return true;
+        }
+
+        if ( false !== stripos( $message, 'Content-Type: text/html' ) ) {
+            return true;
+        }
+
+        if ( preg_match( '/^\s*Content-Type:\s*text\/html\b/im', $message ) ) {
+            return true;
+        }
+
+        $trim = ltrim( $message, "\xEF\xBB\xBF\0\t\n\r " );
+        if ( preg_match( '/^(<!DOCTYPE\s+html|<html[\s>])/i', $trim ) ) {
+            return true;
+        }
+
+        if ( preg_match( '/<meta\b[^>]*http-equiv\s*=\s*["\']?\s*Content-Type\b[^>]*content\s*=\s*["\'][^"\']*text\/html/im', $message ) ) {
+            return true;
+        }
+
+        if ( preg_match( '/<meta\b[^>]*content\s*=\s*["\'][^"\']*text\/html[^"\']*["\'][^>]*http-equiv\s*=\s*["\']?\s*Content-Type/im', $message ) ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Extract the HTML body from a multipart/raw MIME message.
+     *
+     * @param string $message Raw message body from logs.
+     * @return string Renderable HTML body when detected, otherwise original message.
+     */
+    private function extract_html_message_body( $message ) {
+        if ( ! is_string( $message ) || '' === $message ) {
+            return $message;
+        }
+
+        $normalized = str_replace( array( "\r\n", "\r" ), "\n", $message );
+
+        // Try to isolate the HTML MIME part.
+        if ( preg_match( '/Content-Type:\s*text\/html\b(.*?)(?:\n--[^\n]*|\z)/is', $normalized, $match ) ) {
+            $html_part = trim( $match[1] );
+
+            // Split MIME headers from body.
+            $segments = preg_split( "/\n\n/", $html_part, 2 );
+            $part_headers = $segments[0];
+            $part_body    = isset( $segments[1] ) ? $segments[1] : $html_part;
+
+            if ( false !== stripos( $part_headers, 'quoted-printable' ) && function_exists( 'quoted_printable_decode' ) ) {
+                $part_body = quoted_printable_decode( $part_body );
+            } elseif ( false !== stripos( $part_headers, 'base64' ) ) {
+                $decoded = base64_decode( trim( $part_body ), true );
+                if ( false !== $decoded ) {
+                    $part_body = $decoded;
+                }
+            }
+
+            // Remove any leftover boundary marker lines.
+            $part_body = preg_replace( '/^\s*--[^\n]*\s*$/m', '', $part_body );
+            $part_body = trim( $part_body );
+
+            if ( '' !== $part_body ) {
+                return $part_body;
+            }
+        }
+
+        return $message;
+    }
 
     /**
      * Installs the Table | Creates the Table
@@ -259,17 +408,10 @@ class PostmanEmailLogs {
         $data['time'] = !isset( $data['time'] ) ? current_time( 'timestamp' ) : $data['time'];
 
         if( !empty( $id ) ) {
-
             return $this->update( $data, $id );
-
         }
         else {
-
-            return $this->db->insert(
-                $this->db->prefix . $this->db_name,
-                $data  
-            ) ? $this->db->insert_id : false;
-
+            return $this->db->insert( $this->db->prefix . $this->db_name, $data  ) ? $this->db->insert_id : false;
         }
 
     }
@@ -285,11 +427,13 @@ class PostmanEmailLogs {
      */
     public function update( $data, $id ) {
 
-        return $this->db->update(
-            $this->db->prefix . $this->db_name,
-            $data,
-            array( 'id' => $id )
-        );
+        $result = $this->db->update(
+			$this->db->prefix . $this->db_name,
+			$data,
+			array( 'id' => $id )
+		);
+
+		return $result !== false ? $id : false;
 
     }
 
@@ -301,13 +445,18 @@ class PostmanEmailLogs {
      * @version 1.0
      */
     public function get_logs_ajax() {
-
         if( !wp_verify_nonce( $_GET['security'], 'security' ) ) {
 
             return;
 
         }
 
+        // Check if user has permission to view email logs
+        if ( ! current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
+            wp_send_json_error( __( 'Sorry, you are not allowed to access email logs.', 'post-smtp' ) );
+            return;
+        }
+  
         if( isset( $_GET['action'] ) && $_GET['action'] == 'ps-get-email-logs' ) {
 
             $logs_query = new PostmanEmailQueryLog;
@@ -335,41 +484,38 @@ class PostmanEmailLogs {
                 $query['from'] = strtotime( sanitize_text_field( $_GET['from'] ) );
 
             }
-
+       
             if( isset( $_GET['to'] ) && !empty( $_GET['to'] ) ) {
 
                 $query['to'] = strtotime( sanitize_text_field( $_GET['to'] ) ) + 86400;
 
             }
 
-            $data = $logs_query->get_logs( $query );
+            if( isset( $_GET['filter_by'] ) && !empty( $_GET['filter_by'] ) ) {
 
+                $query['filter_by'] = sanitize_text_field( $_GET['filter_by'] );
+
+            }
+
+            $data = $logs_query->get_logs( $query );
             //WordPress Date, Time Format
             $date_format = get_option( 'date_format' );
 		    $time_format = get_option( 'time_format' );
-            $search = array(
-                '<',
-                '>',
-                '"',
-                "'"
-            );
-            $replace = array(
-                '&lt;',
-                '&gt;',
-                '&quot;',
-                '&#039;'
-            );
-
+   
             //Lets manage the Date format :)
             foreach( $data as $row ) {
 
-                $row->time = date( "{$date_format} {$time_format}", $row->time );
+                $row->time = date_i18n( "{$date_format} {$time_format}", $row->time );
 
                 if( $row->success == 1 ) {
 
                     $row->success = '<span title="Success">Success</span>';
 
-                }
+                } else if( $row->success == 'Sent ( ** Fallback ** )' ){
+
+                    $row->success = '<span title="Sent ( ** Fallback ** )">Success</span><a href="#" class="ps-status-log ps-popup-btn">View details</a>';
+                    
+               }
                 elseif( $row->success == 'In Queue' ) {
 
                     $row->success = '<span title="In Queue">In Queue</span>';
@@ -377,7 +523,7 @@ class PostmanEmailLogs {
                 }
                 else {
 
-                    $row->success = '<span title="'.str_replace( $search, $replace, $row->success ).'">Failed</span><a href="#" class="ps-status-log ps-popup-btn">View details</a>';
+                    $row->success = '<span title="' . esc_attr( $row->success ) . '">Failed</span><a href="#" class="ps-status-log ps-popup-btn">View details</a>';
                     
                 }
                 
@@ -392,8 +538,11 @@ class PostmanEmailLogs {
                  */
                 $row = apply_filters( 'ps_email_logs_row', $row );
 
-                //Escape HTML
+                //Escape HTML for safe output.
                 $row->original_subject = esc_html( $row->original_subject );
+                if ( isset( $row->event_type ) ) {
+                    $row->event_type = esc_html( $row->event_type );
+                }
 
             }
 
@@ -431,15 +580,23 @@ class PostmanEmailLogs {
             return;
 
         }
+
+        // Check if user has permission to manage email logs
+        if ( ! current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
+            wp_send_json_error( __( 'Sorry, you are not allowed to delete email logs.', 'post-smtp' ) );
+            return;
+        }
 		
 		if( isset( $_POST['action'] ) && $_POST['action'] == 'ps-delete-email-logs' ) {
 
 			$args = array();
+            $deleted_all = false;
 
 			//Delete all
 			if( !isset( $_POST['selected'] ) ) {
 
 				$args = array( -1 );
+                $deleted_all = true;
 
 			}
 			//Delete selected
@@ -465,7 +622,8 @@ class PostmanEmailLogs {
 
 				$response = array(
 					'success' => true,
-					'message' => __( 'Logs deleted successfully', 'post-smtp' )
+					'message' => __( 'Logs deleted successfully', 'post-smtp' ),
+                    'deleted_all' => $deleted_all
 				);
 
 			}
@@ -473,7 +631,8 @@ class PostmanEmailLogs {
 
 				$response = array(
 					'success' => false,
-					'message' => __( 'Error deleting logs', 'post-smtp' )
+					'message' => __( 'Error deleting logs', 'post-smtp' ),
+                    'deleted_all' => $deleted_all
 				);
 
 			}
@@ -497,6 +656,12 @@ class PostmanEmailLogs {
 
             return;
 
+        }
+
+        // Check if user has permission to export email logs
+        if ( ! current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
+            wp_send_json_error( __( 'Sorry, you are not allowed to export email logs.', 'post-smtp' ) );
+            return;
         }
 
 		if( isset( $_POST['action'] ) && $_POST['action'] == 'ps-export-email-logs' ) {
@@ -562,7 +727,7 @@ class PostmanEmailLogs {
                 $data[10] = $log->original_message;
                 $data[11] = $log->original_headers;
                 $data[12] = $log->session_transcript;
-                $data[13] = date( "$date_format $time_format", $log->time );
+                $data[13] = date_i18n( "$date_format $time_format", $log->time );
                 
                 fputcsv($fp, $data);
 
@@ -591,14 +756,35 @@ class PostmanEmailLogs {
 
         }
 
+        // Check if user has permission to view email logs
+        if ( ! current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
+            wp_send_json_error( __( 'Sorry, you are not allowed to view email logs.', 'post-smtp' ) );
+            return;
+        }
+
 		if( isset( $_POST['action'] ) && $_POST['action'] == 'ps-view-log' ) {
 
-			$id = sanitize_text_field( $_POST['id'] );
+			$id   = sanitize_text_field( $_POST['id'] );
 			$type = array( sanitize_text_field( $_POST['type'] ) );
 			$type = $type[0] == 'original_message' ? '' : $type;
 
 			$email_query_log = new PostmanEmailQueryLog();
-			$log = $email_query_log->get_log( $id, $type );
+			$log             = $email_query_log->get_log( $id, $type );
+
+			// When viewing the rendered message (original_message), we still want
+			// reply_to_header available for the desktop popup details table.
+			if ( empty( $type ) && ! isset( $log['reply_to_header'] ) ) {
+				$extra = $email_query_log->get_log(
+					$id,
+					array(
+						'reply_to_header',
+					)
+				);
+
+				if ( is_array( $extra ) && isset( $extra['reply_to_header'] ) ) {
+					$log['reply_to_header'] = $extra['reply_to_header'];
+				}
+			}
             $_log = $log;
 
             //Escape HTML
@@ -623,7 +809,7 @@ class PostmanEmailLogs {
 				$date_format = get_option( 'date_format' );
 				$time_format = get_option( 'time_format' );
 				
-				$log['time'] = date( "{$date_format} {$time_format}", $log['time'] );
+				$log['time'] = date_i18n( "{$date_format} {$time_format}", $log['time'] );
 
 			}
 
@@ -673,6 +859,12 @@ class PostmanEmailLogs {
 
             return;
 
+        }
+
+        // Check if user has permission to resend emails
+        if ( ! current_user_can( Postman::MANAGE_POSTMAN_CAPABILITY_LOGS ) ) {
+            wp_send_json_error( __( 'Sorry, you are not allowed to resend emails.', 'post-smtp' ) );
+            return;
         }
 
         if( isset( $_POST['action'] ) && $_POST['action'] == 'ps-resend-email' ) {

@@ -20,6 +20,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Posts class.
+ *
+ * @method get_analytics_data()
  */
 class Posts extends Objects {
 
@@ -37,7 +39,7 @@ class Posts extends Objects {
 			->one();
 
 		if ( is_null( $post ) ) {
-			return [ 'errorMessage' => esc_html__( 'Sorry, no post found for given id.', 'rank-math' ) ];
+			return [ 'errorMessage' => esc_html__( 'Sorry, no post found for given id.', 'seo-by-rank-math' ) ];
 		}
 
 		$post->admin_url = admin_url();

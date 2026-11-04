@@ -16,6 +16,7 @@ use RankMath\Traits\Ajax;
 use RankMath\Traits\Hooker;
 use RankMath\Helpers\Sitepress;
 use RankMath\Helpers\Param;
+use RankMath\Helpers\Str;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -24,7 +25,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class Notices implements Runner {
 
-	use Hooker, Ajax;
+	use Hooker;
+	use Ajax;
 
 	/**
 	 * Register hooks.
@@ -40,8 +42,154 @@ class Notices implements Runner {
 	public function notices() {
 		$this->is_plugin_configured();
 		$this->new_post_type();
-		$this->convert_wpml_settings();
+		if ( Sitepress::get()->is_active() ) {
+			$this->convert_wpml_settings();
+			$this->display_wpml_notice();
+		}
 		$this->permalink_changes_warning();
+		$this->react_settings_ui_notice();
+		$this->mcp_adapter_notice();
+	}
+
+	/**
+	 * Recommend the MCP Adapter plugin to existing MCP users on Rank Math admin pages when it is not active.
+	 *
+	 * @return void
+	 */
+	private function mcp_adapter_notice() {
+		$notice_id = 'rank_math_mcp_adapter_notice';
+
+		if (
+			class_exists( '\WP\MCP\Core\McpAdapter' ) ||
+			! function_exists( 'wp_get_abilities' ) ||
+			! function_exists( 'get_plugins' ) ||
+			! Str::starts_with( 'rank-math', Param::get( 'page' ) ) ||
+			! current_user_can( 'install_plugins' ) ||
+			get_option( 'rank_math_mcp_adapter_notice_dismissed' ) ||
+			! $this->is_mcp_user( get_current_user_id() )
+		) {
+			Helper::remove_notification( $notice_id );
+			return;
+		}
+
+		$message = sprintf(
+			// Translators: 1: opening anchor tag, 2: closing anchor tag.
+			__( 'For MCP features, please install and activate the %1$sWordPress MCP Adapter%2$s plugin.', 'seo-by-rank-math' ),
+			'<a href="' . esc_url( $this->get_mcp_adapter_install_url() ) . '">',
+			'</a>'
+		);
+
+		// Replace any stored copy so the link's nonce is fresh and belongs to the current user.
+		Helper::remove_notification( $notice_id );
+
+		Helper::add_notification(
+			$message,
+			[
+				'type'       => 'info',
+				'id'         => $notice_id,
+				'capability' => 'install_plugins',
+			]
+		);
+	}
+
+	/**
+	 * Get the URL that installs the MCP Adapter plugin, or activates it when it is already installed.
+	 *
+	 * @return string
+	 */
+	private function get_mcp_adapter_install_url() {
+		$plugin = 'mcp-adapter/mcp-adapter.php';
+
+		if ( ! array_key_exists( $plugin, get_plugins() ) ) {
+			// Core's installer screen links to activation once the install finishes.
+			return wp_nonce_url(
+				network_admin_url( 'update.php?action=install-plugin&plugin=mcp-adapter' ),
+				'install-plugin_mcp-adapter'
+			);
+		}
+
+		// Activate the same way Rank Math itself is active: network-wide or on this site only.
+		$admin_url = is_plugin_active_for_network( plugin_basename( RANK_MATH_FILE ) ) ? network_admin_url( 'plugins.php' ) : admin_url( 'plugins.php' );
+
+		return wp_nonce_url(
+			add_query_arg(
+				[
+					'action' => 'activate',
+					'plugin' => rawurlencode( $plugin ),
+				],
+				$admin_url
+			),
+			'activate-plugin_' . $plugin
+		);
+	}
+
+	/**
+	 * Check if the user has used MCP: MCP Adapter sessions or an MCP OAuth connection.
+	 *
+	 * @param int $user_id User ID.
+	 *
+	 * @return bool
+	 */
+	private function is_mcp_user( $user_id ) {
+		$meta = get_user_meta( $user_id );
+		if ( ! is_array( $meta ) ) {
+			return false;
+		}
+
+		$session_keys = [ 'mcp_adapter_sessions', 'mcp_adapter_sessions_' . get_current_blog_id() ];
+		foreach ( $meta as $key => $values ) {
+			$key = (string) $key;
+
+			if ( Str::starts_with( 'mcp_refresh_jti_', $key ) ) {
+				return true;
+			}
+
+			if ( in_array( $key, $session_keys, true ) && ! empty( maybe_unserialize( $values[0] ?? '' ) ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Show a persistent admin notice when the React Settings UI is disabled.
+	 *
+	 * Adds a dismissible, persistent error when the temporary option to
+	 * disable the React-based Settings UI is turned off. The notice is removed
+	 * when the React Settings UI is enabled again.
+	 *
+	 * @since 1.0.255
+	 * @return void
+	 */
+	private function react_settings_ui_notice() {
+		// Only relevant for admins in the dashboard context.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$notice_id = 'rank_math_react_settings_ui_disabled';
+
+		if ( ! Helper::is_react_enabled() ) {
+			$message = sprintf(
+				// Translators: 1: opening anchor tag, 2: closing anchor tag.
+				__( 'The React Settings UI is currently disabled, and the classic settings interface is active. Note: The PHP-based settings interface will be removed in an upcoming release. %1$sEnable the React Settings UI%2$s to switch back.', 'seo-by-rank-math' ),
+				'<a href="' . esc_url( Helper::get_dashboard_url() ) . '">',
+				'</a>'
+			);
+
+			Helper::add_notification(
+				$message,
+				[
+					'type' => 'error',
+					'id'   => $notice_id,
+				]
+			);
+			return;
+		}
+
+		// React UI is enabled; ensure any prior notice is removed.
+		Helper::remove_notification( $notice_id );
 	}
 
 	/**
@@ -60,12 +208,16 @@ class Notices implements Runner {
 			return;
 		}
 
-		if ( 'convert_wpml_settings' === $notification_id ) {
+		if ( 'display_wpml_notice' === $notification_id ) {
 			update_option( 'rank_math_wpml_notice_dismissed', true );
 		}
 
 		if ( 'rank-math-site-url-mismatch' === $notification_id ) {
 			update_option( 'rank_math_siteurl_mismatch_notice_dismissed', true );
+		}
+
+		if ( 'rank_math_mcp_adapter_notice' === $notification_id ) {
+			update_option( 'rank_math_mcp_adapter_notice_dismissed', true, false );
 		}
 	}
 
@@ -106,15 +258,15 @@ class Notices implements Runner {
 
 		$list = '<code>' . implode( '</code>, <code>', $new ) . '</code>';
 		/* Translators: placeholder is the post type name. */
-		$message = __( 'Rank Math has detected a new post type: %1$s. You may want to check the settings of the <a href="%2$s">Titles &amp; Meta page</a>.', 'rank-math' );
+		$message = __( 'Rank Math has detected a new post type: %1$s. You may want to check the settings of the <a href="%2$s">Titles &amp; Meta page</a>.', 'seo-by-rank-math' );
 		$count   = count( $new );
 		if ( $count > 1 ) {
 			/* Translators: placeholder is the post type names separated with commas. */
-			$message = __( 'Rank Math has detected new post types: %1$s. You may want to check the settings of the <a href="%2$s">Titles &amp; Meta page</a>.', 'rank-math' );
+			$message = __( 'Rank Math has detected new post types: %1$s. You may want to check the settings of the <a href="%2$s">Titles &amp; Meta page</a>.', 'seo-by-rank-math' );
 		}
 
 		$message = $this->do_filter( 'admin/notice/new_post_type', $message, $count );
-		$message = sprintf( wp_kses_post( $message ), $list, Helper::get_admin_url( 'options-titles#setting-panel-post-type-' . key( $new ) ), Helper::get_admin_url( 'options-sitemap#setting-panel-sitemap-post-type-' . key( $new ) ) );
+		$message = sprintf( wp_kses_post( $message ), $list, Helper::get_settings_url( 'titles', 'post-type-' . key( $new ) ), Helper::get_settings_url( 'sitemap', 'post-type-' . key( $new ) ) );
 		Helper::add_notification(
 			$message,
 			[
@@ -128,24 +280,11 @@ class Notices implements Runner {
 	 * Function to show Show String Translation plugin notice and convert the settings.
 	 */
 	private function convert_wpml_settings() {
-		if ( ! Sitepress::get()->is_active() || get_option( 'rank_math_wpml_data_converted' ) ) {
+		if ( ! function_exists( 'icl_get_languages' ) || get_option( 'rank_math_wpml_data_converted' ) ) {
 			return;
 		}
 
-		if ( ! function_exists( 'icl_add_string_translation' ) ) {
-			if ( ! get_option( 'rank_math_wpml_notice_dismissed' ) ) {
-				Helper::add_notification(
-					__( 'Please activate the WPML String Translation plugin to convert Rank Math Setting values in different languages.', 'rank-math' ),
-					[
-						'type' => 'error',
-						'id'   => 'convert_wpml_settings',
-					]
-				);
-			}
-			return;
-		}
-
-		$languages = icl_get_languages();
+		$languages = icl_get_languages(); // @phpstan-ignore-line
 		foreach ( $languages as $lang_code => $language ) {
 
 			foreach ( [ 'general', 'titles' ] as $option ) {
@@ -160,13 +299,39 @@ class Notices implements Runner {
 				}
 
 				foreach ( $common_data as $option_key ) {
-					$string_id = icl_get_string_id( Helper::get_settings( "$option.$option_key" ), "admin_texts_rank-math-options-$option" );
-					icl_add_string_translation( $string_id, $lang_code, $data[ $option_key ], 10 );
+					$string_id = icl_get_string_id( Helper::get_settings( "$option.$option_key" ), "admin_texts_rank-math-options-$option" ); // @phpstan-ignore-line
+					icl_add_string_translation( $string_id, $lang_code, $data[ $option_key ], 10 ); // @phpstan-ignore-line
 				}
 			}
 		}
 
 		update_option( 'rank_math_wpml_data_converted', true );
+	}
+
+	/**
+	 * Display WPML notice.
+	 *
+	 * @return void
+	 */
+	private function display_wpml_notice() {
+		if ( function_exists( 'icl_add_string_translation' ) || get_option( 'rank_math_wpml_notice_dismissed' ) ) {
+			return;
+		}
+
+		$sitepress      = Sitepress::get()->get_var();
+		$setup_complete = $sitepress->get_setting( 'setup_complete', false );
+
+		if ( ! $setup_complete ) {
+			return;
+		}
+
+		Helper::add_notification(
+			__( 'Please activate the WPML String Translation plugin to convert Rank Math Setting values in different languages.', 'seo-by-rank-math' ),
+			[
+				'type' => 'error',
+				'id'   => 'display_wpml_notice',
+			]
+		);
 	}
 
 	/**
@@ -251,7 +416,7 @@ class Notices implements Runner {
 	 */
 	public function add_permalink_changes_warning() {
 		wp_enqueue_script( 'rank-math-core-permalink-settings' );
-		$message = __( '<b>Rank Math Warning:</b> Changing the permalinks on a live, indexed site may result in serious loss of traffic if done incorrectly. Consider adding a new redirection from the old URL format to the new one.', 'rank-math' );
+		$message = __( '<b>Rank Math Warning:</b> Changing the permalinks on a live, indexed site may result in serious loss of traffic if done incorrectly. Consider adding a new redirection from the old URL format to the new one.', 'seo-by-rank-math' );
 		Helper::add_notification(
 			$message,
 			[

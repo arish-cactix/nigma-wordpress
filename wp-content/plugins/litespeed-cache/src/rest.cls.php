@@ -1,130 +1,124 @@
 <?php
-
 /**
- * The REST related class.
+ * REST endpoints and helpers for LiteSpeed.
  *
- * @since      	2.9.4
+ * @since   2.9.4
+ * @package LiteSpeed
  */
 
 namespace LiteSpeed;
 
-defined('WPINC') || exit();
+defined( 'WPINC' ) || exit();
 
-class REST extends Root
-{
+/**
+ * Class REST
+ *
+ * Registers plugin REST endpoints and exposes helpers for REST detection.
+ */
+class REST extends Root {
+
 	const LOG_TAG = '☎️';
+
+	/**
+	 * Whether current request is an internal REST call.
+	 *
+	 * @var bool
+	 */
 	private $_internal_rest_status = false;
 
 	/**
-	 * Confructor of ESI
+	 * Constructor.
 	 *
-	 * @since    2.9.4
+	 * @since 2.9.4
 	 */
-	public function __construct()
-	{
-		// Hook to internal REST call
-		add_filter('rest_request_before_callbacks', array($this, 'set_internal_rest_on'));
-		add_filter('rest_request_after_callbacks', array($this, 'set_internal_rest_off'));
+	public function __construct() {
+		// Hook to internal REST call.
+		add_filter( 'rest_request_before_callbacks', [ $this, 'set_internal_rest_on' ] );
+		add_filter( 'rest_request_after_callbacks', [ $this, 'set_internal_rest_off' ] );
 
-		add_action('rest_api_init', array($this, 'rest_api_init'));
+		add_action( 'rest_api_init', [ $this, 'rest_api_init' ] );
 	}
 
 	/**
-	 * Register REST hooks
+	 * Register REST routes.
 	 *
-	 * @since  3.0
-	 * @access public
+	 * @since 3.0
+	 * @return void
 	 */
-	public function rest_api_init()
-	{
+	public function rest_api_init() {
 		// Activate or deactivate a specific crawler callback
-		register_rest_route('litespeed/v1', '/toggle_crawler_state', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'toggle_crawler_state'),
+		register_rest_route( 'litespeed/v1', '/toggle_crawler_state', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'toggle_crawler_state' ],
 			'permission_callback' => function () {
-				return current_user_can('manage_network_options') || current_user_can('manage_options');
+				return current_user_can( 'manage_network_options' ) || current_user_can( 'manage_options' );
 			},
-		));
+		] );
 
-		register_rest_route('litespeed/v1', '/tool/check_ip', array(
-			'methods' => 'GET',
-			'callback' => array($this, 'check_ip'),
+		register_rest_route( 'litespeed/v1', '/tool/check_ip', [
+			'methods'             => 'GET',
+			'callback'            => [ $this, 'check_ip' ],
 			'permission_callback' => function () {
-				return current_user_can('manage_network_options') || current_user_can('manage_options');
+				return current_user_can( 'manage_network_options' ) || current_user_can( 'manage_options' );
 			},
-		));
+		] );
+
+		register_rest_route( 'litespeed/v1', '/guest/sync', [
+			'methods'             => 'GET',
+			'callback'            => [ $this, 'guest_sync' ],
+			'permission_callback' => function () {
+				return current_user_can( 'manage_network_options' ) || current_user_can( 'manage_options' );
+			},
+		] );
 
 		// IP callback validate
-		register_rest_route('litespeed/v1', '/ip_validate', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'ip_validate'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
+		register_rest_route( 'litespeed/v3', '/ip_validate', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'ip_validate' ],
+			'permission_callback' => function ( $request ) {
+				return $this->cls( 'Cloud' )->validate_signed_callback( $request, Cloud::SIGN_ACTION_IP_VALIDATE );
+			},
+		] );
 
-		// Token callback validate
-		register_rest_route('litespeed/v1', '/token', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'token'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
-		register_rest_route('litespeed/v1', '/token', array(
-			'methods' => 'GET',
-			'callback' => array($this, 'token_get'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
-		register_rest_route('litespeed/v3', '/ping', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'ping'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
-
-		// API key callback notification
-		register_rest_route('litespeed/v1', '/apikey', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'apikey'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
+		// 1.2. WP REST Dryrun Callback
+		register_rest_route( 'litespeed/v3', '/wp_rest_echo', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'wp_rest_echo' ],
+			'permission_callback' => '__return_true',
+		] );
+		register_rest_route( 'litespeed/v3', '/ping', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'ping' ],
+			'permission_callback' => function ( $request ) {
+				return $this->cls( 'Cloud' )->validate_signed_callback( $request, Cloud::SIGN_ACTION_PING );
+			},
+		] );
 
 		// CDN setup callback notification
-		register_rest_route('litespeed/v1', '/cdn_status', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'cdn_status'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
+		register_rest_route( 'litespeed/v3', '/cdn_status', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'cdn_status' ],
+			'permission_callback' => function ( $request ) {
+				return $this->cls( 'Cloud' )->validate_signed_callback( $request, Cloud::SIGN_ACTION_CDN_STATUS );
+			},
+		] );
 
 		// Image optm notify_img
-		// Need validation
-		register_rest_route('litespeed/v1', '/notify_img', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'notify_img'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
+		register_rest_route( 'litespeed/v1', '/notify_img', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'notify_img' ],
+			'permission_callback' => function ( $request ) {
+				return $this->cls( 'Cloud' )->validate_signed_callback( $request, Cloud::SIGN_ACTION_NOTIFY_IMG );
+			},
+		] );
 
-		register_rest_route('litespeed/v1', '/notify_ucss', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'notify_ucss'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
-
-		register_rest_route('litespeed/v1', '/notify_vpi', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'notify_vpi'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
-
-		register_rest_route('litespeed/v1', '/err_domains', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'err_domains'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
-
-		// Image optm check_img
-		// Need validation
-		register_rest_route('litespeed/v1', '/check_img', array(
-			'methods' => 'POST',
-			'callback' => array($this, 'check_img'),
-			'permission_callback' => array($this, 'is_from_cloud'),
-		));
+		register_rest_route( 'litespeed/v3', '/err_domains', [
+			'methods'             => 'POST',
+			'callback'            => [ $this, 'err_domains' ],
+			'permission_callback' => function ( $request ) {
+				return $this->cls( 'Cloud' )->validate_signed_callback( $request, Cloud::SIGN_ACTION_ERR_DOMAINS );
+			},
+		] );
 	}
 
 	/**
@@ -132,235 +126,288 @@ class REST extends Root
 	 *
 	 * @since  4.3
 	 */
-	public function toggle_crawler_state()
-	{
-		if (isset($_POST['crawler_id'])) {
-			return $this->cls('Crawler')->toggle_activeness($_POST['crawler_id']) ? 1 : 0;
+	public function toggle_crawler_state() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- REST API nonce verified by WordPress
+		$crawler_id = isset( $_POST['crawler_id'] ) ? sanitize_text_field( wp_unslash( $_POST['crawler_id'] ) ) : '';
+
+		if ( '' !== $crawler_id ) {
+			return $this->cls( 'Crawler' )->toggle_activeness( $crawler_id ) ? 1 : 0;
 		}
 	}
 
 	/**
-	 * Check if the request is from cloud nodes
+	 * Ping pong.
 	 *
-	 * @since 4.2
-	 * @since 4.4.7 As there is always token/api key validation, ip validation is redundant
+	 * @since 3.0.4
+	 * @param \WP_REST_Request $request REST request.
+	 * @return mixed
 	 */
-	public function is_from_cloud()
-	{
-		// return true;
-		return $this->cls('Cloud')->is_from_cloud();
+	public function ping( $request ) {
+		return $this->cls( 'Cloud' )->ping( $request->get_body() );
 	}
 
 	/**
-	 * Token get for
+	 * Launch IP check.
 	 *
-	 * @since  3.0.4
+	 * @since 3.0
+	 * @return mixed
 	 */
-	public function token_get()
-	{
-		return Cloud::ok();
-	}
-
-	/**
-	 * Ping pong
-	 *
-	 * @since  3.0.4
-	 */
-	public function ping()
-	{
-		return $this->cls('Cloud')->ping();
-	}
-
-	/**
-	 * Launch api call
-	 *
-	 * @since  3.0
-	 */
-	public function check_ip()
-	{
+	public function check_ip() {
 		return Tool::cls()->check_ip();
 	}
 
 	/**
-	 * Launch api call
+	 * Sync Guest Mode IP/UA lists.
 	 *
-	 * @since  3.0
+	 * @since 7.7
+	 * @return array
 	 */
-	public function ip_validate()
-	{
-		return $this->cls('Cloud')->ip_validate();
+	public function guest_sync() {
+		return Guest::cls()->sync_lists();
 	}
 
 	/**
-	 * Launch api call
+	 * Validate IPs from cloud.
 	 *
-	 * @since  3.0
+	 * @since 3.0
+	 * @param \WP_REST_Request $request REST request.
+	 * @return mixed
 	 */
-	public function token()
-	{
-		return $this->cls('Cloud')->token_validate();
+	public function ip_validate( $request ) {
+		return $this->cls( 'Cloud' )->ip_validate();
 	}
 
 	/**
-	 * Launch api call
+	 * REST echo helper.
 	 *
-	 * @since  3.0
+	 * @since 3.0
+	 * @return mixed
 	 */
-	public function apikey()
-	{
-		return $this->cls('Cloud')->save_apikey();
+	public function wp_rest_echo() {
+		return $this->cls( 'Cloud' )->wp_rest_echo();
 	}
 
 	/**
-	 * Endpoint for QC to notify plugin of CDN setup status update.
+	 * Endpoint to notify plugin of CDN status updates.
 	 *
-	 * @since  3.0
-	 */
-	public function cdn_status()
-	{
-		return $this->cls('Cdn_Setup')->update_cdn_status();
-	}
-
-	/**
-	 * Launch api call
+	 * @since 7.0
+	 * @since 7.9.1 Forwards the exact raw body the signature was verified over.
 	 *
-	 * @since  3.0
+	 * @param \WP_REST_Request $request REST request.
+	 * @return mixed
 	 */
-	public function notify_img()
-	{
-		return Img_Optm::cls()->notify_img();
+	public function cdn_status( $request ) {
+		return $this->cls( 'Cloud' )->update_cdn_status( $request->get_body() );
 	}
 
 	/**
-	 * @since  5.2
-	 */
-	public function notify_ucss()
-	{
-		self::debug('notify_ucss');
-		return UCSS::cls()->notify();
-	}
-
-	/**
-	 * @since  4.7
-	 */
-	public function notify_vpi()
-	{
-		self::debug('notify_vpi');
-		return VPI::cls()->notify();
-	}
-
-	/**
-	 * @since  4.7
-	 */
-	public function err_domains()
-	{
-		self::debug('err_domains');
-		return $this->cls('Cloud')->rest_err_domains();
-	}
-
-	/**
-	 * Launch api call
+	 * Image optimization notification.
 	 *
-	 * @since  3.0
+	 * @since 3.0
+	 * @since 7.9.1 Accepts the REST request and forwards its exact raw body.
+	 * @param \WP_REST_Request $request REST request.
+	 * @return mixed
 	 */
-	public function check_img()
-	{
-		try {
-			$this->cls('Cloud')->validate_hash(4);
-		} catch (\Exception $e) {
-			return self::err($e->getMessage());
-		}
-
-		return Img_Optm::cls()->check_img();
+	public function notify_img( $request ) {
+		return Img_Optm::cls()->notify_img( $request->get_body() );
 	}
 
 	/**
-	 * Return error
+	 * Error domain report from cloud.
 	 *
-	 * @since  5.7.0.1
+	 * @since 4.7
+	 * @param \WP_REST_Request $request REST request.
+	 * @return mixed
 	 */
-	public static function err($code)
-	{
-		return array('_res' => 'err', '_msg' => $code);
+	public function err_domains( $request ) {
+		self::debug( 'err_domains' );
+		return $this->cls( 'Cloud' )->rest_err_domains( $request->get_body() );
 	}
 
 	/**
-	 * Set internal REST tag to ON
+	 * Return a standardized error payload.
 	 *
-	 * @since  2.9.4
-	 * @access public
+	 * @since 5.7.0.1
+	 * @param string|int $code Error code.
+	 * @return array
 	 */
-	public function set_internal_rest_on($not_used = null)
-	{
+	public static function err( $code ) {
+		return [
+			'_res' => 'err',
+			'_msg' => $code,
+		];
+	}
+
+	/**
+	 * Set internal REST tag to ON.
+	 *
+	 * @since 2.9.4
+	 * @param mixed $not_used Passthrough value from the filter.
+	 * @return mixed
+	 */
+	public function set_internal_rest_on( $not_used = null ) {
 		$this->_internal_rest_status = true;
-		Debug2::debug2('[REST] ✅ Internal REST ON [filter] rest_request_before_callbacks');
+		Debug2::debug2( '[REST] ✅ Internal REST ON [filter] rest_request_before_callbacks' );
 
 		return $not_used;
 	}
 
 	/**
-	 * Set internal REST tag to OFF
+	 * Set internal REST tag to OFF.
 	 *
-	 * @since  2.9.4
-	 * @access public
+	 * @since 2.9.4
+	 * @param mixed $not_used Passthrough value from the filter.
+	 * @return mixed
 	 */
-	public function set_internal_rest_off($not_used = null)
-	{
+	public function set_internal_rest_off( $not_used = null ) {
 		$this->_internal_rest_status = false;
-		Debug2::debug2('[REST] ❎ Internal REST OFF [filter] rest_request_after_callbacks');
+		Debug2::debug2( '[REST] ❎ Internal REST OFF [filter] rest_request_after_callbacks' );
 
 		return $not_used;
 	}
 
 	/**
-	 * Get internal REST tag
+	 * Whether current request is an internal REST call.
 	 *
-	 * @since  2.9.4
-	 * @access public
+	 * @since 2.9.4
+	 * @return bool
 	 */
-	public function is_internal_rest()
-	{
+	public function is_internal_rest() {
 		return $this->_internal_rest_status;
 	}
 
 	/**
-	 * Check if an URL or current page is REST req or not
+	 * Match URI rules against pretty and rest_route spellings.
 	 *
-	 * @since  2.9.3
-	 * @since  2.9.4 Moved here from Utility, dropped static
-	 * @access public
+	 * @since 7.9.1
+	 * @param string $req_uri  Raw request URI.
+	 * @param array  $rules    URI rules.
+	 * @param bool   $has_ttl  Whether rules include a TTL.
+	 * @return bool|string|array
 	 */
-	public function is_rest($url = false)
-	{
-		// For WP 4.4.0- compatibility
-		if (!function_exists('rest_get_url_prefix')) {
-			return defined('REST_REQUEST') && REST_REQUEST;
+	public static function str_hit_uri( $req_uri, $rules, $has_ttl = false ) {
+		$rules = self::_trim_uri_wildcards( $rules, $has_ttl );
+		$uris  = [ $req_uri ];
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Type is checked before sanitization.
+		$route = isset( $_GET['rest_route'] ) ? wp_unslash( $_GET['rest_route'] ) : '';
+		$route = is_string( $route ) ? sanitize_text_field( $route ) : '';
+		if ( '' !== $route && function_exists( 'rest_get_url_prefix' ) ) {
+			$prefix = wp_parse_url( home_url( rest_get_url_prefix() ), PHP_URL_PATH );
+			if ( $prefix ) {
+				$equivalent = '/' . ltrim( $prefix, '/' ) . '/' . ltrim( $route, '/' );
+				// Carry the other arguments over byte for byte: rules compare exactly, so parse_str() would break them.
+				$query = wp_parse_url( $req_uri, PHP_URL_QUERY );
+				$kept  = [];
+				if ( is_string( $query ) && '' !== $query ) {
+					foreach ( explode( '&', $query ) as $segment ) {
+						// Empty segments are kept too — dropping `&&` would itself be a rewrite.
+						$name = urldecode( explode( '=', $segment, 2 )[0] );
+						if ( 'rest_route' === $name || 0 === strpos( $name, 'rest_route[' ) ) {
+							continue;
+						}
+						$kept[] = $segment;
+					}
+				}
+				if ( $kept ) {
+					$equivalent .= '?' . implode( '&', $kept );
+				}
+				$uris[] = $equivalent;
+			}
+		}
+
+		foreach ( array_unique( array_merge( $uris, array_map( 'rawurldecode', $uris ) ) ) as $uri ) {
+			$hit = Utility::str_hit_array( $uri, $rules, $has_ttl );
+			if ( $hit ) {
+				return $hit;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Drop leading/trailing `*` from URI rules.
+	 *
+	 * Rules are substring matches, so `/wp-json/mcp/*` means the same as `/wp-json/mcp/`. Without this the `*` was compared literally and the rule never hit.
+	 *
+	 * @since 7.9.2
+	 * @param array $rules   URI rules.
+	 * @param bool  $has_ttl Whether rules include a TTL.
+	 * @return array
+	 */
+	private static function _trim_uri_wildcards( $rules, $has_ttl ) {
+		if ( ! is_array( $rules ) ) {
+			return $rules;
+		}
+
+		foreach ( $rules as $k => $rule ) {
+			if ( ! is_string( $rule ) || false === strpos( $rule, '*' ) ) {
+				continue;
+			}
+
+			$ttl = '';
+			if ( $has_ttl && false !== strpos( $rule, ' ' ) ) {
+				list( $rule, $ttl ) = explode( ' ', $rule, 2 );
+				$ttl                = ' ' . $ttl;
+			}
+
+			// Only trim a side without anchor, `^/a*$` is not the same as `^/a$`.
+			$trimmed = $rule;
+			if ( '^' !== substr( $trimmed, 0, 1 ) ) {
+				$trimmed = ltrim( $trimmed, '*' );
+			}
+			if ( '$' !== substr( $trimmed, -1 ) ) {
+				$trimmed = rtrim( $trimmed, '*' );
+			}
+
+			// A rule of only `*` must not turn into an empty rule that hits every URI.
+			if ( '' !== trim( $trimmed, '^$' ) ) {
+				$rules[ $k ] = $trimmed . $ttl;
+			}
+		}
+
+		return $rules;
+	}
+
+	/**
+	 * Check whether a URL or current page is a REST request.
+	 *
+	 * @since 2.9.3
+	 * @since 2.9.4 Moved here from Utility, dropped static.
+	 * @param string|false $url URL to check; when false checks current request.
+	 * @return bool
+	 */
+	public function is_rest( $url = false ) {
+		// For WP 4.4.0- compatibility.
+		if ( ! function_exists( 'rest_get_url_prefix' ) ) {
+			return ( defined( 'REST_REQUEST' ) && REST_REQUEST );
 		}
 
 		$prefix = rest_get_url_prefix();
 
-		// Case #1: After WP_REST_Request initialisation
-		if (defined('REST_REQUEST') && REST_REQUEST) {
+		// Case #1: After WP_REST_Request initialization.
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
 			return true;
 		}
 
-		// Case #2: Support "plain" permalink settings
-		if (isset($_GET['rest_route']) && strpos(trim($_GET['rest_route'], '\\/'), $prefix, 0) === 0) {
+		// Case #2: Support the rest_route query used by plain permalinks.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Type is checked before sanitization.
+		$route = isset( $_GET['rest_route'] ) ? wp_unslash( $_GET['rest_route'] ) : '';
+		$route = is_string( $route ) ? sanitize_text_field( $route ) : '';
+
+		if ( false === $url && '' !== $route ) {
 			return true;
 		}
 
-		if (!$url) {
+		if ( !$url ) {
 			return false;
 		}
 
-		// Case #3: URL Path begins with wp-json/ (REST prefix) Safe for subfolder installation
-		$rest_url = wp_parse_url(site_url($prefix));
-		$current_url = wp_parse_url($url);
-		// Debug2::debug( '[Util] is_rest check [base] ', $rest_url );
-		// Debug2::debug( '[Util] is_rest check [curr] ', $current_url );
-		// Debug2::debug( '[Util] is_rest check [curr2] ', wp_parse_url( add_query_arg( array( ) ) ) );
-		if ($current_url !== false && !empty($current_url['path']) && $rest_url !== false && !empty($rest_url['path'])) {
-			return strpos($current_url['path'], $rest_url['path']) === 0;
+		// Case #3: Match the home-based REST path, including subfolder installs.
+		$rest_url    = wp_parse_url( home_url( $prefix ) );
+		$current_url = wp_parse_url( $url );
+
+		if ( false !== $current_url && ! empty( $current_url['path'] ) && false !== $rest_url && ! empty( $rest_url['path'] ) ) {
+			return 0 === strpos( $current_url['path'], $rest_url['path'] );
 		}
 
 		return false;

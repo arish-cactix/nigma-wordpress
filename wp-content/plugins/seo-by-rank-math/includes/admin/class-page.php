@@ -68,6 +68,13 @@ class Page {
 	public $position = -1;
 
 	/**
+	 * The init hook priority.
+	 *
+	 * @var int
+	 */
+	public $priority = 25;
+
+	/**
 	 * The function/file that displays the page content for the menu page.
 	 *
 	 * @var string|callable
@@ -127,11 +134,11 @@ class Page {
 
 		// Early bail!
 		if ( ! $id ) {
-			wp_die( esc_html__( '$id variable required', 'rank-math' ), esc_html__( 'Variable Required', 'rank-math' ) );
+			wp_die( esc_html__( '$id variable required', 'seo-by-rank-math' ), esc_html__( 'Variable Required', 'seo-by-rank-math' ) );
 		}
 
 		if ( ! $title ) {
-			wp_die( esc_html__( '$title variable required', 'rank-math' ), esc_html__( 'Variable Required', 'rank-math' ) );
+			wp_die( esc_html__( '$title variable required', 'seo-by-rank-math' ), esc_html__( 'Variable Required', 'seo-by-rank-math' ) );
 		}
 
 		$this->id    = $id;
@@ -144,7 +151,7 @@ class Page {
 			$this->menu_title = $title;
 		}
 
-		add_action( 'init', [ $this, 'init' ], 25 );
+		add_action( 'init', [ $this, 'init' ], $this->priority ?? 25 );
 	}
 
 	/**
@@ -274,7 +281,7 @@ class Page {
 	}
 
 	/**
-	 * Is the page is currrent page.
+	 * Is the page is current page.
 	 *
 	 * @return bool
 	 */
@@ -308,8 +315,13 @@ class Page {
 		}
 
 		foreach ( $this->assets['scripts'] as $handle => $src ) {
+			if ( $handle === 'media-editor' ) {
+				wp_enqueue_media();
+			}
 			wp_enqueue_script( $handle, $src, null, rank_math()->version, true );
 		}
+
+		do_action( 'rank-math/admin_enqueue_scripts' );
 	}
 
 	/**
@@ -363,7 +375,6 @@ class Page {
 	 * Display settings.
 	 */
 	private function display_settings() {
-		rank_math()->admin->display_admin_header();
 		echo '<div id="rank-math-settings" class="' . esc_attr( $this->id ) . '"></div>';
 	}
 }

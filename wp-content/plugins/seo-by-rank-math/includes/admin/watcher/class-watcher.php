@@ -46,13 +46,13 @@ class Watcher implements Runner {
 		}
 
 		if ( ! current_user_can( 'deactivate_plugins' ) ) {
-			wp_die( esc_html__( 'Sorry, you are not allowed to deactivate plugins for this site.', 'rank-math' ) );
+			wp_die( esc_html__( 'Sorry, you are not allowed to deactivate plugins for this site.', 'seo-by-rank-math' ) );
 		}
 
 		check_admin_referer( 'rank_math_deactivate_plugins' );
 
 		$type    = Param::get( 'plugin_type', 'seo', FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK );
-		$allowed = [ 'seo', 'sitemap' ];
+		$allowed = [ 'seo', 'sitemap', 'redirections' ];
 		if ( ! in_array( $type, $allowed, true ) ) {
 			return;
 		}
@@ -67,15 +67,15 @@ class Watcher implements Runner {
 		$set     = [];
 		$plugins = get_option( 'active_plugins', [] );
 
-		foreach ( self::get_conflicting_plugins() as $plugin => $type ) {
-			if ( ! isset( $set[ $type ] ) && in_array( $plugin, $plugins, true ) ) {
-				$set[ $type ] = true;
-				self::set_notification( $type );
+		foreach ( self::get_conflicting_plugins() as $plugin => $group ) {
+			if ( ! isset( $set[ $group ] ) && in_array( $plugin, $plugins, true ) ) {
+				$set[ $group ] = true;
+				self::set_notification( $group );
 			}
 		}
 
 		if ( in_array( 'wpml-string-translation/plugin.php', $plugins, true ) ) {
-			GlobalHelper::remove_notification( 'convert_wpml_settings' );
+			GlobalHelper::remove_notification( 'display_wpml_notice' );
 		}
 	}
 
@@ -104,7 +104,7 @@ class Watcher implements Runner {
 		}
 
 		if ( 'off' === $state ) {
-			$type = 'sitemap' === $module ? 'sitemap' : 'seo';
+			$type = 'sitemap' === $module || 'redirections' === $module ? $module : 'seo';
 			GlobalHelper::remove_notification( "conflicting_{$type}_plugins" );
 		}
 
@@ -122,7 +122,7 @@ class Watcher implements Runner {
 				if ( ! current_user_can( 'deactivate_plugin', $plugin ) ) {
 					$message = sprintf(
 						/* translators: plugin name */
-						esc_html__( 'You are not allowed to deactivate this plugin: %s.', 'rank-math' ),
+						esc_html__( 'You are not allowed to deactivate this plugin: %s.', 'seo-by-rank-math' ),
 						esc_html( $plugin )
 					);
 					GlobalHelper::add_notification(
@@ -144,29 +144,28 @@ class Watcher implements Runner {
 	/**
 	 * Function to set conflict plugin notification.
 	 *
-	 * @param string $type Plugin type.
+	 * @param string $group Plugin group.
 	 */
-	private static function set_notification( $type ) {
-		$message = sprintf(
-			/* translators: deactivation link */
-			esc_html__( 'Please keep only one SEO plugin active, otherwise, you might lose your rankings and traffic. %s.', 'rank-math' ),
-			'<a href="###DEACTIVATE_SEO_PLUGINS###">' . __( 'Click here to Deactivate', 'rank-math' ) . '</a>'
-		);
+	private static function set_notification( $group ) {
+		$message = esc_html__( 'Please keep only one SEO plugin active, otherwise, you might lose your rankings and traffic.', 'seo-by-rank-math' );
 
-		if ( 'sitemap' === $type ) {
-			$message = sprintf(
-				/* translators: deactivation link */
-				esc_html__( 'Please keep only one Sitemap plugin active, otherwise, you might lose your rankings and traffic. %s.', 'rank-math' ),
-				'<a href="###DEACTIVATE_SITEMAP_PLUGINS###">' . __( 'Click here to Deactivate', 'rank-math' ) . '</a>'
-			);
+		if ( 'sitemap' === $group ) {
+			$message = esc_html__( 'Please keep only one Sitemap plugin active, otherwise, you might lose your rankings and traffic.', 'seo-by-rank-math' );
 		}
+
+		if ( 'redirections' === $group ) {
+			$message = esc_html__( 'Please keep only one Redirection plugin active to avoid redirect conflicts or unexpected behavior.', 'seo-by-rank-math' );
+		}
+
+		$message .= ' <a href="###DEACTIVATE_PLUGINS###">' . __( 'Click here to Deactivate', 'seo-by-rank-math' ) . '</a>';
 
 		GlobalHelper::add_notification(
 			$message,
 			[
-				'id'      => "conflicting_{$type}_plugins",
+				'id'      => "conflicting_{$group}_plugins",
 				'type'    => 'error',
 				'classes' => 'is-dismissible',
+				'group'   => $group,
 			]
 		);
 	}
@@ -206,7 +205,7 @@ class Watcher implements Runner {
 		];
 
 		if ( GlobalHelper::is_module_active( 'redirections' ) ) {
-			$plugins['redirection/redirection.php'] = 'seo';
+			$plugins['redirection/redirection.php'] = 'redirections';
 		}
 		if ( GlobalHelper::is_module_active( 'sitemap' ) ) {
 			$plugins['google-sitemap-generator/sitemap.php'] = 'sitemap';
@@ -236,24 +235,13 @@ class Watcher implements Runner {
 		$deactivate_url = Security::add_query_arg(
 			[
 				'rank_math_deactivate_plugins' => '1',
-				'plugin_type'                  => 'seo',
+				'plugin_type'                  => $options['group'],
 				'_wpnonce'                     => wp_create_nonce( 'rank_math_deactivate_plugins' ),
 			],
 			admin_url( 'plugins.php' )
 		);
 
-		$output = str_replace( '###DEACTIVATE_SEO_PLUGINS###', $deactivate_url, $output );
-
-		$deactivate_sitemap_plugins_url = Security::add_query_arg(
-			[
-				'rank_math_deactivate_plugins' => '1',
-				'plugin_type'                  => 'sitemap',
-				'_wpnonce'                     => wp_create_nonce( 'rank_math_deactivate_plugins' ),
-			],
-			admin_url( 'plugins.php' )
-		);
-
-		$output = str_replace( '###DEACTIVATE_SITEMAP_PLUGINS###', $deactivate_sitemap_plugins_url, $output );
+		$output = str_replace( '###DEACTIVATE_PLUGINS###', $deactivate_url, $output );
 
 		return $output;
 	}
@@ -273,7 +261,7 @@ class Watcher implements Runner {
 		GlobalHelper::add_notification(
 			sprintf(
 				// translators: %1$s: general reading settings URL.
-				__( '<strong>SEO Notice</strong>: Your site is set to No Index and will not appear in search engines. You can change the Search engine visibility <a href="%1$s">from here</a>.', 'rank-math' ),
+				__( '<strong>SEO Notice</strong>: Your site is set to No Index and will not appear in search engines. You can change the Search engine visibility <a href="%1$s">from here</a>.', 'seo-by-rank-math' ),
 				admin_url( 'options-reading.php' )
 			),
 			[
@@ -282,6 +270,5 @@ class Watcher implements Runner {
 				'classes' => 'is-dismissible',
 			]
 		);
-
 	}
 }

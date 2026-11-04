@@ -49,13 +49,13 @@ class User_Role_Editor {
 	 * Adds Rank Math capability group in the User Role Editor plugin.
 	 *
 	 * @param  array $groups Current groups.
-	 * @return array Filtered list of capabilty groups.
+	 * @return array Filtered list of capability groups.
 	 */
 	public function register_group( $groups = [] ) {
 		$groups = (array) $groups;
 
 		$groups[ self::GROUP ] = [
-			'caption' => esc_html__( 'Rank Math', 'rank-math' ),
+			'caption' => esc_html__( 'Rank Math', 'seo-by-rank-math' ),
 			'parent'  => 'custom',
 			'level'   => 3,
 		];

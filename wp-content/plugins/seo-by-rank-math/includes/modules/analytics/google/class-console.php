@@ -10,7 +10,9 @@
 
 namespace RankMath\Google;
 
+use RankMath\Google\Api;
 use RankMath\Helpers\Str;
+use RankMath\Helpers\Schedule;
 use RankMath\Analytics\Workflow\Base;
 use RankMath\Sitemap\Sitemap;
 use WP_Error;
@@ -21,6 +23,11 @@ defined( 'ABSPATH' ) || exit;
  * Console class.
  */
 class Console extends Analytics {
+
+	/**
+	 * Connection status key.
+	 */
+	const CONNECTION_STATUS_KEY = 'rank_math_console_connection_error';
 
 	/**
 	 * Add site.
@@ -85,7 +92,7 @@ class Console extends Analytics {
 		$this->http_post( 'https://www.googleapis.com/siteVerification/v1/webResource?verificationMethod=META', $args );
 
 		// Sync sitemap.
-		as_enqueue_async_action( 'rank_math/analytics/sync_sitemaps', [], 'rank-math' );
+		Schedule::async_action( 'rank_math/analytics/sync_sitemaps', [], 'rank-math' );
 
 		return $this->is_success();
 	}
@@ -162,7 +169,7 @@ class Console extends Analytics {
 	 *
 	 * @param array $args  Query arguments.
 	 *
-	 * @return array
+	 * @return array|false|WP_Error
 	 */
 	public function get_search_analytics( $args = [] ) {
 		$dates = Base::get_dates();
@@ -184,7 +191,7 @@ class Console extends Analytics {
 			[
 				'country'             => '',
 				'profile'             => '',
-				'enable_index_status' => '',
+				'enable_index_status' => true,
 			]
 		);
 		$country = isset( $args['country'] ) ? $args['country'] : $stored['country'];
@@ -218,7 +225,7 @@ class Console extends Analytics {
 		$this->log_failed_request( $response, $workflow, $start_date, func_get_args() );
 
 		if ( ! $this->is_success() ) {
-			return new WP_Error( 'request_failed', __( 'The Google Search Console request failed.', 'rank-math' ) );
+			return new WP_Error( 'request_failed', __( 'The Google Search Console request failed.', 'seo-by-rank-math' ) );
 		}
 
 		if ( ! isset( $response['rows'] ) ) {
@@ -298,23 +305,26 @@ class Console extends Analytics {
 	/**
 	 * Get site url.
 	 *
+	 * @param boolean $raw Return raw url.
 	 * @return string
 	 */
-	public static function get_site_url() {
-		static $rank_math_site_url;
+	public static function get_site_url( $raw = false ) {
+		static $rank_math_site_url = [];
 
-		if ( is_null( $rank_math_site_url ) ) {
-			$default            = trailingslashit( strtolower( home_url() ) );
-			$rank_math_site_url = get_option( 'rank_math_google_analytic_profile', [ 'profile' => $default ] );
-			$rank_math_site_url = empty( $rank_math_site_url['profile'] ) ? $default : $rank_math_site_url['profile'];
+		if ( ! isset( $rank_math_site_url[ $raw ] ) ) {
+			$default  = trailingslashit( strtolower( home_url() ) );
+			$site_url = get_option( 'rank_math_google_analytic_profile', [ 'profile' => $default ] );
+			$site_url = empty( $site_url['profile'] ) ? $default : $site_url['profile'];
 
-			if ( Str::contains( 'sc-domain:', $rank_math_site_url ) ) {
-				$rank_math_site_url = str_replace( 'sc-domain:', '', $rank_math_site_url );
-				$rank_math_site_url = ( is_ssl() ? 'https://' : 'http://' ) . $rank_math_site_url;
+			if ( ! $raw && Str::contains( 'sc-domain:', $site_url ) ) {
+				$site_url = str_replace( 'sc-domain:', '', $site_url );
+				$site_url = ( is_ssl() ? 'https://' : 'http://' ) . $site_url;
 			}
+
+			$rank_math_site_url[ $raw ] = $site_url;
 		}
 
-		return $rank_math_site_url;
+		return $rank_math_site_url[ $raw ];
 	}
 
 	/**
@@ -332,5 +342,19 @@ class Console extends Analytics {
 		);
 
 		return ! empty( $profile['profile'] );
+	}
+
+	/**
+	 * Is valid connection
+	 */
+	public static function is_valid_connection() {
+		return Api::get()->get_connection_status( self::CONNECTION_STATUS_KEY );
+	}
+
+	/**
+	 * Test connection
+	 */
+	public static function test_connection() {
+		return Api::get()->check_connection_status( self::CONNECTION_STATUS_KEY, [ Api::get(), 'get_search_analytics' ] );
 	}
 }

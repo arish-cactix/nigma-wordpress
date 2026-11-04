@@ -62,17 +62,18 @@ class Blocks {
 	/**
 	 * Create a new (Rank Math) block category.
 	 *
-	 * @param array $categories Array of block categories.
+	 * @param array|null $categories Array of block categories.
 	 *
 	 * @return array
 	 */
 	public function block_categories( $categories ) {
+		$categories = empty( $categories ) ? [] : $categories;
 		return array_merge(
 			$categories,
 			[
 				[
 					'slug'  => 'rank-math-blocks',
-					'title' => __( 'Rank Math', 'rank-math' ),
+					'title' => __( 'Rank Math', 'seo-by-rank-math' ),
 					'icon'  => 'wordpress',
 				],
 			]

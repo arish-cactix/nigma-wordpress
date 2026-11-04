@@ -66,12 +66,20 @@ class Block_TOC extends Block {
 		$this->filter( 'rank_math/metabox/post/values', 'block_settings_metadata' );
 		$this->action( 'admin_enqueue_scripts', 'add_json_data' );
 		register_block_type( RANK_MATH_PATH . 'includes/modules/schema/blocks/toc/block.json' );
+		$this->action( 'wp_enqueue_scripts', 'register_block_style' );
+	}
+
+	/**
+	 * Register block style.
+	 */
+	public function register_block_style() {
+		wp_register_style( 'rank-math-toc-block', rank_math()->plugin_url() . 'includes/modules/schema/blocks/toc/assets/css/toc_list_style.css', [], rank_math()->version );
 	}
 
 	/**
 	 * Add meta data to use in the TOC block.
 	 *
-	 * @param array $values Aray of tabs.
+	 * @param array $values Array of tabs.
 	 *
 	 * @return array
 	 */
@@ -79,6 +87,7 @@ class Block_TOC extends Block {
 		$values['tocTitle']           = Helper::get_settings( 'general.toc_block_title' );
 		$values['tocExcludeHeadings'] = Helper::get_settings( 'general.toc_block_exclude_headings', [] );
 		$values['listStyle']          = Helper::get_settings( 'general.toc_block_list_style', 'ul' );
+		$values['tocHeadingBlocks']   = $this->get_heading_blocks();
 
 		return $values;
 	}
@@ -96,6 +105,27 @@ class Block_TOC extends Block {
 		Helper::add_json( 'tocTitle', Helper::get_settings( 'general.toc_block_title' ) );
 		Helper::add_json( 'tocExcludeHeadings', Helper::get_settings( 'general.toc_block_exclude_headings', [] ) );
 		Helper::add_json( 'listStyle', Helper::get_settings( 'general.toc_block_list_style', 'ul' ) );
+		Helper::add_json( 'tocHeadingBlocks', $this->get_heading_blocks() );
+	}
+
+	/**
+	 * Get third-party blocks that should be treated as headings by the TOC block.
+	 *
+	 * @return array
+	 */
+	private function get_heading_blocks() {
+		/**
+		 * Filter: 'rank_math/schema/toc/heading_blocks' - Register third-party blocks to detect as headings.
+		 *
+		 * Keyed by block name, each holding the attributes to read the heading level and text from:
+		 * `levelAttr`, `levelType` ('tag' for 'h2', 'number' for 2), `contentAttr` and `contentType`
+		 * ('string' or 'richText'). The optional `anchorAttr` must point at an id the block already
+		 * renders itself; without it the heading is listed with no jump link, as there is nowhere to
+		 * persist a generated one.
+		 *
+		 * @param array $heading_blocks Blocks to treat as headings.
+		 */
+		return $this->do_filter( 'schema/toc/heading_blocks', [] );
 	}
 
 	/**
@@ -107,6 +137,7 @@ class Block_TOC extends Block {
 	 * @return string
 	 */
 	public function render_toc_block_content( $block_content, $parsed_block ) {
+		wp_enqueue_style( 'rank-math-toc-block' );
 		if ( isset( $parsed_block['attrs']['title'] ) ) {
 			return $block_content;
 		}
@@ -121,7 +152,7 @@ class Block_TOC extends Block {
 
 		$block_content = preg_replace_callback(
 			'/(<div class=".*?wp-block-rank-math-toc-block.*?"\>)/i',
-			function( $value ) use ( $title, $block_content, $title_wrapper ) {
+			function ( $value ) use ( $title, $block_content, $title_wrapper ) {
 				if ( ! isset( $value[0] ) ) {
 					return $block_content;
 				}

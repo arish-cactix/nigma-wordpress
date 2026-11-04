@@ -100,10 +100,10 @@ class Str {
 	}
 
 	/**
-	 * Convert string to array with defined seprator.
+	 * Convert string to array with defined separator.
 	 *
 	 * @param string $str String to convert.
-	 * @param string $sep Seprator.
+	 * @param string $sep Separator.
 	 *
 	 * @return bool|array
 	 */
@@ -166,13 +166,12 @@ class Str {
 	 * @return string
 	 */
 	public static function human_number( $number, $precision = 1 ) {
-
 		if ( ! is_numeric( $number ) ) {
 			return 0;
 		}
 
 		$negative = '';
-		if ( abs( $number ) != $number ) {
+		if ( abs( $number ) != $number ) { //phpcs:ignore -- Loose comparison is needed here due to the negative value.
 			$negative = '-';
 			$number   = abs( $number );
 		}
@@ -220,16 +219,33 @@ class Str {
 	}
 
 	/**
-	 * Multibyte ucwords.
+	 * Returns the portion of string specified by the offset and length parameters.
 	 *
-	 * @param string $string String to convert.
+	 * @param string   $str    The input string.
+	 * @param int      $start  The offset position.
+	 * @param int|null $length The length of the substring returned.
+	 *
+	 * @return string
 	 */
-	public static function mb_ucwords( $string ) {
-		if ( ! function_exists( 'mb_convert_case' ) || ! function_exists( 'mb_detect_encoding' ) || mb_detect_encoding( $string ) !== 'UTF-8' ) {
-			return ucwords( $string );
+	public static function substr( $str, $start, $length = null ) {
+		if ( function_exists( 'mb_substr' ) ) {
+			return mb_substr( $str, $start, $length );
 		}
 
-		$words   = preg_split( '/([\s]+)/u', $string, -1, PREG_SPLIT_DELIM_CAPTURE );
+		return substr( $str, $start, $length );
+	}
+
+	/**
+	 * Multibyte ucwords.
+	 *
+	 * @param string $value String to convert.
+	 */
+	public static function mb_ucwords( $value ) {
+		if ( ! function_exists( 'mb_convert_case' ) || ! function_exists( 'mb_detect_encoding' ) || mb_detect_encoding( $value ) !== 'UTF-8' ) {
+			return ucwords( $value );
+		}
+
+		$words   = preg_split( '/([\s]+)/u', $value, -1, PREG_SPLIT_DELIM_CAPTURE );
 		$ucwords = '';
 		foreach ( $words as $word ) {
 			if ( is_numeric( $word ) ) {

@@ -10,10 +10,14 @@
 
 namespace RankMath\Analytics;
 
+use RankMath\Helpers\DB as DB_Helper;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Objects class.
+ *
+ * @method set_page_as_key()
  */
 class Objects extends Summary {
 
@@ -57,8 +61,9 @@ class Objects extends Summary {
 			'noData' => $request->get_param( 'noData' ),
 		];
 		$field_name = 'seo_score';
-		$per_page   = $request->get_param( 'per_page' ) ? sanitize_text_field( $request->get_param( 'per_page' ) ) : 25;
-		$offset     = ( sanitize_text_field( $request->get_param( 'page' ) ) - 1 ) * $per_page;
+		$per_page   = absint( $request->get_param( 'per_page' ) );
+		$per_page   = $per_page ? min( $per_page, 100 ) : 25;
+		$offset     = ( max( 1, absint( $request->get_param( 'page' ) ) ) - 1 ) * $per_page;
 
 		// Construct SQL condition based on filter parameters.
 		$conditions = [];
@@ -89,8 +94,7 @@ class Objects extends Summary {
 		}
 
 		// Get filtered objects data limited by page param.
-		// phpcs:disable
-		$pages = $wpdb->get_results(
+		$pages = DB_Helper::get_results(
 			"SELECT * FROM {$wpdb->prefix}rank_math_analytics_objects 
 			WHERE is_indexable = 1 
 			{$subwhere} 
@@ -98,15 +102,14 @@ class Objects extends Summary {
 			LIMIT {$offset} , {$per_page}",
 			ARRAY_A
 		);
-		
+
 		// Get total filtered objects count.
-		$total_rows = $wpdb->get_var(
+		$total_rows = DB_Helper::get_var(
 			"SELECT count(*) FROM {$wpdb->prefix}rank_math_analytics_objects 
 			WHERE is_indexable = 1 
 			{$subwhere}
 			ORDER BY created DESC"
 		);
-		// phpcs:enable
 
 		return [
 			'rows'      => $this->set_page_as_key( $pages ),

@@ -13,6 +13,7 @@ namespace RankMath\Admin;
 use RankMath\Runner;
 use RankMath\Helper;
 use RankMath\Helpers\Str;
+use RankMath\Helpers\DB as DB_Helper;
 use RankMath\Helpers\Param;
 use RankMath\Admin\Admin_Helper;
 use RankMath\Traits\Ajax;
@@ -27,7 +28,8 @@ defined( 'ABSPATH' ) || exit;
  */
 class Admin implements Runner {
 
-	use Hooker, Ajax;
+	use Hooker;
+	use Ajax;
 
 	/**
 	 * Register hooks.
@@ -35,18 +37,54 @@ class Admin implements Runner {
 	public function hooks() {
 		$this->action( 'init', 'flush', 999 );
 		$this->filter( 'user_contactmethods', 'update_user_contactmethods' );
+		$this->action( 'profile_update', 'profile_update', 10, 3 );
 		$this->action( 'admin_footer', 'convert_additional_profile_url_to_textarea' );
 		$this->action( 'save_post', 'canonical_check_notice' );
 		$this->action( 'cmb2_save_options-page_fields', 'update_is_configured_value', 10, 2 );
 		$this->filter( 'action_scheduler_pastdue_actions_check_pre', 'as_exclude_pastdue_actions' );
-		$this->action( 'rank_math/pro_badge', 'offer_icon' );
+		$this->filter( 'rank_math/pro_badge', 'offer_icon' );
 		$this->filter( 'load_script_translation_file', 'load_script_translation_file', 10, 3 );
+
+		// Use woocommerce textdomain for the Actiion scheduler strings.
+		$this->filter( 'gettext', 'remap_action_scheduler_translation', 10, 3 );
+		$this->filter( 'gettext_with_context', 'remap_action_scheduler_translation_with_context', 10, 4 );
 
 		// AJAX.
 		$this->ajax( 'search_pages', 'search_pages' );
 		$this->ajax( 'is_keyword_new', 'is_keyword_new' );
 		$this->ajax( 'save_checklist_layout', 'save_checklist_layout' );
 		$this->ajax( 'deactivate_plugins', 'deactivate_plugins' );
+	}
+
+	/**
+	 * Update user profile.
+	 *
+	 * @param int   $user_id      The user ID.
+	 * @param array $old_user_data Old user data.
+	 * @param array $userdata      User data.
+	 */
+	public function profile_update( $user_id, $old_user_data, $userdata ) {
+		if ( ! current_user_can( 'edit_user', $user_id ) ) {
+			return false;
+		}
+
+		$nonce = Param::post( '_wpnonce', '', FILTER_SANITIZE_SPECIAL_CHARS );
+		if ( ! wp_verify_nonce( $nonce, 'update-user_' . $user_id ) ) {
+			return false;
+		}
+
+		$twitter                 = Param::post( 'twitter', '', FILTER_SANITIZE_URL );
+		$facebook                = Param::post( 'facebook', '', FILTER_SANITIZE_URL );
+		$additional_profile_urls = Param::post( 'additional_profile_urls', '' );
+
+		if ( $additional_profile_urls ) {
+			$additional_profile_urls = array_map( 'sanitize_url', explode( PHP_EOL, $additional_profile_urls ) );
+			$additional_profile_urls = implode( ' ', $additional_profile_urls );
+		}
+
+		update_user_meta( $user_id, 'twitter', $twitter );
+		update_user_meta( $user_id, 'facebook', $facebook );
+		update_user_meta( $user_id, 'additional_profile_urls', $additional_profile_urls );
 	}
 
 	/**
@@ -73,19 +111,21 @@ class Admin implements Runner {
 	 * The following code is a derivative work of the code from the Yoast(https://github.com/Yoast/wordpress-seo/), which is licensed under GPL v3.
 	 */
 	public function update_user_contactmethods( $contactmethods ) {
-		$contactmethods['twitter']                 = esc_html__( 'Twitter username (without @)', 'rank-math' );
-		$contactmethods['facebook']                = esc_html__( 'Facebook profile URL', 'rank-math' );
-		$contactmethods['additional_profile_urls'] = esc_html__( 'Additional profile URLs', 'rank-math' );
+		$contactmethods['twitter']                 = esc_html__( 'Twitter username (without @)', 'seo-by-rank-math' );
+		$contactmethods['facebook']                = esc_html__( 'Facebook profile URL', 'seo-by-rank-math' );
+		$contactmethods['additional_profile_urls'] = esc_html__( 'Additional profile URLs', 'seo-by-rank-math' );
 
 		return $contactmethods;
 	}
 
 	/**
 	 * Display admin header.
+	 *
+	 * @param bool $show_breadcrumbs Determines whether to show breadcrumbs or not.
 	 */
-	public function display_admin_header() {
+	public function display_admin_header( $show_breadcrumbs = true ) {
 		$nav_tabs = new Admin_Header();
-		$nav_tabs->display();
+		$nav_tabs->display( $show_breadcrumbs );
 	}
 
 	/**
@@ -113,12 +153,12 @@ class Admin implements Runner {
 		$post_type  = get_post_type( $post_id );
 		$is_allowed = in_array( $post_type, Helper::get_allowed_post_types(), true );
 
-		if ( ! $is_allowed || Helper::is_autosave() || Helper::is_ajax() || isset( $_REQUEST['bulk_edit'] ) ) {
+		if ( ! $is_allowed || Helper::is_autosave() || Helper::is_ajax() || isset( $_REQUEST['bulk_edit'] ) ) { // phpcs:ignore
 			return $post_id;
 		}
 
-		if ( ! empty( $_POST['rank_math_canonical_url'] ) && false === Param::post( 'rank_math_canonical_url', false, FILTER_VALIDATE_URL ) ) {
-			$message = esc_html__( 'The canonical URL you entered does not seem to be a valid URL. Please double check it in the SEO meta box &raquo; Advanced tab.', 'rank-math' );
+		if ( ! empty( $_POST['rank_math_canonical_url'] ) && false === Param::post( 'rank_math_canonical_url', false, FILTER_VALIDATE_URL ) ) { // phpcs:ignore
+			$message = esc_html__( 'The canonical URL you entered does not seem to be a valid URL. Please double check it in the SEO meta box &raquo; Advanced tab.', 'seo-by-rank-math' );
 			Helper::add_notification( $message, [ 'type' => 'error' ] );
 		}
 	}
@@ -161,7 +201,7 @@ class Admin implements Runner {
 		}
 
 		global $wpdb;
-		$pages = $wpdb->get_results(
+		$pages = DB_Helper::get_results(
 			$wpdb->prepare(
 				"SELECT ID, post_title FROM {$wpdb->prefix}posts WHERE post_type = 'page' AND post_status = 'publish' AND post_title LIKE %s",
 				"%{$wpdb->esc_like( $term )}%"
@@ -216,7 +256,7 @@ class Admin implements Runner {
 		}
 		$query .= sprintf( '%1$s.meta_key = \'rank_math_focus_keyword\' and ( %1$s.meta_value = %2$s OR %1$s.meta_value like %3$s ) and %1$s.%4$s_id != %5$d', $meta, '%s', '%s', $object_type, $object_id );
 
-		$data = $wpdb->get_row( $wpdb->prepare( $query, $keyword, $wpdb->esc_like( $keyword ) . ',%' ) ); // phpcs:ignore
+		$data = DB_Helper::get_row( $wpdb->prepare( $query, $keyword, $wpdb->esc_like( $keyword ) . ',%' ) );
 
 		$result['isNew'] = empty( $data );
 
@@ -288,6 +328,64 @@ class Admin implements Runner {
 	}
 
 	/**
+	 * Remap Action Scheduler translation to use WooCommerce's text domain (no context).
+	 *
+	 * @param string $translated Translated text.
+	 * @param string $text       Original text.
+	 * @param string $domain     Text domain.
+	 * @return string Modified translated text.
+	 */
+	public function remap_action_scheduler_translation( $translated, $text, $domain ) {
+		if ( ! self::should_remap_action_scheduler_translation( $domain ) ) {
+			return $translated;
+		}
+
+		return self::get_translated_string( $translated, $text );
+	}
+
+	/**
+	 * Remap Action Scheduler translation to use WooCommerce's text domain (with context).
+	 *
+	 * @param string $translated Translated text.
+	 * @param string $text       Original text.
+	 * @param string $context    Context information for translators.
+	 * @param string $domain     Text domain.
+	 * @return string Modified translated text.
+	 */
+	public function remap_action_scheduler_translation_with_context( $translated, $text, $context, $domain ) {
+		if ( ! self::should_remap_action_scheduler_translation( $domain ) ) {
+			return $translated;
+		}
+
+		return self::get_translated_string( $translated, $text, $context );
+	}
+
+	/**
+	 * Determine whether to remap Action Scheduler translations to WooCommerce's text domain.
+	 *
+	 * @param string $domain Text domain.
+	 * @return bool True if the translation should be remapped, false otherwise.
+	 */
+	private static function should_remap_action_scheduler_translation( $domain ) {
+		return 'action-scheduler' === $domain && Helper::is_woocommerce_active();
+	}
+
+	/**
+	 * Get the translated string from WooCommerce's text domain if the original string matches an Action Scheduler string.
+	 *
+	 * @param string      $translated Translated text.
+	 * @param string      $text       Original text.
+	 * @param string|null $context    Context information for translators.
+	 *
+	 * @return string Modified translated text.
+	 */
+	private static function get_translated_string( $translated, $text, $context = null ) {
+		$translations = get_translations_for_domain( 'woocommerce' );
+		$translation  = $translations->translate( $text, $context );
+		return $translation !== $text ? $translation : $translated;
+	}
+
+	/**
 	 * Set term query.
 	 *
 	 * @param array  $query    Array of query.
@@ -310,40 +408,14 @@ class Admin implements Runner {
 	/**
 	 * Output link suggestions.
 	 *
+	 * @deprecated 1.0.273 Link suggestions are now rendered by the React component.
+	 *
 	 * @param  array $suggestions Link items.
 	 * @return string
 	 */
 	public function get_link_suggestions_html( $suggestions ) {
-		$output = '<div class="rank-math-link-suggestions-content" data-count="' . count( $suggestions ) . '">';
-
-		$is_use_fk = 'focus_keywords' === Helper::get_settings( 'titles.pt_' . get_post_type() . '_ls_use_fk' );
-		foreach ( $suggestions as $suggestion ) {
-			$label = $suggestion['title'];
-			if ( $is_use_fk && ! empty( $suggestion['focus_keywords'] ) ) {
-				$label = $suggestion['focus_keywords'][0];
-			}
-
-			$output .= sprintf(
-				'<div class="suggestion-item">
-					<div class="suggestion-actions">
-						<button class="dashicons dashicons-clipboard suggestion-copy" title="%5$s" data-clipboard-text="%2$s"></button>
-						<button class="dashicons dashicons-admin-links suggestion-insert" title="%6$s" data-url="%2$s" data-text="%7$s"></button>
-					</div>
-					<span class="suggestion-title" data-fk=\'%1$s\'><a target="_blank" href="%2$s" title="%3$s">%4$s</a></span>
-				</div>',
-				esc_attr( wp_json_encode( $suggestion['focus_keywords'] ) ),
-				$suggestion['url'],
-				$suggestion['title'],
-				$label,
-				esc_attr__( 'Copy Link URL to Clipboard', 'rank-math' ),
-				esc_attr__( 'Insert Link in Content', 'rank-math' ),
-				esc_attr( $label )
-			);
-		}
-
-		$output .= '</div>';
-
-		return $output;
+		_deprecated_function( __METHOD__, '1.0.273' );
+		return '';
 	}
 
 	/**
@@ -366,7 +438,7 @@ class Admin implements Runner {
 	public function deactivate_plugins() {
 		check_ajax_referer( 'rank-math-ajax-nonce', 'security' );
 		if ( ! current_user_can( 'activate_plugins' ) ) {
-			$this->error( esc_html__( 'You are not authorized to perform this action.', 'rank-math' ) );
+			$this->error( esc_html__( 'You are not authorized to perform this action.', 'seo-by-rank-math' ) );
 		}
 		$plugin = Param::post( 'plugin', '', FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK );
 		if ( 'all' !== $plugin ) {
@@ -385,9 +457,9 @@ class Admin implements Runner {
 	 * We first do the same check as what ActionScheduler_AdminView->check_pastdue_actions() does,
 	 * but then we also count how many of those past-due actions are ours.
 	 *
-	 * @param null $null Null value.
+	 * @param null $value Null value.
 	 */
-	public function as_exclude_pastdue_actions( $null ) {
+	public function as_exclude_pastdue_actions( $value ) {
 		$query_args = [
 			'date'     => as_get_datetime_object( time() - DAY_IN_SECONDS ),
 			'status'   => \ActionScheduler_Store::STATUS_PENDING,
@@ -405,10 +477,10 @@ class Admin implements Runner {
 		}
 
 		$threshold_seconds = (int) apply_filters( 'action_scheduler_pastdue_actions_seconds', DAY_IN_SECONDS );
-		$threshhold_min    = (int) apply_filters( 'action_scheduler_pastdue_actions_min', 1 );
+		$threshold_min     = (int) apply_filters( 'action_scheduler_pastdue_actions_min', 1 );
 
-		$check = ( $num_pastdue_actions >= $threshhold_min );
-		return (bool) apply_filters( 'action_scheduler_pastdue_actions_check', $check, $num_pastdue_actions, $threshold_seconds, $threshhold_min );
+		$check = ( $num_pastdue_actions >= $threshold_min );
+		return (bool) apply_filters( 'action_scheduler_pastdue_actions_check', $check, $num_pastdue_actions, $threshold_seconds, $threshold_min );
 	}
 
 	/**
@@ -421,22 +493,25 @@ class Admin implements Runner {
 
 		// Holiday Season related variables.
 		$time                   = time();
-		$current_year           = 2022;
-		$anniversary_start_time = gmmktime( 17, 00, 00, 10, 30, $current_year ); // 30 Oct.
-		$anniversary_end_time   = gmmktime( 17, 00, 00, 11, 30, $current_year ); // 30 Nov.
-		$holiday_start_time     = gmmktime( 17, 00, 00, 12, 20, $current_year ); // 20 Dec.
-		$holiday_end_time       = gmmktime( 17, 00, 00, 01, 07, 2023 ); // 07 Jan.
+		$current_year           = 2025;
+		$anniversary_start_time = gmmktime( 17, 00, 00, 10, 29, $current_year ); // 29 Oct.
+		$anniversary_end_time   = gmmktime( 17, 00, 00, 12, 03, $current_year ); // 30 Nov.
+		$holiday_start_time     = gmmktime( 17, 00, 00, 12, 24, $current_year ); // 20 Dec.
+		$holiday_end_time       = gmmktime( 17, 00, 00, 01, 07, 2026 ); // 07 Jan.
 
+		ob_start();
 		if (
 			( $time > $anniversary_start_time && $time < $anniversary_end_time ) ||
 			( $time > $holiday_start_time && $time < $holiday_end_time )
 		) { ?>
-			<a href="https://rankmath.com/pricing/?utm_source=Plugin&utm_medium=Header+Offer+Icon&utm_campaign=WP" target="_blank" class="rank-math-tooltip bottom" style="margin-left:5px;">
+			<a href="<?php echo esc_url( \RankMath\KB::get( 'pro', 'Header Offer Icon' ) ); ?>" target="_blank" class="rank-math-tooltip bottom" style="margin-left:5px;">
 				🎉
-				<span><?php esc_attr_e( 'Exclusive Offer!', 'rank-math' ); ?></span>
+				<span><?php esc_attr_e( 'Exclusive Offer!', 'seo-by-rank-math' ); ?></span>
 			</a>
 			<?php
 		}
+
+		return ob_get_clean();
 	}
 
 	/**
@@ -447,7 +522,7 @@ class Admin implements Runner {
 			return;
 		}
 
-		$field_description = __( 'Additional Profiles to add in the <code>sameAs</code> Schema property.', 'rank-math' );
+		$field_description = __( 'Additional Profiles to add in the <code>sameAs</code> Schema property.', 'seo-by-rank-math' );
 		?>
 		<script type="text/javascript">
 			( function( $ ) {

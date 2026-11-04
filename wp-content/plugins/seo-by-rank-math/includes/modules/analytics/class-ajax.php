@@ -10,6 +10,7 @@
 
 namespace RankMath\Analytics;
 
+use WP_Error;
 use RankMath\Helper;
 use RankMath\Google\Api;
 use RankMath\Helpers\Str;
@@ -30,6 +31,21 @@ defined( 'ABSPATH' ) || exit;
 class AJAX {
 
 	use \RankMath\Traits\Ajax;
+
+	/**
+	 * Get the instance of this class.
+	 *
+	 * @return AJAX
+	 */
+	public static function get() {
+		static $instance = null;
+
+		if ( is_null( $instance ) ) {
+			$instance = new self();
+		}
+
+		return $instance;
+	}
 
 	/**
 	 * The Constructor
@@ -139,7 +155,7 @@ class AJAX {
 			$this->success( [ 'streams' => $streams ] );
 		}
 
-		$stream = $this->create_ga4_data_stream( "properties/{$property_id}" );
+		$stream = $this->create_ga4_data_stream( $property_id );
 		if ( ! is_array( $stream ) ) {
 			$this->error( $stream );
 		}
@@ -154,10 +170,9 @@ class AJAX {
 		check_ajax_referer( 'rank-math-ajax-nonce', 'security' );
 		$this->has_cap_ajax( 'analytics' );
 
-		$success = Api::get()->get_search_analytics();
-
-		if ( is_wp_error( $success ) ) {
-			$this->error( esc_html__( 'Data import will not work for this service as sufficient permissions are not given.', 'rank-math' ) );
+		$success = Google_Analytics::test_connection();
+		if ( false === $success ) {
+			$this->error( esc_html__( 'Data import will not work for this service as sufficient permissions are not given.', 'seo-by-rank-math' ) );
 		}
 
 		$this->success();
@@ -170,10 +185,9 @@ class AJAX {
 		check_ajax_referer( 'rank-math-ajax-nonce', 'security' );
 		$this->has_cap_ajax( 'analytics' );
 
-		$success = Analytics::get_analytics( [], true );
-
-		if ( is_wp_error( $success ) ) {
-			$this->error( esc_html__( 'Data import will not work for this service as sufficient permissions are not given.', 'rank-math' ) );
+		$success = Analytics::test_connection();
+		if ( false === $success ) {
+			$this->error( esc_html__( 'Data import will not work for this service as sufficient permissions are not given.', 'seo-by-rank-math' ) );
 		}
 
 		$this->success();
@@ -186,52 +200,18 @@ class AJAX {
 		check_ajax_referer( 'rank-math-ajax-nonce', 'security' );
 		$this->has_cap_ajax( 'analytics' );
 
-		$profile             = Param::post( 'profile' );
-		$country             = Param::post( 'country', 'all' );
-		$days                = Param::get( 'days', 90, FILTER_VALIDATE_INT );
-		$enable_index_status = Param::post( 'enableIndexStatus', false, FILTER_VALIDATE_BOOLEAN );
-
-		$success = Api::get()->get_search_analytics(
+		$response = $this->do_save_analytic_profile(
 			[
-				'country' => $country,
-				'profile' => $profile,
+				'profile'             => Param::post( 'profile' ),
+				'country'             => Param::post( 'country', 'all' ),
+				'days'                => Param::get( 'days', 90, FILTER_VALIDATE_INT ),
+				'enable_index_status' => Param::post( 'enableIndexStatus', false, FILTER_VALIDATE_BOOLEAN ),
 			]
 		);
 
-		if ( is_wp_error( $success ) ) {
-			$this->error( esc_html__( 'Data import will not work for this service as sufficient permissions are not given.', 'rank-math' ) );
+		if ( is_wp_error( $response ) ) {
+			$this->error( esc_html__( 'Data import will not work for this service as sufficient permissions are not given.', 'seo-by-rank-math' ) );
 		}
-
-		$prev  = get_option( 'rank_math_google_analytic_profile', [] );
-		$value = [
-			'country'             => $country,
-			'profile'             => $profile,
-			'enable_index_status' => $enable_index_status,
-		];
-		update_option( 'rank_math_google_analytic_profile', $value );
-
-		// Remove other stored sites from option for privacy.
-		$all_accounts          = get_option( 'rank_math_analytics_all_services', [] );
-		$all_accounts['sites'] = [ $profile => $profile ];
-
-		update_option( 'rank_math_analytics_all_services', $all_accounts );
-
-		// Purge Cache.
-		if ( ! empty( array_diff( $prev, $value ) ) ) {
-			DB::purge_cache();
-		}
-
-		new Objects();
-		new Console();
-		new Inspections();
-
-		// Start fetching console data.
-		Workflow\Workflow::do_workflow(
-			'console',
-			$days,
-			$prev,
-			$value
-		);
 
 		$this->success();
 	}
@@ -243,65 +223,25 @@ class AJAX {
 		check_ajax_referer( 'rank-math-ajax-nonce', 'security' );
 		$this->has_cap_ajax( 'analytics' );
 
-		$value = [
-			'account_id'       => Param::post( 'accountID', false, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK ),
-			'property_id'      => Param::post( 'propertyID', false, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK ),
-			'view_id'          => Param::post( 'viewID', false, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK ),
-			'measurement_id'   => Param::post( 'measurementID', false, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK ),
-			'stream_name'      => Param::post( 'streamName', false, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK ),
-			'country'          => Param::post( 'country', 'all', FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_BACKTICK ),
-			'install_code'     => Param::post( 'installCode', false, FILTER_VALIDATE_BOOLEAN ),
-			'anonymize_ip'     => Param::post( 'anonymizeIP', false, FILTER_VALIDATE_BOOLEAN ),
-			'local_ga_js'      => Param::post( 'localGAJS', false, FILTER_VALIDATE_BOOLEAN ),
-			'exclude_loggedin' => Param::post( 'excludeLoggedin', false, FILTER_VALIDATE_BOOLEAN ),
-		];
-
-		// Test Google Analytics (GA) connection request.
-		if ( ! empty( $value['view_id'] ) || ! empty( $value['country'] ) || ! empty( $value['property_id'] ) ) {
-			$request = Analytics::get_analytics(
-				[
-					'view_id'     => $value['view_id'],
-					'country'     => $value['country'],
-					'property_id' => $value['property_id'],
-				],
-				true
-			);
-
-			if ( is_wp_error( $request ) ) {
-				$this->error( esc_html__( 'Data import will not work for this service as sufficient permissions are not given.', 'rank-math' ) );
-			}
-		}
-
-		$days = Param::get( 'days', 90, FILTER_VALIDATE_INT );
-
-		$prev = get_option( 'rank_math_google_analytic_options' );
-		// Preserve adsense info.
-		if ( isset( $prev['adsense_id'] ) ) {
-			$value['adsense_id'] = $prev['adsense_id'];
-		}
-		update_option( 'rank_math_google_analytic_options', $value );
-
-		// Remove other stored accounts from option for privacy.
-		$all_accounts = get_option( 'rank_math_analytics_all_services', [] );
-		if ( isset( $all_accounts['accounts'][ $value['account_id'] ] ) ) {
-			$account = $all_accounts['accounts'][ $value['account_id'] ];
-
-			if ( isset( $account['properties'][ $value['property_id'] ] ) ) {
-				$property              = $account['properties'][ $value['property_id'] ];
-				$account['properties'] = [ $value['property_id'] => $property ];
-			}
-
-			$all_accounts['accounts'] = [ $value['account_id'] => $account ];
-		}
-		update_option( 'rank_math_analytics_all_services', $all_accounts );
-
-		// Start fetching analytics data.
-		Workflow\Workflow::do_workflow(
-			'analytics',
-			$days,
-			$prev,
-			$value
+		$request = $this->do_save_analytic_options(
+			[
+				'account_id'       => Param::post( 'accountID', false, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK ),
+				'property_id'      => Param::post( 'propertyID', false, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK ),
+				'view_id'          => Param::post( 'viewID', false, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK ),
+				'measurement_id'   => Param::post( 'measurementID', false, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK ),
+				'stream_name'      => Param::post( 'streamName', false, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK ),
+				'country'          => Param::post( 'country', 'all', FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_BACKTICK ),
+				'install_code'     => Param::post( 'installCode', false, FILTER_VALIDATE_BOOLEAN ),
+				'anonymize_ip'     => Param::post( 'anonymizeIP', false, FILTER_VALIDATE_BOOLEAN ),
+				'local_ga_js'      => Param::post( 'localGAJS', false, FILTER_VALIDATE_BOOLEAN ),
+				'exclude_loggedin' => Param::post( 'excludeLoggedin', false, FILTER_VALIDATE_BOOLEAN ),
+				'days'             => Param::get( 'days', 90, FILTER_VALIDATE_INT ),
+			]
 		);
+
+		if ( is_wp_error( $request ) ) {
+			$this->error( esc_html__( 'Data import will not work for this service as sufficient permissions are not given.', 'seo-by-rank-math' ) );
+		}
 
 		$this->success();
 	}
@@ -315,6 +255,16 @@ class AJAX {
 		Api::get()->revoke_token();
 		Workflow\Workflow::kill_workflows();
 
+		foreach (
+			[
+				'rank_math_analytics_all_services',
+				'rank_math_google_analytic_options',
+			]
+			as $option_name
+		) {
+			delete_option( $option_name );
+		}
+
 		$this->success();
 	}
 
@@ -326,7 +276,10 @@ class AJAX {
 		$this->has_cap_ajax( 'analytics' );
 		Workflow\Workflow::kill_workflows();
 
-		$this->success( esc_html__( 'Data fetching cancelled.', 'rank-math' ) );
+		// Clear fetching state immediately so the UI reflects the cancellation on reload.
+		update_option( 'rank_math_analytics_first_fetch', 'hidden' );
+
+		$this->success( esc_html__( 'Data fetching cancelled.', 'seo-by-rank-math' ) );
 	}
 
 	/**
@@ -337,7 +290,7 @@ class AJAX {
 		$this->has_cap_ajax( 'analytics' );
 
 		if ( ! Authentication::is_authorized() ) {
-			$this->error( esc_html__( 'Google oAuth is not authorized.', 'rank-math' ) );
+			$this->error( esc_html__( 'Google oAuth is not authorized.', 'seo-by-rank-math' ) );
 		}
 
 		$days = Param::get( 'days', 90, FILTER_VALIDATE_INT );
@@ -350,6 +303,10 @@ class AJAX {
 			delete_option( 'rank_math_analytics_installed' );
 		}
 		delete_option( 'rank_math_analytics_last_single_action_schedule_time' );
+
+		// Set fetching state synchronously so a reload doesn't race the async workflow.
+		update_option( 'rank_math_analytics_first_fetch', 'fetching' );
+
 		// Start fetching data.
 		foreach ( [ 'console', 'analytics', 'adsense' ] as $action ) {
 			Workflow\Workflow::do_workflow(
@@ -360,7 +317,7 @@ class AJAX {
 			);
 		}
 
-		$this->success( esc_html__( 'Data fetching started in the background.', 'rank-math' ) );
+		$this->success( esc_html__( 'Data fetching started in the background.', 'seo-by-rank-math' ) );
 	}
 
 	/**
@@ -372,7 +329,7 @@ class AJAX {
 
 		$days = Param::get( 'days', false, FILTER_VALIDATE_INT );
 		if ( ! $days ) {
-			$this->error( esc_html__( 'Not a valid settings founds to delete cache.', 'rank-math' ) );
+			$this->error( esc_html__( 'Not a valid settings founds to delete cache.', 'seo-by-rank-math' ) );
 		}
 
 		// Delete fetched console data within specified date range.
@@ -381,12 +338,15 @@ class AJAX {
 		// Cancel data fetch action.
 		Workflow\Workflow::kill_workflows();
 		delete_transient( 'rank_math_analytics_data_info' );
-		$db_info            = DB::info();
-		$db_info['message'] = sprintf( '<div class="rank-math-console-db-info"><span class="dashicons dashicons-calendar-alt"></span> Cached Days: <strong>%s</strong></div>', $db_info['days'] ) .
-		sprintf( '<div class="rank-math-console-db-info"><span class="dashicons dashicons-editor-ul"></span> Data Rows: <strong>%s</strong></div>', Str::human_number( $db_info['rows'] ) ) .
-		sprintf( '<div class="rank-math-console-db-info"><span class="dashicons dashicons-editor-code"></span> Size: <strong>%s</strong></div>', size_format( $db_info['size'] ) );
+		$db_info = DB::info();
 
-		$this->success( $db_info );
+		$this->success(
+			[
+				'days' => $db_info['days'] ?? 0,
+				'rows' => Str::human_number( $db_info['rows'] ?? 0 ),
+				'size' => size_format( $db_info['size'] ?? 0 ),
+			]
+		);
 	}
 
 	/**
@@ -563,7 +523,7 @@ class AJAX {
 		];
 
 		$stream = Api::get()->http_post(
-			"https://analyticsadmin.googleapis.com/v1alpha/{$property_id}/dataStreams",
+			"https://analyticsadmin.googleapis.com/v1alpha/properties/{$property_id}/dataStreams",
 			$args
 		);
 
@@ -576,5 +536,126 @@ class AJAX {
 			'name'          => $stream['displayName'],
 			'measurementId' => $stream['webStreamData']['measurementId'],
 		];
+	}
+
+	/**
+	 * Save analytic profile.
+	 *
+	 * @param array $data Data to save.
+	 */
+	public function do_save_analytic_options( $data = [] ) {
+		$value = [
+			'account_id'       => $data['account_id'] ?? '',
+			'property_id'      => $data['property_id'] ?? '',
+			'view_id'          => $data['view_id'] ?? '',
+			'measurement_id'   => $data['measurement_id'] ?? '',
+			'stream_name'      => $data['stream_name'] ?? '',
+			'country'          => $data['country'] ?? 'all',
+			'install_code'     => $data['install_code'] ?? false,
+			'anonymize_ip'     => $data['anonymize_ip'] ?? false,
+			'local_ga_js'      => $data['local_ga_js'] ?? false,
+			'exclude_loggedin' => $data['exclude_loggedin'] ?? false,
+			'days'             => $data['days'] ?? 90,
+		];
+
+		$days = $value['days'];
+
+		$prev = get_option( 'rank_math_google_analytic_options' );
+		// Preserve adsense info.
+		if ( isset( $prev['adsense_id'] ) ) {
+			$value['adsense_id'] = $prev['adsense_id'];
+		}
+		update_option( 'rank_math_google_analytic_options', $value );
+
+		// Remove other stored accounts from option for privacy.
+		$all_accounts = get_option( 'rank_math_analytics_all_services', [] );
+		if ( isset( $all_accounts['accounts'][ $value['account_id'] ] ) ) {
+			$account = $all_accounts['accounts'][ $value['account_id'] ];
+
+			if ( isset( $account['properties'][ $value['property_id'] ] ) ) {
+				$property              = $account['properties'][ $value['property_id'] ];
+				$account['properties'] = [ $value['property_id'] => $property ];
+			}
+
+			$all_accounts['accounts'] = [ $value['account_id'] => $account ];
+		}
+		update_option( 'rank_math_analytics_all_services', $all_accounts );
+
+		// Test Google Analytics (GA) connection request.
+		if ( ! empty( $value['view_id'] ) || ! empty( $value['country'] ) || ! empty( $value['property_id'] ) ) {
+			$request = Analytics::get_sample_response();
+			if ( is_wp_error( $request ) ) {
+				return new WP_Error(
+					'insufficient_permissions',
+					esc_html__( 'Data import will not work for this service as sufficient permissions are not given.', 'seo-by-rank-math' )
+				);
+			}
+		}
+
+		// Start fetching analytics data.
+		Workflow\Workflow::do_workflow(
+			'analytics',
+			$days,
+			$prev,
+			$value
+		);
+
+		return true;
+	}
+
+	/**
+	 * Save analytic profile.
+	 *
+	 * @param array $data Data to save.
+	 */
+	public function do_save_analytic_profile( $data = [] ) {
+		$profile             = $data['profile'] ?? '';
+		$country             = $data['country'] ?? 'all';
+		$days                = $data['days'] ?? 90;
+		$enable_index_status = $data['enable_index_status'] ?? false;
+
+		$success = Api::get()->get_search_analytics(
+			[
+				'country' => $country,
+				'profile' => $profile,
+			]
+		);
+
+		if ( is_wp_error( $success ) ) {
+			return new WP_Error( 'insufficient_permissions', esc_html__( 'Data import will not work for this service as sufficient permissions are not given.', 'seo-by-rank-math' ) );
+		}
+
+		$prev  = get_option( 'rank_math_google_analytic_profile', [] );
+		$value = [
+			'country'             => $country,
+			'profile'             => $profile,
+			'enable_index_status' => $enable_index_status,
+		];
+		update_option( 'rank_math_google_analytic_profile', $value );
+
+		// Remove other stored sites from option for privacy.
+		$all_accounts          = get_option( 'rank_math_analytics_all_services', [] );
+		$all_accounts['sites'] = [ $profile => $profile ];
+
+		update_option( 'rank_math_analytics_all_services', $all_accounts );
+
+		// Purge Cache.
+		if ( ! empty( array_diff( $prev, $value ) ) ) {
+			DB::purge_cache();
+		}
+
+		new Objects();
+		new Console();
+		new Inspections();
+
+		// Start fetching console data.
+		Workflow\Workflow::do_workflow(
+			'console',
+			$days,
+			$prev,
+			$value
+		);
+
+		return true;
 	}
 }

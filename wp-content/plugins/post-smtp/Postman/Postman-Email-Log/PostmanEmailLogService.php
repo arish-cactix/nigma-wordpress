@@ -79,28 +79,76 @@ if ( ! class_exists( 'PostmanEmailLogService' ) ) {
 			return $inst;
 		}
 
-		public function write_success_log($log, $message, $transcript, $transport) {
+		public function write_success_log( $log, $message, $transcript, $transport = null ) {
+			if ( $this->is_notification( $message, $log ) ) {
+				return;
+			}
 		    $options = PostmanOptions::getInstance();
             if ( $options->getRunMode() == PostmanOptions::RUN_MODE_PRODUCTION || $options->getRunMode() == PostmanOptions::RUN_MODE_LOG_ONLY ) {
                 $this->writeSuccessLog( $log, $message, $transcript, $transport );
             }
         }
 
-        public function write_failed_log($log, $message, $transcript, $transport, $statusMessage) {
+        public function write_failed_log( $log, $message, $transcript, $transport = null, $statusMessage = null ) {
+			if ( $this->is_notification( $message, $log ) ) {
+				return;
+			}
             $options = PostmanOptions::getInstance();
             if ( $options->getRunMode() == PostmanOptions::RUN_MODE_PRODUCTION || $options->getRunMode() == PostmanOptions::RUN_MODE_LOG_ONLY ) {
-                $this->writeFailureLog( $log, $message, $transcript, $transport, $statusMessage );
+				$this->writeFailureLog( $log, $transcript, $statusMessage, $transport, $message );
             }
         }
+
+		/**
+		 * Check if an email is an internal Post SMTP notification.
+		 *
+		 * @param PostmanMessage|null $message
+		 * @param PostmanEmailLog|null $log
+		 * @return bool
+		 */
+		private function is_notification( $message = null, $log = null ) {
+			if ( class_exists( 'PostmanMailNotify' ) && PostmanMailNotify::is_sending() ) {
+				return true;
+			}
+
+			if ( $message instanceof PostmanMessage ) {
+				foreach ( (array) $message->getHeaders() as $header ) {
+					if ( isset( $header['name'] ) && 0 === strcasecmp( $header['name'], PostmanMailNotify::NOTIFICATION_HEADER ) ) {
+						return true;
+					}
+				}
+
+				$subject = $message->getSubject();
+				if ( ! empty( $subject ) && is_string( $subject ) && false !== stripos( $subject, 'Post SMTP email error' ) ) {
+					return true;
+				}
+			}
+
+			if ( $log ) {
+				if ( ! empty( $log->originalHeaders ) ) {
+					$headers_str = is_array( $log->originalHeaders ) ? implode( "\n", $log->originalHeaders ) : $log->originalHeaders;
+					if ( false !== stripos( $headers_str, PostmanMailNotify::NOTIFICATION_HEADER ) ) {
+						return true;
+					}
+				}
+
+				$subject = ! empty( $log->originalSubject ) ? $log->originalSubject : ( ! empty( $log->subject ) ? $log->subject : '' );
+				if ( ! empty( $subject ) && is_string( $subject ) && false !== stripos( $subject, 'Post SMTP email error' ) ) {
+					return true;
+				}
+			}
+
+			return false;
+		}
 
 		/**
 		 * Logs successful email attempts
 		 *
 		 * @param PostmanMessage         $message
 		 * @param mixed                $transcript
-		 * @param PostmanModuleTransport $transport
+		 * @param PostmanModuleTransport|null $transport
 		 */
-		public function writeSuccessLog( PostmanEmailLog $log, PostmanMessage $message, $transcript, PostmanModuleTransport $transport ) {
+		public function writeSuccessLog( PostmanEmailLog $log, PostmanMessage $message, $transcript, ?PostmanModuleTransport $transport = null ) {
 			if ( PostmanOptions::getInstance()->isMailLoggingEnabled() ) {
 				$statusMessage = '';
 				$status = true;
@@ -109,7 +157,13 @@ if ( ! class_exists( 'PostmanEmailLogService' ) ) {
 					$statusMessage = sprintf( '%s: %s', __( 'Warning', 'post-smtp' ), __( 'An empty subject line can result in delivery failure.', 'post-smtp' ) );
 					$status = 'WARN';
 				}
-				$this->createLog( $log, $message, $transcript, $statusMessage, $status, $transport );
+				
+				$logger = $this->logger;
+				if ( is_null( $transport ) ) {
+					$logger->warn( 'writeSuccessLog called with null transport' );
+				}
+				
+				$this->createLog( $log, $transcript, $statusMessage, $status, $transport, $message );
 				$this->writeToEmailLog( $log );
 			}
 		}
@@ -119,18 +173,62 @@ if ( ! class_exists( 'PostmanEmailLogService' ) ) {
 		 *
 		 * @param PostmanMessage         $message
 		 * @param mixed                $transcript
-		 * @param PostmanModuleTransport $transport
 		 * @param mixed                $statusMessage
 		 * @param mixed                $originalTo
 		 * @param mixed                $originalSubject
 		 * @param mixed                $originalMessage
+		 * @param PostmanModuleTransport|null $transport
 		 * @param mixed                $originalHeaders
 		 */
-		public function writeFailureLog( PostmanEmailLog $log, PostmanMessage $message = null, $transcript, PostmanModuleTransport $transport, $statusMessage ) {
+	public function writeFailureLog( PostmanEmailLog $log, $transcript, $statusMessage, ?PostmanModuleTransport $transport = null, ?PostmanMessage $message = null ) {
 			if ( PostmanOptions::getInstance()->isMailLoggingEnabled() ) {
-				$this->createLog( $log, $message, $transcript, $statusMessage, false, $transport );
+				
+				if ( is_null( $transport ) ) {
+					$this->logger->warn( 'writeFailureLog called with null transport' );
+				}
+
+				$this->createLog( $log, $transcript, $statusMessage, false, $transport, $message );
 				$this->writeToEmailLog( $log,$message );
 			}
+		}
+
+		/**
+		 * Sanitizes a list of emails, handling both single and multiple email inputs.
+		 *
+		 * @param string|array $emails The email(s) to sanitize.
+		 * @return string Sanitized email(s) as a comma-separated string.
+		 * @since 3.1.2
+		 * @version 1.0.0
+		 */
+		public function sanitize_emails( $emails ) {
+			if ( empty( $emails ) ) {
+				return '';
+			}
+
+			// Convert string to an array if necessary.
+			if ( is_string( $emails ) ) {
+				$emails = explode( ',', $emails );
+			}
+
+			if ( ! is_array( $emails ) ) {
+				return '';
+			}
+
+			$sanitized_emails = array_map( function ( $email ) {
+				$email = trim( $email );
+
+				// Extract email from "Name <email>" format.
+				if ( preg_match( '/<(.+?)>/', $email, $matches ) ) {
+					$email = $matches[1];
+				}
+
+				return filter_var( $email, FILTER_VALIDATE_EMAIL ) ? sanitize_email( $email ) : '';
+			}, $emails );
+
+			// Remove duplicates and empty values
+			$sanitized_emails = array_unique( array_filter( $sanitized_emails ) );
+
+			return implode( ', ', $sanitized_emails );
 		}
 
 		/**
@@ -138,7 +236,7 @@ if ( ! class_exists( 'PostmanEmailLogService' ) ) {
 		 *
 		 * From http://wordpress.stackexchange.com/questions/8569/wp-insert-post-php-function-and-custom-fields
 		 */
-		private function writeToEmailLog( PostmanEmailLog $log, PostmanMessage $message = null ) {
+		private function writeToEmailLog( PostmanEmailLog $log, ?PostmanMessage $message = null ) {
 
 		    $options = PostmanOptions::getInstance();
 
@@ -148,28 +246,31 @@ if ( ! class_exists( 'PostmanEmailLogService' ) ) {
                 $new_status = 'Sent ( ** Fallback ** )';
             }
 
-            if ( $options->is_fallback &&  ! empty( $log->statusMessage ) ) {
+            if ( $options->is_fallback && ! empty( $log->statusMessage ) ) {
                 $new_status = '( ** Fallback ** ) ' . $log->statusMessage;
             }
 
             $new_status = apply_filters( 'post_smtp_log_status', $new_status, $log, $message );
-			
 			//If Table exists, Insert Log into Table
 			if( $this->new_logging ) {
-
 				$data = array();
-				$data['solution'] = apply_filters( 'post_smtp_log_solution', null, $new_status, $log, $message );
-				$data['success'] = empty( $new_status ) ? 1 : $new_status;
-				$data['from_header'] = $log->sender;
-				$data['to_header'] = !empty( $log->toRecipients ) ? $log->toRecipients : '';
-				$data['cc_header'] = !empty( $log->ccRecipients ) ? $log->ccRecipients : '';
-				$data['bcc_header'] = !empty( $log->bccRecipients ) ? $log->bccRecipients : '';
-				$data['reply_to_header'] = !empty( $log->replyTo ) ? $log->replyTo : '';
-				$data['transport_uri'] = !empty( $log->transportUri ) ? $log->transportUri : '';
-				$data['original_to'] = is_array( $log->originalTo ) ? implode( ',', $log->originalTo ) : $log->originalTo;
-				$data['original_subject'] = !empty( $log->originalSubject ) ? $log->originalSubject : '';
+				$data['solution']         = apply_filters( 'post_smtp_log_solution', null, $new_status, $log, $message );
+				// The filtering logic will handle both success = 1 and fallback status messages
+				if ( $log->success === true || $log->success === 'WARN' || $log->success === 1 ) {
+					$data['success'] = empty( $new_status ) ? 1 : $new_status;
+				} else {
+					$data['success'] = empty( $new_status ) ? 0 : $new_status;
+				}
+				$data['from_header']      = $log->sender;
+				$data['to_header']        = $this->sanitize_emails( $log->toRecipients );
+				$data['cc_header']        = $this->sanitize_emails( $log->ccRecipients );
+				$data['bcc_header']       = $this->sanitize_emails( $log->bccRecipients );
+				$data['reply_to_header']  = $this->sanitize_emails( $log->replyTo );
+				$data['transport_uri']    = !empty( $log->transportUri ) ? $log->transportUri : '';
+				$data['original_to']      = $this->sanitize_emails( $log->originalTo );
+				$data['original_subject'] = !empty( $log->originalSubject ) ? sanitize_text_field( $log->originalSubject ) : '';
 				$data['original_message'] = $log->originalMessage;
-				$data['original_headers'] = is_array($log->originalHeaders) ? serialize($log->originalHeaders) : $log->originalHeaders;
+			    $data['original_headers'] = is_array( $log->originalHeaders ) ? serialize( $log->originalHeaders ) : $log->originalHeaders;
 				$data['session_transcript'] = $log->sessionTranscript;
 
 				$email_logs = new PostmanEmailLogs();
@@ -181,10 +282,9 @@ if ( ! class_exists( 'PostmanEmailLogService' ) ) {
 				 * @since 2.5.0
 				 * @version 1.0.0
 				 */
-				$log_id = apply_filters( 'post_smtp_update_email_log_id', '' );
-
+				$log_id = $options->is_fallback ? '' : apply_filters( 'post_smtp_update_email_log_id', '' );
 				$log_id = $email_logs->save( $data, $log_id );
-
+				
 				/**
 				 * Fires after the email log is saved
 				 * 
@@ -287,10 +387,10 @@ if ( ! class_exists( 'PostmanEmailLogService' ) ) {
 		 * @param mixed                $transcript
 		 * @param mixed                $statusMessage
 		 * @param mixed                $success
-		 * @param PostmanModuleTransport $transport
+		 * @param PostmanModuleTransport|null $transport
 		 * @return PostmanEmailLog
 		 */
-		private function createLog( PostmanEmailLog $log, PostmanMessage $message = null, $transcript, $statusMessage, $success, PostmanModuleTransport $transport ) {
+		private function createLog( PostmanEmailLog $log, $transcript, $statusMessage, $success, ?PostmanModuleTransport $transport, ?PostmanMessage $message = null ) {
 			if ( $message ) {
 				$log->sender = $message->getFromAddress()->format();
 				$log->toRecipients = $this->flattenEmails( $message->getToRecipients() );
@@ -299,13 +399,18 @@ if ( ! class_exists( 'PostmanEmailLogService' ) ) {
 				$log->subject = $message->getSubject();
 				$log->body = $message->getBody();
 				if ( null !== $message->getReplyTo() ) {
-					$log->replyTo = $message->getReplyTo()->format();
+						$log->replyTo = $message->getReplyTo()->format();
 				}
 			}
 			$log->success = $success;
 			$log->statusMessage = $statusMessage;
-			$log->transportUri = PostmanTransportRegistry::getInstance()->getPublicTransportUri( $transport );
-			$log->sessionTranscript = $log->transportUri . "\n\n" . $transcript;
+			if ( $transport ) {
+				$log->transportUri = PostmanTransportRegistry::getInstance()->getPublicTransportUri( $transport );
+				$log->sessionTranscript = $log->transportUri . "\n\n" . $transcript;
+			} else {
+				$log->transportUri = '';
+				$log->sessionTranscript = $transcript;
+			}
 			return $log;
 		}
 
@@ -316,20 +421,24 @@ if ( ! class_exists( 'PostmanEmailLogService' ) ) {
 		 * @return string
 		 */
 		private static function flattenEmails( array $addresses ) {
-			$flat = '';
-			$count = 0;
+			/**
+			 * Previously this method limited the output to the first 3 recipients
+			 * and then appended a summary such as ".. +N more". That summary string
+			 * is not a valid email address, so when the value was later passed
+			 * through sanitize_emails() only the first few addresses were actually
+			 * stored in the database.
+			 *
+			 * For accurate logging (and to make all CC/BCC recipients available
+			 * to the UI and REST API), we now return the full list of formatted
+			 * email addresses with no truncation.
+			 */
+			$emails = array();
 			foreach ( $addresses as $address ) {
-				if ( $count >= 3 ) {
-					$flat .= sprintf( __( '.. +%d more', 'post-smtp' ), sizeof( $addresses ) - $count );
-					break;
+				if ( $address instanceof PostmanEmailAddress ) {
+					$emails[] = $address->format();
 				}
-				if ( $count > 0 ) {
-					$flat .= ', ';
-				}
-				$flat .= $address->format();
-				$count ++;
 			}
-			return $flat;
+			return implode( ', ', $emails );
 		}
 	}
 }

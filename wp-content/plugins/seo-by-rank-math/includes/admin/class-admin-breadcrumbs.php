@@ -1,6 +1,6 @@
 <?php
 /**
- * Breadcrumbs for the Rank Math pages
+ * Breadcrumbs for the Rank Math pages.
  *
  * @since      1.0.44
  * @package    RankMath
@@ -12,6 +12,7 @@ namespace RankMath\Admin;
 
 use RankMath\Helper;
 use RankMath\Helpers\Param;
+use RankMath\Google\Console;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -28,8 +29,8 @@ class Admin_Breadcrumbs {
 	public function display() {
 		?>
 		<div class="rank-math-breadcrumbs-wrap">
-		<div class="rank-math-breadcrumbs">
-				<span><?php echo esc_html__( 'Dashboard', 'rank-math' ); ?></span>
+			<div class="rank-math-breadcrumbs">
+				<span><?php echo esc_html__( 'Dashboard', 'seo-by-rank-math' ); ?></span>
 				<span class="divider">/</span>
 				<span class="active"><?php echo esc_html( $this->get_page_title() ); ?></span>
 			</div>
@@ -41,9 +42,9 @@ class Admin_Breadcrumbs {
 	 * Get Current Admin Page Title.
 	 */
 	private function get_page_title() {
-		$base = __( 'Modules', 'rank-math' );
+		$base = __( 'Modules', 'seo-by-rank-math' );
 		if ( is_network_admin() ) {
-			$base = __( 'Help', 'rank-math' );
+			$base = __( 'Help', 'seo-by-rank-math' );
 		}
 		$default = 'rank-math' === Param::get( 'page' ) ? $base : get_admin_page_title();
 		return str_replace( '_', ' ', Param::get( 'view', $default, FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_BACKTICK ) );

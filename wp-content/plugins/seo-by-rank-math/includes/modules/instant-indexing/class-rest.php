@@ -42,49 +42,68 @@ class Rest extends WP_REST_Controller {
 	public function register_routes() {
 		$namespace = $this->namespace;
 
-		$endpoint = '/submitUrls/';
 		register_rest_route(
 			$namespace,
-			$endpoint,
+			'/submitUrls',
 			[
 				[
 					'methods'             => WP_REST_Server::EDITABLE,
 					'callback'            => [ $this, 'submit_urls' ],
 					'permission_callback' => [ $this, 'has_permission' ],
+					'args'                => [
+						'urls' => [
+							'description' => __( 'The list of urls to submit to the Instant Indexing API.', 'seo-by-rank-math' ),
+							'type'        => 'string',
+							'required'    => true,
+						],
+					],
 				],
 			]
 		);
 
-		$endpoint = '/getLog/';
 		register_rest_route(
 			$namespace,
-			$endpoint,
+			'/getLog',
 			[
 				[
-					'methods'             => WP_REST_Server::READABLE,
+					'methods'             => WP_REST_Server::CREATABLE,
 					'callback'            => [ $this, 'get_log' ],
 					'permission_callback' => [ $this, 'has_permission' ],
+					'args'                => [
+						'filter' => [
+							'description' => __( 'Filter log by type.', 'seo-by-rank-math' ),
+							'type'        => 'string',
+							'enum'        => [ 'all', 'manual', 'auto' ],
+							'default'     => 'all',
+						],
+					],
 				],
 			]
 		);
 
-		$endpoint = '/clearLog/';
 		register_rest_route(
 			$namespace,
-			$endpoint,
+			'/clearLog',
 			[
 				[
 					'methods'             => WP_REST_Server::EDITABLE,
 					'callback'            => [ $this, 'clear_log' ],
 					'permission_callback' => [ $this, 'has_permission' ],
+					'args'                => [
+						'filter' => [
+							'description' => __( 'Clear log by type.', 'seo-by-rank-math' ),
+							'type'        => 'string',
+							'enum'        => [ 'all', 'manual', 'auto' ],
+							'default'     => 'all',
+						],
+					],
 				],
 			]
 		);
 
-		$endpoint = '/resetKey/';
 		register_rest_route(
 			$namespace,
-			$endpoint,
+			'/resetKey',
 			[
 				[
 					'methods'             => WP_REST_Server::EDITABLE,
@@ -105,19 +124,19 @@ class Rest extends WP_REST_Controller {
 	public function submit_urls( WP_REST_Request $request ) {
 		$urls = $request->get_param( 'urls' );
 		if ( empty( $urls ) ) {
-			return new WP_Error( 'empty_urls', __( 'No URLs provided.', 'rank-math' ) );
+			return new WP_Error( 'empty_urls', __( 'No URLs provided.', 'seo-by-rank-math' ) );
 		}
 
 		$urls = Arr::from_string( $urls, "\n" );
 		$urls = array_values( array_unique( array_filter( $urls, 'wp_http_validate_url' ) ) );
 
 		if ( ! $urls ) {
-			return new WP_Error( 'invalid_urls', __( 'Invalid URLs provided.', 'rank-math' ) );
+			return new WP_Error( 'invalid_urls', __( 'Invalid URLs provided.', 'seo-by-rank-math' ) );
 		}
 
 		$result = Api::get()->submit( $urls );
 		if ( ! $result ) {
-			return new WP_Error( 'submit_failed', __( 'Failed to submit URLs. See details in the History tab.', 'rank-math' ) );
+			return new WP_Error( 'submit_failed', __( 'Failed to submit URLs. See details in the History tab.', 'seo-by-rank-math' ) );
 		}
 
 		$urls_number = count( $urls );
@@ -130,7 +149,7 @@ class Rest extends WP_REST_Controller {
 						'Successfully submitted %s URL.',
 						'Successfully submitted %s URLs.',
 						$urls_number,
-						'rank-math'
+						'seo-by-rank-math'
 					),
 					$urls_number
 				),
@@ -148,11 +167,11 @@ class Rest extends WP_REST_Controller {
 	public function get_log( WP_REST_Request $request ) {
 		$filter = $request->get_param( 'filter' );
 		$result = Api::get()->get_log();
-		$total = count( $result );
+		$total  = count( $result );
 		foreach ( $result as $key => $value ) {
 			$result[ $key ]['timeFormatted'] = wp_date( 'Y-m-d H:i:s', $value['time'] );
 			// Translators: placeholder is human-readable time, e.g. "1 hour".
-			$result[ $key ]['timeHumanReadable'] = sprintf( __( '%s ago', 'rank-math' ), human_time_diff( $value['time'] ) );
+			$result[ $key ]['timeHumanReadable'] = sprintf( __( '%s ago', 'seo-by-rank-math' ), human_time_diff( $value['time'] ) );
 
 			if ( 'manual' === $filter && empty( $result[ $key ]['manual_submission'] ) ) {
 				unset( $result[ $key ] );
@@ -193,7 +212,7 @@ class Rest extends WP_REST_Controller {
 	public function reset_key( WP_REST_Request $request ) {
 		$api = Api::get();
 		$api->reset_key();
-		$key = $api->get_key();
+		$key      = $api->get_key();
 		$location = $api->get_key_location( 'reset_key' );
 		return new WP_REST_Response(
 			[

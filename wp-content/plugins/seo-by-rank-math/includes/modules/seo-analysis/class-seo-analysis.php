@@ -45,8 +45,6 @@ class SEO_Analysis {
 		if ( Helper::has_cap( 'rank_math_site_analysis' ) ) {
 			$this->action( 'rank_math/admin_bar/items', 'admin_bar_items', 11 );
 		}
-
-		$this->filter( 'rank_math/seo_analysis/admin_tab_view', 'add_tab_previews', 10, 2 );
 	}
 
 	/**
@@ -58,9 +56,9 @@ class SEO_Analysis {
 		$menu->add_sub_menu(
 			'seo-analysis',
 			[
-				'title'    => esc_html__( 'SEO Analyzer', 'rank-math' ),
+				'title'    => esc_html__( 'SEO Analyzer', 'seo-by-rank-math' ),
 				'href'     => Helper::get_admin_url( 'seo-analysis' ),
-				'meta'     => [ 'title' => esc_html__( 'Site-wide analysis', 'rank-math' ) ],
+				'meta'     => [ 'title' => esc_html__( 'Site-wide analysis', 'seo-by-rank-math' ) ],
 				'priority' => 50,
 			]
 		);
@@ -71,9 +69,9 @@ class SEO_Analysis {
 			$menu->add_sub_menu(
 				'analyze',
 				[
-					'title' => $link ? esc_html__( 'Analyze this Page', 'rank-math' ) : esc_html__( 'SEO Analyzer', 'rank-math' ),
+					'title' => $link ? esc_html__( 'Analyze this Page', 'seo-by-rank-math' ) : esc_html__( 'SEO Analyzer', 'seo-by-rank-math' ),
 					'href'  => Helper::get_admin_url( 'seo-analysis' ) . ( $link ? '&u=' . rawurlencode( $link ) : '' ),
-					'meta'  => [ 'title' => esc_html__( 'SEO Analysis for this page', 'rank-math' ) ],
+					'meta'  => [ 'title' => esc_html__( 'SEO Analysis for this page', 'seo-by-rank-math' ) ],
 				],
 				'seo-analysis'
 			);
@@ -90,7 +88,7 @@ class SEO_Analysis {
 	 */
 	public function add_tab_previews( $file, $current_tab ) {
 		if ( 'competitor_analyzer' === $current_tab ) {
-			$file = dirname( __FILE__ ) . '/views/competitor-analysis.php';
+			$file = __DIR__ . '/views/competitor-analysis.php';
 		}
 
 		return $file;

@@ -13,6 +13,7 @@ namespace RankMath\Analytics;
 use RankMath\Helper;
 use RankMath\Traits\Hooker;
 use RankMath\Google\Authentication;
+use RankMath\Helpers\Sitepress;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -46,7 +47,7 @@ class Watcher {
 	 */
 	public function hooks() {
 		if ( Authentication::is_authorized() ) {
-			$this->action( 'save_post', 'update_post_info', 99 );
+			$this->action( 'save_post', 'update_post_info', 101 );
 		}
 	}
 
@@ -78,7 +79,8 @@ class Watcher {
 			$primary_keyword = trim( $primary_keyword[0] );
 		}
 
-		$page = str_replace( Helper::get_home_url(), '', urldecode( get_permalink( $post_id ) ) );
+		$permalink = $this->get_permalink( $post_id );
+		$page      = str_replace( Helper::get_home_url(), '', urldecode( $permalink ) );
 
 		// Set argument for object row.
 		$object_args = [
@@ -111,7 +113,7 @@ class Watcher {
 				DB::add_object( $object_args );
 			}
 
-			// Here we don't need to add `rank_math_analytic_object_id` post meta, because we always remove old translated objects info and add new one, in case of multi-lanauge.
+			// Here we don't need to add `rank_math_analytic_object_id` post meta, because we always remove old translated objects info and add new one, in case of multi-language.
 			return;
 		}
 
@@ -121,5 +123,16 @@ class Watcher {
 		if ( $id > 0 ) {
 			update_post_meta( $post_id, 'rank_math_analytic_object_id', $id );
 		}
+	}
+
+	/**
+	 * Get permalink.
+	 *
+	 * @param int $post_id   Post ID.
+	 *
+	 * @return string
+	 */
+	public function get_permalink( $post_id ) {
+		return Sitepress::get()->get_permalink( $post_id );
 	}
 }

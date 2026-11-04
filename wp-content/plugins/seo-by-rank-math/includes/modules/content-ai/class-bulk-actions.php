@@ -16,6 +16,7 @@ use RankMath\Helpers\Str;
 use RankMath\Paper\Paper;
 use RankMath\Admin\Admin_Helper;
 use RankMath\Post;
+use RankMath\Term;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -83,11 +84,11 @@ class Bulk_Actions {
 			return $actions;
 		}
 
-		$actions['rank_math_ai_options']                             = __( '&#8595; Rank Math Content AI', 'rank-math' );
-		$actions['rank_math_content_ai_fetch_seo_title']             = esc_html__( 'Write SEO Title with AI', 'rank-math' );
-		$actions['rank_math_content_ai_fetch_seo_description']       = esc_html__( 'Write SEO Description with AI', 'rank-math' );
-		$actions['rank_math_content_ai_fetch_seo_title_description'] = esc_html__( 'Write SEO Title & Description with AI', 'rank-math' );
-		$actions['rank_math_content_ai_fetch_image_alt']             = esc_html__( 'Write Image Alt Text with AI', 'rank-math' );
+		$actions['rank_math_ai_options']                             = __( '&#8595; Rank Math Content AI', 'seo-by-rank-math' );
+		$actions['rank_math_content_ai_fetch_seo_title']             = esc_html__( 'Write SEO Title with AI', 'seo-by-rank-math' );
+		$actions['rank_math_content_ai_fetch_seo_description']       = esc_html__( 'Write SEO Description with AI', 'seo-by-rank-math' );
+		$actions['rank_math_content_ai_fetch_seo_title_description'] = esc_html__( 'Write SEO Title & Description with AI', 'seo-by-rank-math' );
+		$actions['rank_math_content_ai_fetch_image_alt']             = esc_html__( 'Write Image Alt Text with AI', 'seo-by-rank-math' );
 
 		return $actions;
 	}
@@ -103,8 +104,8 @@ class Bulk_Actions {
 			return $actions;
 		}
 
-		$actions['rank_math_ai_options']                 = __( '&#8595; Rank Math Content AI', 'rank-math' );
-		$actions['rank_math_content_ai_fetch_image_alt'] = esc_html__( 'Write Image Alt Text with AI', 'rank-math' );
+		$actions['rank_math_ai_options']                 = __( '&#8595; Rank Math Content AI', 'seo-by-rank-math' );
+		$actions['rank_math_content_ai_fetch_image_alt'] = esc_html__( 'Write Image Alt Text with AI', 'seo-by-rank-math' );
 
 		return $actions;
 	}
@@ -125,7 +126,7 @@ class Bulk_Actions {
 
 		if ( ! empty( get_option( 'rank_math_content_ai_posts' ) ) ) {
 			Helper::add_notification(
-				esc_html__( 'Another bulk editing process is already running. Please try again later after the existing process is complete.', 'rank-math' ),
+				esc_html__( 'Another bulk editing process is already running. Please try again later after the existing process is complete.', 'seo-by-rank-math' ),
 				[
 					'type'    => 'warning',
 					'id'      => 'rank_math_content_ai_posts_error',
@@ -160,7 +161,7 @@ class Bulk_Actions {
 
 		$method = $is_post_list ? 'get_post_data' : 'get_term_data';
 		foreach ( $object_ids as $object_id ) {
-			$data['posts'][] = $this->$method( $object_id );
+			$data['posts'][] = $this->$method( $object_id, $action );
 		}
 
 		Bulk_Edit_SEO_Meta::get()->start( $data );
@@ -191,7 +192,7 @@ class Bulk_Actions {
 			// Keep only the image tags that have src attribute but no alt attribute.
 			$images = array_filter(
 				$images[0],
-				function( $image ) {
+				function ( $image ) {
 					return preg_match( '/src=[\'"]?([^\'" >]+)[\'" >]/i', $image, $matches ) && ( ! preg_match( '/alt="([^"]*)"/i', $image, $matches ) || preg_match( '/alt=""/i', $image, $matches ) );
 				}
 			);
@@ -238,14 +239,14 @@ class Bulk_Actions {
 		$processed = get_option( 'rank_math_content_ai_posts_processed' );
 
 		$tools['content_ai_cancel_bulk_edit_process'] = [
-			'title'       => esc_html__( 'Cancel Content AI Bulk Editing Process', 'rank-math' ),
+			'title'       => esc_html__( 'Cancel Content AI Bulk Editing Process', 'seo-by-rank-math' ),
 			'description' => sprintf(
 				// Translators: placeholders are the number of posts that were processed.
-				esc_html__( 'Terminate the ongoing Content AI Bulk Editing Process to halt any pending modifications and revert to the previous state. The bulk metadata has been generated for %1$d out of %1$d posts so far.', 'rank-math' ),
+				esc_html__( 'Terminate the ongoing Content AI Bulk Editing Process to halt any pending modifications and revert to the previous state. The bulk metadata has been generated for %1$d out of %1$d posts so far.', 'seo-by-rank-math' ),
 				$processed,
 				count( $posts )
 			),
-			'button_text' => esc_html__( 'Terminate', 'rank-math' ),
+			'button_text' => esc_html__( 'Terminate', 'seo-by-rank-math' ),
 		];
 
 		return $tools;
@@ -257,24 +258,25 @@ class Bulk_Actions {
 	public function cancel_bulk_edit_process() {
 		Bulk_Edit_SEO_Meta::get()->cancel();
 		Helper::remove_notification( 'rank_math_content_ai_posts_started' );
-		return __( 'Bulk Editing Process Successfully Cancelled', 'rank-math' );
+		return __( 'Bulk Editing Process Successfully Cancelled', 'seo-by-rank-math' );
 	}
 
 	/**
 	 * Get Post data.
 	 *
 	 * @param integer $object_id Post ID.
+	 * @param string  $action    The action being performed (title, description, or both).
 	 *
 	 * @return array Post data.
 	 */
-	private function get_post_data( $object_id ) {
+	private function get_post_data( $object_id, $action = 'both' ) {
 		$object = get_post( $object_id );
 		return [
 			'post_id'       => $object_id,
 			'post_type'     => 'download' === $object->post_type ? 'Product' : ucfirst( $object->post_type ),
 			'title'         => get_the_title( $object_id ),
 			'focus_keyword' => Post::get_meta( 'focus_keyword', $object_id ),
-			'summary'       => Helper::replace_vars( $this->get_post_description( $object ), $object ),
+			'summary'       => Helper::replace_vars( $this->get_content_for_ai( $object, $action ), $object ),
 		];
 	}
 
@@ -282,49 +284,66 @@ class Bulk_Actions {
 	 * Get Term data.
 	 *
 	 * @param integer $object_id Term ID.
+	 * @param string  $action    The action being performed (title, description, or both).
 	 *
 	 * @return array Term data.
 	 */
-	private function get_term_data( $object_id ) {
+	private function get_term_data( $object_id, $action = 'both' ) {
 		$object = get_term( $object_id );
 		return [
 			'post_id'       => $object_id,
 			'post_type'     => $object->taxonomy,
 			'title'         => $object->name,
-			'focus_keyword' => get_term_meta( $object_id, 'rank_math_focus_keyword', true ),
-			'summary'       => Helper::replace_vars( $this->get_term_description( $object ), $object ),
+			'focus_keyword' => Term::get_meta( 'focus_keyword', $object, $object->taxonomy ),
+			'summary'       => Helper::replace_vars( $this->get_content_for_ai( $object, $action ), $object ),
 		];
 	}
 
 	/**
-	 * Get post description.
+	 * Get content for AI processing based on object type and action.
 	 *
-	 * @param WP_Post $object Post Instance.
+	 * @param object $current_object Object instance (WP_Post or WP_Term).
+	 * @param string $action The action being performed (title, description, or both).
 	 *
-	 * @return string Post description.
+	 * @return string Content to use for AI generation.
 	 */
-	private function get_post_description( $object ) {
-		$description = Post::get_meta( 'description', $object->ID );
-		if ( '' !== $description ) {
-			return $description;
+	private function get_content_for_ai( $current_object, $action = 'both' ) {
+		// For description generation, don't use current SEO descriptions.
+		if ( $action === 'description' || $action === 'both' ) {
+			return $this->get_content_without_seo_meta( $current_object );
 		}
 
-		return ! empty( $object->post_excerpt ) ? $object->post_excerpt : Str::truncate( Paper::get_from_options( "pt_{$object->post_type}_description", $object ), 160 );
+		// For title generation, prioritize existing SEO description.
+		return $current_object instanceof \WP_Post
+		? Post::get_meta( 'description', $current_object->ID, $this->get_content_without_seo_meta( $current_object ) )
+		: Term::get_meta( 'description', $current_object, $current_object->taxonomy, $this->get_content_without_seo_meta( $current_object ) );
 	}
 
 	/**
-	 * Get post description.
+	 * Get content from object without using SEO meta description.
 	 *
-	 * @param WP_Post $object Post Instance.
+	 * @param object $current_object Object instance (WP_Post or WP_Term).
 	 *
-	 * @return string Post description.
+	 * @return string Content from the object.
 	 */
-	private function get_term_description( $object ) {
-		$description = get_term_meta( $object->term_id, 'rank_math_description', true );
-		if ( '' !== $description ) {
-			return $description;
+	private function get_content_without_seo_meta( $current_object ) {
+		$is_post = $current_object instanceof \WP_Post;
+
+		// For terms: term description > template.
+		if ( ! $is_post ) {
+			return ! empty( $current_object->description ) ? $current_object->description : Str::truncate( Paper::get_from_options( "tax_{$current_object->taxonomy}_description", $current_object ), 160 );
 		}
 
-		return ! empty( $object->description ) ? $object->description : Str::truncate( Paper::get_from_options( "tax_{$object->taxonomy}_description", $object ), 160 );
+		// For posts: excerpt > content > template.
+		if ( ! empty( $current_object->post_excerpt ) ) {
+			return $current_object->post_excerpt;
+		}
+
+		$content = wp_strip_all_tags( $current_object->post_content );
+		if ( ! empty( $content ) ) {
+			return Str::truncate( $content, 300 );
+		}
+
+		return Str::truncate( Paper::get_from_options( "pt_{$current_object->post_type}_description", $current_object ), 160 );
 	}
 }

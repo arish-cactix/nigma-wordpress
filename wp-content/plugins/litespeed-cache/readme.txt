@@ -1,9 +1,10 @@
 === LiteSpeed Cache ===
 Contributors: LiteSpeedTech
 Tags: caching, optimize, performance, pagespeed, seo, image optimize, object cache, redis, memcached, database cleaner
-Requires at least: 4.9
-Tested up to: 6.7
-Stable tag: 6.5.3
+Requires at least: 6.0
+Requires PHP: 7.4
+Tested up to: 7.1
+Stable tag: 7.9.3
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 
@@ -48,7 +49,7 @@ LiteSpeed Cache for WordPress is compatible with ClassicPress.
 * Single Site and Multisite (Network) support
 * Import/Export settings
 * Attractive, easy-to-understand interface
-* WebP image format support
+* AVIF/WebP image format support
 * Heartbeat control
 
 <sup>+</sup> This service is not provided by the LSCache plugin, nor is it guaranteed to be installed by your service provider. However, the plugin is compatible with the service if it is in use on your site.
@@ -91,10 +92,10 @@ LiteSpeed Cache for WordPress is compatible with ClassicPress.
 == LSCWP Resources ==
 * [Join our Slack community](https://litespeedtech.com/slack) to connect with other LiteSpeed users.
 * [Ask a question on our support forum](https://wordpress.org/support/plugin/litespeed-cache/).
-* [View detailed documentation](https://docs.litespeedtech.com/lscache/lscwp/overview/).
-* [Read WordPress Wednesday tutorials on our blog](https://blog.litespeedtech.com/tag/wordpress-wednesday/).
+* [View detailed documentation](https://docs.litespeedtech.com/lscache/lscwp/).
+* [Read about LSCWP and WordPress on our blog](https://blog.litespeedtech.com/tag/wordpress/).
 * [Help translate LSCWP](https://translate.wordpress.org/projects/wp-plugins/litespeed-cache/).
-* [LSCWP GitHub repo](https://github.com/litespeedtech/lscache_wp).
+* [Contribute to the LSCWP GitHub repo](https://github.com/litespeedtech/lscache_wp).
 
 == Installation ==
 
@@ -131,7 +132,9 @@ This plugin includes some suggested text that you can add to your site's Privacy
 
 **For your own information:** LiteSpeed Cache for WordPress potentially stores a duplicate copy of every web page on display on your site. The pages are stored locally on the system where LiteSpeed server software is installed and are not transferred to or accessed by LiteSpeed employees in any way, except as necessary in providing routine technical support if you request it. All cache files are temporary, and may easily be purged before their natural expiration, if necessary, via a Purge All command. It is up to individual site administrators to come up with their own cache expiration rules.
 
-In addition to caching, our WordPress plugin has online features provided by QUIC.cloud for Image Optimization, CSS Optimization and Low Quality Image Placeholder services. When one of those optimizations are requested, data is transmitted to a remote QUIC.cloud server, processed, and then transmitted back for use on your site. Now if using the QUIC.cloud CDN it uses LSCache technologies to access your site then host your site to others globally and also your data is not transferred to or accessed by QUIC.cloud employees in any way, except as necessary in providing maintenance or technical support. QUIC.cloud keeps copies of that data for up to 7 days and then permanently deletes them. Similarly, the WordPress plugin has a Reporting feature whereby a site owner can transmit an environment report to LiteSpeed so that we may better provide technical support. None of these features collects any visitor data. Only server and site data are involved.
+In addition to caching, our WordPress plugin has online features provided by QUIC.cloud for Image Optimization and Page Optimization services. When one of these optimizations is requested, data is transmitted to a remote QUIC.cloud server, processed, and then transmitted back for use on your site. QUIC.cloud keeps copies of that data for up to 7 days and then permanently deletes it. Similarly, the WordPress plugin has a Reporting feature whereby a site owner can transmit an environment report to LiteSpeed so that we may better provide technical support. None of these features collects any visitor data. Only server and site data are involved.
+
+QUIC.cloud CDN, if enabled, uses LSCache technology to access your site, and serve your content from remote global nodes. Your data is not accessed by QUIC.cloud employees in any way, except as necessary in providing maintenance or technical support.
 
 Please see the [QUIC.cloud Privacy Policy](https://quic.cloud/privacy-policy/) for our complete Privacy/GDPR statement.
 
@@ -250,188 +253,144 @@ The vast majority of plugins and themes are compatible with LiteSpeed Cache. The
 
 = How can I report security bugs? =
 
-You can report security bugs through the Patchstack Vulnerability Disclosure Program. The Patchstack team help validate, triage and handle any security vulnerabilities. [Report a security vulnerability.](https://patchstack.com/database/vdp/litespeed-cache)
+Report a suspected vulnerability through either channel:
+
+* The [Patchstack Vulnerability Disclosure Program](https://patchstack.com/database/vdp/litespeed-cache), where the Patchstack team help validate and triage the report.
+* Email `support@litespeedtech.com`, or open a private ticket from the LiteSpeed Client Area.
+
+Please don't report a suspected vulnerability in this support forum. Reporting details are in `security.md` in the plugin folder.
 
 == Changelog ==
 
-= 6.5.3 - Dec 4 2024 =
-* **Misc** Quote escaped in attributes when building HTML.
+= 8.0 - Coming soon 2026 =
+* 🌱**OptiMax** OptiMax to maximize the page score.
 
-= 6.5.2 - Oct 17 2024 =
-* **Crawler** Removed barely used Role Simulator from Crawler, to prevent potential security issues.
-* **Misc** Removed `mt_srand` function in random hash generation to slightly improve the hash result.
+= 7.9.3 - Nov 3 2026 =
+* **Object Cache** Fixed repeated database queries when Memcached rejects oversized alloptions values. (Peter Wells #1076)
+* **Core** Moved uninstall handling to uninstall.php to avoid unnecessary option reads on normal requests. (Contributolo PR#1078)
+* **Purge** Added the litespeed_purged action for public purge tag additions. (Contributolo PR#1072)
+* **Page Optimize** Prioritized the front page in CCSS, UCSS, VPI and OptiMax queues and corrected queue capacity handling. (Faisal Ahammad PR#1064)
+* **Guest Mode** Fixed PHP 8.5 deprecation warnings in CIDR checks. (deltafactory PR#1080)
+* **Conf** Fixed WooCommerce option warnings with shared multisite settings. (lhero-org #1077, dassels43)
+* **Page Optimize** Kept CSS/JS optimization on pages with a very large inline style or script block that previously exceeded the PCRE limit and skipped optimization. (ventio, PR#1081)
+* **Crawler** Limited automatic HTTP fallback to connection failures during the Server IP HTTPS test. (unsetfocus #1074)
+* **Core** Fixed constant rewrites of the shared static folder .htaccess on subdirectory multisite. (#869638)
+* **Purge** Fixed excessive cache purges from non-public custom post types. (markhysted #1044, models118)
+* **Purge** Purge Post Type Archive now purges only the post type archive page (e.g. the Shop page), instead of also purging every post of that type. (John-belt #310, models118)
+* **Cloud** Signed the QUIC.cloud link request.
+* **Cloud** Cleared the stored main domain when the QUIC.cloud registration is reset, so a deactivated site no longer reports itself as an alias of an old domain.
+* **Heartbeat** Kept the configured interval on post lists and editors. (#1082)
+* **3rd** Perfmatters script manager no longer disables ESI site-wide; it is now skipped only on ESI requests. (VIP PR#1055)
+* **Cache** Fixed mobile cache vary detection behind LiteSpeed ADC on Apache origins. (PR#1088)
+* **VPI** Preloaded responsive VPI images with their srcset and sizes, so the browser fetches the same candidate the page renders. (PR#1089)
 
-= 6.5.1 - Sep 25 2024 =
-* **Security** This release includes two security updates to enhance the post validation of the editor (CVE-2024-47373), and to secure the GUI queue display from malicious vary input (CVE-2024-47374).
-* **Media** Sanitized dimensions for the images when replacing with placeholders. (TaiYou)
-* **Page Optimize** Sanitized vary value in queue list. (TaiYou)
-* **Cloud** Silent API error when failing to retrieve news updates.
+= 7.9.2 - Oct 20 2026 =
+* **Image Optimize** Fixed thumbnails skipped for images in the uploads root. (AsFLY-902 PR#1059)
+* **Cloud** Retry credit sync after one hour when credit is exhausted.
+* **Cache** URI rules like `Do Not Cache URIs` now ignore a leading or trailing `*`, so `/wp-json/mcp/*` matches the same as `/wp-json/mcp/`. (#1040)
+* **Page Optimize** Protected HTML boundaries during resource rewriting, insertion and minification. Hardened delayed-script globals, preserved pages on parsing errors, and corrected Deferred ordering. Removed JS Delayed Includes and its public filter; global Delayed mode remains available. Improved Instant Click CDN compatibility.
+* **Media** Corrected next-gen image variants, lazy-load priorities and VPI markup, and protected quoted content, raw text and noscript fallbacks. Validated LQIP and avatar paths, and made remote dimension checks opt-in.
+* **Cache** Hardened visitor isolation, vary cookies, Guest Mode and cache-control permissions, including Force Public safeguards for private and authenticated responses. Corrected ignored query strings, exclusions and purge scheduling, and restricted shared-cache management to network administrators. (Ionut Platon #419630)
+* **Image Optimize** Corrected callback accounting, duplicate detection, scan cursors and metadata handling. Preserved offload hooks and reported failed clean/reset writes.
+* **Conf** Protected site identity and shared multisite settings, moved runtime configuration to a PHP-protected file, and improved import validation and .htaccess updates. Synchronized shared Guest settings and preserved runtime overrides during upgrades. Shared multisite settings now require network activation.
+* **Presets** Prevented path traversal, isolated backups by site in protected PHP files, excluded secrets from new backups, and added a legacy-backup cleanup reminder.
+* **Object Cache** Corrected Add/Replace conditions, forced reads, Redis/Memcached connections, timeouts, TTLs and flush results. Improved drop-in cleanup and disabled status, preserved runtime fallback, and removed the unused lifetime field. Isolated cache keys per installation.
+* **ESI** Hardened request signatures and cleanup markers, made WooCommerce nonce fragments private by default, and preserved shortcode attributes. Clarified private-content requirements.
+* **Cloud** Restricted service nodes to trusted QUIC.cloud origins and preserved replay protection. Corrected nonce parsing, site throttling and dashboard data, escaped free-text notices, and restricted news/dashboard markup.
+* **CDN** Prevented HTML injection during inline CSS URL rewriting, validated mapping URLs, and preserved Cloudflare zones after failed lookups. (nathaningram)
+* **Crawler** Restricted sitemap origins and role simulation, hardened hash checks, and corrected mobile/Guest variants and request isolation. Preserved successful child sitemaps and the previous map on total failure. (#866256)
+* **CLI** Corrected local and multisite URL purges, required HTTPS imports, validated blog IDs, preserved nested option values, and limited sync output to usage data.
+* **Database Optimize** Scoped table operations to the site's table prefix and safely quoted identifiers. Preserved recent auto drafts, bounded cleanup, invalidated caches, added confirmations, and reported cleanup and conversion failures. Restricted multisite management to network administrators.
+* **Debug** Restricted beta packages to trusted sources, protected logs, and redacted credentials from logs, reports and page comments while preserving useful diagnostics. Removed the default trusted loopback IP.
+* **Task** Isolated asynchronous tokens by job type, used constant-time validation, and excluded tokens from logs.
+* **Purge** Corrected unpublished-post and empty-archive purges, preserved encoded paths, and prevented site cron from flushing shared backends.
+* **3rd** Corrected WooCommerce and NextGEN purges, protected unvaried cart responses, and validated bulk-edit and WCML settings permissions.
+* **3rd** WCML: guests in the shop currency now use the default cache, and the crawler warms it. (#1057)
+* **Core** Hardened file writes, admin output and static asset headers, replaced React and Babel with plain jQuery/JavaScript forms, and improved installation, upgrade and uninstall handling.
+* **Localization** Validated resource patterns while preserving comments, limited remote JavaScript downloads to 10 seconds, cleaned failed downloads, and restored HTTPS fallback redirects.
 
-= 6.5.0.2 - Sep 6 2024 =
-* **Debug** Compatibility improvement for WP installations w/o `AUTH_KEY` defined in `wp-config.php`.
+= 7.9.1 - Sep 1 2026 =
+* **Core** Aligned the runtime PHP and WordPress guards with the published minimum requirements.
+* **ESI** Prevented Guest Mode pages from creating ESI subrequests when an integration registered its ESI hooks before Guest Mode detection.
+* **ESI** Bound ESI execution to the signed query payload so POST parameters cannot replace validated block data.
+* **Image Optimize** Fixed a fatal error when the WordPress HTTP fallback could not download an image.
+* **Image Optimize** The image optimization callback is now verified by a QUIC.cloud signature instead of the source IP address, and every notified download location is validated before use.
+* **Image Optimize** Successful callback retries now ignore rows already returned to the raw queue without blocking other live rows in the same batch.
+* **Image Optimize** An image whose queued file can no longer be verified against its attachment is now dropped instead of being sent back for optimization, so it can no longer request optimization again on every cron run.
+* **Image Optimize** Bounded and expired pending image-completion notifications without keeping the image pull cron running indefinitely.
+* **Image Optimize** Optimized image downloads now use the WordPress safe HTTP API, refuse redirects, and validate each response before publication.
+* **Image Optimize** Image pull notices now distinguish download, remote-service, and local-save failures.
+* **Cache** Do Not Cache, Private Cached, Force Cache, Optimization and Lazy Load URI rules now compare the same query string against both spellings of a REST route, so a rule naming a query argument, or anchored to an exact address, applies to plain-permalink sites the same way it does elsewhere.
+* **Optimization** Remote images, avatars, localized JavaScript, CSS/JS cache files, and Guest Mode lists now share bounded streamed downloads and atomic file publication.
+* **VPI** Fixed queue-key collisions on plain-permalink sites and enforced the configured queue limit.
+* **Cloud** Every QUIC.cloud callback — CDN status, error domains, IP validation and ping — is now verified by a QUIC.cloud signature rather than by the source IP address, and the source IP allow list has been removed. Activation, echo, account-link and CDN-enable signatures are now bound to their purpose and site.
+* **Cloud** Added stable callback error codes so QUIC.cloud can distinguish retryable timestamp, storage and replay-cache-capacity failures from terminal authorization failures.
+* **REST** Removed the legacy `check_img` diagnostic endpoint.
+* **API** Removed the `litespeed_is_from_cloud` filter. Each callback is now authorized by its own signature instead of by a request-wide flag.
+* **API** Added the `litespeed_static_dir_htaccess` filter so hosts can remove unsupported directives from the generated static-directory protection file. (vvvllll #1043)
+* **Avatar** Prevented failed on-demand avatar downloads from redirecting visitors to the WordPress admin area.
 
-= 6.5.0.1 - Sep 4 2024 =
-* 🔥**Debug** Fixed a corner case fatal error when Object Cache is ON but failed to connect, and `wp-content/litespeed` directory is not writable, and debug option is ON.
+= 7.9 - Aug 5 2026 =
+* **Cloud** Changed Health service to run asynchronously, resuming through WP cron when the cloud defers the request.
+* **Cache** Respected the existing cache control header when sending the default WP header. (dieter93)
+* **Conf** Updated default cache login value to false.
+* **Core** Minimum required PHP version escalated to PHP v7.4.0.
+* **Core** Minimum required WP version escalated to WP v6.0.
+* **Media** Improved WebP/AVIF data handling and inline script output.
+* **CDN** Stripped file types from settings when the matching Include Images/CSS/JS toggle is on.
+* **CDN** Added Cloudflare purge only when Cloudflare is active. (PR#996)
+* **CDN** Bypassed CDN replacement for REST JSON. (#216585)
+* **Object Cache** Bypassed object cache operations after a failed connection.
+* **Object Cache** Enabled Redis zstd compression via phpredis. (Octavian)
+* **Object Cache** Validated the Host setting on save. (PR#889)
+* **UCSS** Dropped notification step.
+* **CCSS** Dropped notification step. Added try_later handling and sync mode support.
+* **Page Optimize** Fixed race condition when concurrent requests come to same CSS file. (unsetfocus)
+* **Page Optimize** Fixed blob execution in JS Delay. (PR#956, Zsombor Franczia, Marks Dev)
+* **Page Optimize** Fixed JS Combine corrupting URLs inside template literals. (mschroettle #981)
+* **Page Optimize** Fixed CSS Combine serving unstyled pages when the placeholder link tag uses default WordPress whitespace. (Faisal Ahammad #999 PR#1002)
+* **Page Optimize** Resolved WP 7.0 HTML attribute parse compatibility for Font Display setting. (PR#1017)
+* **Image Optimize** Skipped sending queued images from the queue when their optimized files already exist. (terratag)
+* **Image Optimize** Dropped legacy image_optm table.
+* **Crawler** Blacklisted a URL after 3 consecutive failures instead of the first one. (Ryan D)
+* **ESI** Fixed ESI nonce generation for actions with custom nonce lifetimes. (Robert Staddon PR#1006)
+* **ESI** Fixed duplicate comment form appearing alongside its ESI block on non-optimized pages.
+* **ESI** Bypassed comment for silent blocks that fail `_hash` validation. (Robert Staddon PR#1008)
+* **VPI** Added `fetchpriority=high` to VPI preload links. (Maciej Mroziński PR#993)
+* **LQIP** Fixed LQIP generation failing for native WebP/AVIF images. (Ashok PR#976)
+* **Toolbox** Delayed report submission to finish 3rd party conf injection.
+* **GUI** Dropped redundant menu from WP admin Settings page.
+* **GUI** Fixed styles lost on WP 7.0 when heartbeat is disabled.
+* **GUI** Settings tabs no longer flash on page load, are remembered per page, and support browser Back/Forward navigation. (Ryan D PR#984)
+* **3rd** Crawler can now support WCML currencies.
+* **3rd** Cache purge compatibility w/ RankMath SEO. (Ryan D, PR#977)
+* **3rd** DIVI 5 - Disable Rest API cache to fix the invalid_nonce issue. (PR#1004)
+* **3rd** Added Gravity Forms ESI nonce detection. (pascalminator PR#1011)
+* **Misc** Blocked public access to data files in the static cache folder. (Alexander #335626)
+* **Misc** Deactivation survey modal now shows only until the first real deactivation, then stays suppressed. (narratorben)
+* **Avatar** Disabling Avatar Cache now stops the queue counter, gravatar generation, and on-demand static avatar generation.
+* **Purge** Deferred the purge-all success notice to fix the upgrade warning.
 
-= 6.5 - Sep 4 2024 =
-*❗**Security** This release includes several debug log improvements for improved security, as listed below. Update strongly recommended.
-* **Debug** Moved debug log to litespeed individual folder `/wp-content/litespeed/debug/`.
-* **Debug** Disallowed visits to `/litespeed/debug/` folder log files in .htaccess.
-* **Debug** Dropped const `LSCWP_DEBUG_PATH` support.
-* **Debug** Renamed `debug.purge.log` to `purge.log`.
-* **Debug** Added dummy `index.php` for debug folder.
-* **Debug** Used random string for log filenames.
-* **Debug** Removed cookies-related info. (Thanks to Rafie)
-* **Debug** Dropped `Log Cookies` option.
-* **Report** Escaped report content to protect it from potential XSS attack. (Islam R alsaid #505746)
-* **ESI** Added nonce for Advanced Custom Fields + Advanced Forms. (David Lapointe Gilbert #439)
-* **Purge** Run ACTION_PURGE_EMPTYCACHE even if cache is disabled in network admin. (Philip #453)
-* **Page Optimize** Disable UCSS exclusion when UCSS is inactived. (#640)
-* **3rd** Fixed undefined warning in WooCommerce Widgets. (Lolosan #719)
-* **3rd** Correct the integration with User Switching. (John Blackbourn #725)
-* **3rd** Fixed Admin Bar Missing issue on DIVI + Elementor frontend. (thyran/robertstaddon PR#727)
+= 7.8.1 - Apr 1 2026 =
+* **CDN** Fixed Cloudflare API key type detection for the compatibility w/ the new key format.
 
-= 6.4.1 - Aug 19 2024 =
-* ❗**Security** This release patches a security issue that may affect previous LSCWP versions since v1.9.
-* 🐞**Page Optimize** Fixed HTML minification returning blank page issue. (#706)
-* 🐞**CDN** Fixed a bug when Cloudflare status option is empty. (#684 #992174)
-* **Core** Minimum required WP version escalated to WP v4.9.
+= 7.8.0.1 - Mar 17 2026 =
+* **Object Cache** Improved Object Cache resilience: auto disable when connection fails, network subsites fallback to database, and dropped TTL setting to respect never-expired transients.
 
-= 6.4 - Aug 13 2024 =
-* **Cache** Corrected QC and LSADC cache hit status.
-* **Cloud** Allow partner info removal in QUIC.cloud notification.
-* **Crawler** Separated CSS preparation validation from crawler validation.
-* **GUI** Moved `WordPress Image Quality Control` setting from `Image Optimization` menu to `Page Optimization` menu.
-* **3rd** Add Elementor Edit button back in ESI. (PR#635)
-* **3rd** Fixed Instant click potential conflict w/ other plugins.
-
-= 6.3.0.1 - Jul 29 2024 =
-* 🔥🐞**Rest** Disabled WP default Editor cache for REST requests to fix editor errors. (Shivam)
-* **Cache** Supported `cache_nocacheable.txt` predefined settings.
-
-= 6.3 - Jul 22 2024 =
-* 🌱**Page Optimize** HTML Keep Comments: When minifying HTML do not discard comments that match a specified pattern. (#328853)
-* 🌱**Cache** Cache POST requests. Now can configure POST/GET AJAX requests to be cached. (#647300)
-* **Cache** Bypass admin initialization when doing ajax call. (Tim)
-* **Cache** Better control over the cache location #541 (Gal Baras/Tanvir Israq)
-* **Cloud** Added nonce for callback validation to enhance security. (Chloe@Wordfence)
-* **Cloud** Fixed an error message for daily quota.
-* **Cloud** Display error message when communicating with QUIC.cloud causes a token error.
-* **ESI** Bypass ESI at an earlier stage when getting `DONOTCACHEPAGE`.
-* **ESI** Added ESI nonce for Events Calendar and jetMenu mobile hamburger menu. (#306983 #163710 PR#419)
-* **ESI** Added WP Data Access nonce (PR#665)
-* **ESI** Added WP User Frontend ESI nonce (PR#675)
-* **Media** Ignored images from JS in image size detection (PR#660)
-* **GUI** Moved Preset menu from network level to site level for multisite networks.
-* **GUI** Suppressed sitemap generation message if not triggered manually.
-* **GUI** Added CloudFlare purge to front end menu.
-* **GUI** Allowed customized partner CDN login link on dash.
-* **Page Optimize** Cleaned up litespeed_url table when clearing url files. (PR#664)
-* **Page Optimize** Updated Instant Click library to version 5.2.0.
-* **Page Optimize** Added Flatsome theme random string excludes. (PR#415)
-* **Page Optimize** Exclude Cloudflare turnstile from JS optimizations. (Tobolo)
-* **Page Optimize** Fixed Cloudflare Turnstile issues. (Contributolo PR#671/672)
-* **Object** Improved debug log for object cache status. (PR#669)
-* **Object** Added brief parseable header comments to the drop-in file. (OllieJones)
-* **Debug** Trimmed debug log.
-* **Misc** Improved compatibility and sped up resolving for JSON functions `json_encode/json_decode`. (hosni/szepeviktor #693)
-* **Misc** Fixed typos in params and comments. (szepeviktor #688)
-* **Image Optimization** Fixed an issue which suppressed new requests when there were no new images in the library but there were unprocessed images in the send queue.
-* **Image Optimization** Improved Cloud side quota check by disallowing new requests if notified but not pulled.
-* **Image Optimization** Keep image attributes when replacing dimensions. (PR#686 #381779)
-
-= 6.2.0.1 - Apr 25 2024 =
-* 🔥🐞**Page Optimize** Fixed the image display issue that occurs with Elementor's `data-settings` attribute when the WebP image is not yet ready. (kanten/cbwwebmaster/reedock #132840 #680939 #326525)
-
-= 6.2 - Apr 23 2024 =
-* 🌱**Crawler** Added Crawler hit/miss filter. (#328853)
-* 🌱**CLI** Image optimization now supports `wp litespeed-image batch_switch orig/optm`. (A2Hosting)
-* 🌱**VPI** Auto preload VPI images. (Ankit)
-* **Object** Added support for username/password authentication for Redis (PR#616 Donatas Abraitis/hostinger)
-* **Page Optimize** Now supporting Elementors data-settings WebP replacement. (Thanks to Ryan D)
-* **Cache** Send `Cache-Control: no-cache, no-store, must-revalidate, max-age=0` when page is not cacheable. (asafm7/Ruikai)
-* **Cache** Cache control will respect `X-Http-Method-Override` now. (George)
-* **Cache** No cache for `X-Http-Method-Override: HEAD`. (George)
-* **Cache** Specified LSCWP in adv-cache compatible file.
-* **Cache** Fixed redirection loop if query string has tailing ampersand (#389629)
-* **Cache** Dropped "Cache Favicon.ico" option as it is redundant with 404 cache. (Lauren)
-* **Cache** Fixed deprecated PHP v8 warning in page redirection. (Issue#617 dcx15)
-* **Cloud** REST callback used ACL for QC ips validation.
-* **Cloud** Fixed a typo in parsing cloud msg which prevented error messages to show.
-* **Cloud** Carried on PHP ver for better version detection purpose.
-* **Cloud** Escaped token to show correctly in report.
-* **Cloud** Fixed a QC cloud ip verification setup failure in PHP 5.3.
-* 🐞**Cloud** Fixed a continual new version detection.
-* 🐞**Image Optimize** Fixed a summary counter mismatch for finished images. (A2Hosting)
-* **CDN** Auto CDN setup compatibility with WP versions less than 5.3.
-* 🐞**CDN** Fixed wrong replacement of non image files in image replacement. (Lucas)
-* **GUI** Further filtered admin banner messages to prevent from existing danger code in database.
-* **REST** Fixed a potential PHP warning in REST check when param is empty. (metikar)
-
-= 6.1 - Feb 1 2024 =
-* 🌱**Database** New Clear Orphaned Post Meta optimizer function.
-* **Image Optimize** Fixed possible PHP warning for WP requests library response.
-* **Image Optimize** Unlocked `noabort` to all async tasks to avoid image optimization timeout. (Peter Wells)
-* **Image Optimize** Fixed an issue where images weren't being pulled with older versions of WordPress. (PR#608)
-* **Image Optimize** Improved exception handling when node server cert expire.
-* 🐞**Image Optimize** The failed to pull images due to 404 expiry will now be able to send the request again.
-* **Crawler** CLI will now be able to force crawling even if a crawl was recently initiated within the plugin GUI.
-* **Page Optimize** Fixed a dynamic property creation warning in PHP8. (PR#606)
-* **Page Optimize** Fixed an issue where getimagesize could cause page optimization to fail. (PR#607)
-* **Tag** Fixed an array to string conversion warning. (PR#604)
-* **Object Cache** Return false to prevent PHP warning when Redis fails to set a value. (PR#612)
-* **Cache Tag** Fixed an issue where $wp_query is null when getting cache tags. (PR#589)
-
-= 6.0.0.1 - Dec 15 2023 =
-* 🐞**Image Optimize** Grouped the taken notification to regional center servers to reduce the load after image pulled.
-
-= 6.0 - Dec 12 2023 =
-* 🌱**Image Optimize** Parallel pull. (⭐ Contributed by Peter Wells #581)
-* 🌱**Cache** CLI Crawler.
-* 🌱**Cache** New Vary Cookies option.
-* 🌱**Media** New Preload Featured Image option. (Ankit)
-* **Core** Codebase safety review. (Special thanks to Rafie Muhammad @ Patchstack)
-* **Purge** Purge will not show QC message if no queue is cleared.
-* **Purge** Fixed a potential warning when post type is not as expected. (victorzink)
-* **Conf** Server IP field may now be emptied. (#111647)
-* **Conf** CloudFlare CDN setting vulnerability patch. (Gulshan Kumar #541805)
-* **Crawler** Suppressed sitemap generation msg when running by cron.
-* **Crawler** PHP v8.2 Dynamic property creation warning fix. (oldrup #586)
-* **VPI** VPI can now support non-alphabet filenames.
-* **VPI** Fixed PHP8.2 deprecated warning. (Ryan D)
-* **ESI** Fixed ESI nonce showing only HTML comment issue. (Giorgos K.)
-* 🐞**Page Optimize** Fixed a fatal PHP error caused by the WHM plugin's Mass Enable for services not in use. (Michael)
-* 🐞**Network** Fix in-memory options for multisites. (Tynan #588)
-* **Network** Correct `Disable All Features` link for Multisite.
-* 🐞**Image Optimize** Removing original image will also remove optimized images.
-* **Image Optimize** Increased time limit for pull process.
-* **Image Optimize** Last pull time and cron tag now included in optimization summary.
-* **Image Optimize** Fixed Elementors Slideshow unusual background images. (Ryan D)
-* 🐞**Database Optimize** Fix an issue where cleaning post revisions would fail while cleaning postmeta. (Tynan #596)
-* **Crawler** Added status updates to CLI. (Lars)
-* **3rd** WPML product category purge for WooCommerce. (Tynan #577)
-
-= 5.7.0.1 - Oct 25 2023 =
-* **GUI** Improvements to admin banner messaging. (#694622)
-* **CDN** Improvements to CDN Setup. (#694622)
-* **Image Optimize** Improvements to the process of checking image identification. (#694622)
-
-= 5.7 - Oct 10 2023 =
-* 🌱**Page Optimize** New option available: Preconnect. (xguiboy/Mukesh Patel)
-* 🌱**3rd** New Vary for Mini Cart option for Woocommerce. (Ruikai)
-* **Cloud** Force syncing the configuration to QUIC.cloud if CDN is reenabled.
-* **Cloud** Force syncing the configuration to QUIC.cloud if domain key is readded.
-* **Cloud** Limit multi-line fields when posting to QC.
-* **Cache** Treat HEAD requests as cacheable as GET. (George Wang)
-* 🐞**ESI** Patched a possible vulnerability issue. (István Márton@Wordfence #841011)
-* 🐞**ESI** Overwrite SCRIPT_URI to prevent ESI sub request resulting in redirections. (Tobolo)
-* 🐞**Image Optimize** Bypass unnecessary image processing when images were only partially optimized. (Ruikai)
-* 🐞**Guest** Guest mode will not enable WebP directly anymore. (Michael Heymann)
-* **CDN** Auto disable CDN if CDN URL is invalid. (Ruikai)
-* **CDN** Fixed a null parameter warning for PHP v8.1 (#584)
-* **API** Added `litespeed_media_add_missing_sizes` filter to allow bypassing Media's "add missing sizes" option (for Guest Optimization and otherwise). (PR #564)
-* **Guest** Fixed soft 404 and robots.txt report for guest.vary.php.
-* **Vary** Enabled `litespeed_vary_cookies` for LSWS Enterprise.
-* **GUI** Stopped WebP tip from wrongly displaying when Guest Mode is off.
-* **GUI** Added QUIC.cloud promotion postbox on dashboard page.
-* **3rd** Added `pagespeed ninja` to blocklist due to its bad behavior.
+= 7.8 - Mar 3 2026 =
+* **Cloud** Changed Health service to run asynchronously.
+* **Object Cache** Dropped `Store Transients` option. Transients now always use Object Cache when available, preventing potential database bloat from expired transients not being cleared. (ravanh)
+* **Media** Added extension check for WebP/AVIF replacement efficiency - only processes jpg/jpeg/png/gif, skips svg/ico/bmp etc.
+* **Media** Added WebP/AVIF support for macOS Safari >= 16.4. (PR#948)
+* **Media** Fixed pie chart not displaying in media library.
+* **Image Optimize** Fixed infinite redirect loop issue for image optimization actions. (giangel84 PR#959)
+* **Image Optimize** Fixed image optimization data not being cleared when images are replaced using third-party plugins.
+* **Image Optimize** Fixed reset single image not deleting records from img_optm and img_optming database tables.
+* **Page Optimize** Fixed font optimization in certain themes. (rbabt PR#955)
+* **Page Optimize** Filtered HTML tags when saving CSS content.
+* **Object Cache** Fixed methods returning `null` instead of `false` on failure, matching WordPress Object Cache API convention.(jkolodziej)
+* **Conf** Improved network subsites config loading efficiency. (dassels43)
+* **Toolbox** Added download button for log files to download complete logs.
+* **3rd** Purge product cache when orders are cancelled in WooCommerce. (haralampiev12 PR#954)
+* **Misc** Added Apache rewrite rule support for security check. (PR#948)
+* **Misc** Split Cloud and Image Optimization classes into traits for better maintainability.

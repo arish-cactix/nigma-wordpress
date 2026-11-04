@@ -71,7 +71,6 @@ jQuery(document).ready(function($) {
 			[3, 'desc']
 		],
 		"createdRow": function ( row, data, index ) {
-			
 			var id = data['id'];
 			var status = jQuery( row ).find( 'td' )[4];
 
@@ -89,6 +88,16 @@ jQuery(document).ready(function($) {
 				<div class="ps-email-log-resend-container"></div>
 			` );
 
+			jQuery( row ).find( 'td:nth-child(3)').attr( 'title', data['original_to'] );
+			
+			// Display each email on a new line, keeping the comma			
+			jQuery(row).find('td:nth-child(3)').html(
+				data['original_to']
+					? data['original_to'].replace(/,\s*/g, ',<br>')
+					: ''
+			);
+
+
 			if( data['success'] == '<span title="Success">Success</span>' ) {
 
 				jQuery( status ).addClass( 'ps-email-log-status-success' );
@@ -97,6 +106,10 @@ jQuery(document).ready(function($) {
 			else if( data['success'] == '<span title="In Queue">In Queue</span>' ) {
 
 				jQuery( status ).addClass( 'ps-email-log-status-queued' );
+
+			} else if( data['success'] == '<span title="Sent ( ** Fallback ** )">Success</span><a href="#" class="ps-status-log ps-popup-btn">View details</a>' ) {
+
+				jQuery( status ).addClass( 'ps-email-log-status-success' );
 
 			}
 			else {
@@ -363,6 +376,10 @@ jQuery(document).ready(function($) {
 				if( response.success === true ) {
 
 					logsDT.ajax.reload( null, false );
+					if( response.deleted_all ){
+						// Remove all options except "All".
+						jQuery('.ps-advance-log-filter option').not('[value="all"]').remove();
+					 }
 
 				}
 				else {
@@ -431,8 +448,21 @@ jQuery(document).ready(function($) {
 							</tr>
 							<tr>
 								<td><strong>To:</strong></td>
-								<td>${response.data.to_header}</td>
+								<td>${response.data.original_to}</td>
 							</tr>`;
+
+							if (
+								response.data.reply_to_header !== undefined &&
+								response.data.reply_to_header !== null &&
+								response.data.reply_to_header !== ''
+							) {
+								popupContent += `
+									<tr>
+										<td><strong>Reply-To:</strong></td>
+										<td>${response.data.reply_to_header}</td>
+									</tr>
+								`;
+							}
 
 							if( 
 								response.data.cc_header != null 
@@ -623,7 +653,7 @@ jQuery(document).ready(function($) {
 	jQuery( document ).on( 'click', '.ps-email-log-resend', function( e ) {
 
 		e.preventDefault();
-		var sendTo = jQuery( this ).closest( 'tr' ).find( 'td:nth-child(3)' ).text();
+		var sendTo = jQuery( this ).closest( 'tr' ).find( 'td:nth-child(3)' ).attr('title');
 		var currentRow = jQuery( this ).closest( 'tr' );
 
 		jQuery( currentRow ).find( '.ps-email-log-resend-container' ).html( `
@@ -678,7 +708,11 @@ jQuery(document).ready(function($) {
 
 		e.preventDefault();
 		var _details = jQuery( this ).siblings( 'span' ).attr( 'title' );
-		jQuery( '.ps-popup-container' ).html( `<h1 style="margin: 0; padding: 0;"></h1>${_details}` );
+		var $container = jQuery( '.ps-popup-container' );
+
+		$container.empty();
+		$container.append( jQuery( '<h1>', { style: 'margin: 0; padding: 0;' } ) );
+		$container.append( document.createTextNode( _details ) );
 
 	} );
 

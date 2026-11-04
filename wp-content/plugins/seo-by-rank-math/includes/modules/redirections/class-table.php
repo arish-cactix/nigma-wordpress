@@ -34,7 +34,7 @@ class Table extends List_Table {
 				'screen'   => Admin::get_screen(),
 				'singular' => 'redirection',
 				'plural'   => 'redirections',
-				'no_items' => $this->is_trashed_page() ? esc_html__( 'No redirections found in Trash.', 'rank-math' ) : wp_kses_post( __( 'No redirections added yet. <a href="#" class="rank-math-add-new-redirection">Add New Redirection</a>', 'rank-math' ) ),
+				'no_items' => $this->is_trashed_page() ? esc_html__( 'No redirections found in Trash.', 'seo-by-rank-math' ) : wp_kses_post( __( 'No redirections added yet. <a href="#" class="rank-math-add-new-redirection">Add New Redirection</a>', 'seo-by-rank-math' ) ),
 			]
 		);
 	}
@@ -43,8 +43,6 @@ class Table extends List_Table {
 	 * Prepares the list of items for displaying.
 	 */
 	public function prepare_items() {
-		global $per_page;
-
 		$per_page = $this->get_items_per_page( 'rank_math_redirections_per_page', 100 );
 
 		$data = DB::get_redirections(
@@ -118,8 +116,8 @@ class Table extends List_Table {
 		/**
 		 * Filters the default column output. Pass non-empty value to enable.
 		 *
-		 * @param mixed $false The column value.
-		 * @param array $item  The current item.
+		 * @param bool   $false The column value.
+		 * @param object $item  The current item.
 		 */
 		$default = apply_filters( "rank_math/redirection/admin_column_{$column_name}", false, $item );
 		if ( ! empty( $default ) ) {
@@ -157,7 +155,7 @@ class Table extends List_Table {
 		}
 
 		// Show more button.
-		$html .= ' <a href="#" class="rank-math-showmore" title="' . esc_html__( 'Show more', 'rank-math' ) . '">[&hellip;]</a>';
+		$html .= ' <a href="#" class="rank-math-showmore" title="' . esc_html__( 'Show more', 'seo-by-rank-math' ) . '">[&hellip;]</a>';
 		$html .= '<div class="rank-math-more">';
 
 		// Loop remaining.
@@ -167,7 +165,7 @@ class Table extends List_Table {
 		}
 
 		$html .= join( '<br>', $parts );
-		$html .= '<br><a href="#" class="rank-math-hidemore" title="' . esc_html__( 'Hide details', 'rank-math' ) . '">[' . esc_html__( 'Hide', 'rank-math' ) . ']</a>';
+		$html .= '<br><a href="#" class="rank-math-hidemore" title="' . esc_html__( 'Hide details', 'seo-by-rank-math' ) . '">[' . esc_html__( 'Hide', 'seo-by-rank-math' ) . ']</a>';
 		$html .= '</div>';
 
 		return $html;
@@ -229,8 +227,8 @@ class Table extends List_Table {
 		if ( $this->is_trashed_page() ) {
 			return $this->row_actions(
 				[
-					'restore' => '<a href="' . $url . '" data-action="restore" class="rank-math-redirection-action">' . esc_html__( 'Restore', 'rank-math' ) . '</a>',
-					'delete'  => '<a href="' . $url . '" data-action="delete" class="rank-math-redirection-action">' . esc_html__( 'Delete Permanently', 'rank-math' ) . '</a>',
+					'restore' => '<a href="' . $url . '" data-action="restore" class="rank-math-redirection-action">' . esc_html__( 'Restore', 'seo-by-rank-math' ) . '</a>',
+					'delete'  => '<a href="' . $url . '" data-action="delete" class="rank-math-redirection-action">' . esc_html__( 'Delete Permanently', 'seo-by-rank-math' ) . '</a>',
 				]
 			);
 		}
@@ -239,7 +237,7 @@ class Table extends List_Table {
 			'redirections/table_item',
 			[
 				'id'          => $item['id'],
-				'sources'     => unserialize( $item['sources'] ),
+				'sources'     => unserialize( $item['sources'] ), //phpcs:ignore -- This will be fixed after moving the sources to JSON.
 				'url_to'      => $item['url_to'],
 				'header_code' => $item['header_code'],
 				'status'      => $item['status'],
@@ -248,11 +246,11 @@ class Table extends List_Table {
 
 		return $this->row_actions(
 			[
-				'edit'       => '<a data-redirection="' . esc_attr( wp_json_encode( $redirection ) ) . '" href="' . $edit_url . '" class="rank-math-redirection-edit">' . esc_html__( 'Edit', 'rank-math' ) . '</a>',
-				'deactivate' => '<a href="' . $url . '" data-action="deactivate" class="rank-math-redirection-action">' . esc_html__( 'Deactivate', 'rank-math' ) . '</a>',
-				'activate'   => '<a href="' . $url . '" data-action="activate" class="rank-math-redirection-action">' . esc_html__( 'Activate', 'rank-math' ) . '</a>',
-				'trash'      => '<a href="' . $url . '" data-action="trash" class="rank-math-redirection-action">' . esc_html__( 'Trash', 'rank-math' ) . '</a>',
-				'view'       => '<a href="' . $view_url . '" rel="bookmark">' . esc_html__( 'View', 'rank-math' ) . '</a>',
+				'edit'       => '<a data-redirection="' . esc_attr( wp_json_encode( $redirection ) ) . '" href="' . $edit_url . '" class="rank-math-redirection-edit">' . esc_html__( 'Edit', 'seo-by-rank-math' ) . '</a>',
+				'deactivate' => '<a href="' . $url . '" data-action="deactivate" class="rank-math-redirection-action">' . esc_html__( 'Deactivate', 'seo-by-rank-math' ) . '</a>',
+				'activate'   => '<a href="' . $url . '" data-action="activate" class="rank-math-redirection-action">' . esc_html__( 'Activate', 'seo-by-rank-math' ) . '</a>',
+				'trash'      => '<a href="' . $url . '" data-action="trash" class="rank-math-redirection-action">' . esc_html__( 'Trash', 'seo-by-rank-math' ) . '</a>',
+				'view'       => '<a href="' . esc_url( $view_url ) . '" rel="bookmark">' . esc_html__( 'View', 'seo-by-rank-math' ) . '</a>',
 			]
 		);
 	}
@@ -272,12 +270,12 @@ class Table extends List_Table {
 			'rank_math/redirection/admin_columns',
 			[
 				'cb'            => '<input type="checkbox" />',
-				'sources'       => esc_html__( 'From', 'rank-math' ),
-				'url_to'        => esc_html__( 'To', 'rank-math' ),
-				'header_code'   => esc_html__( 'Type', 'rank-math' ),
-				'hits'          => esc_html__( 'Hits', 'rank-math' ),
-				'created'       => esc_html__( 'Created', 'rank-math' ),
-				'last_accessed' => esc_html__( 'Last Accessed', 'rank-math' ),
+				'sources'       => esc_html__( 'From', 'seo-by-rank-math' ),
+				'url_to'        => esc_html__( 'To', 'seo-by-rank-math' ),
+				'header_code'   => esc_html__( 'Type', 'seo-by-rank-math' ),
+				'hits'          => esc_html__( 'Hits', 'seo-by-rank-math' ),
+				'created'       => esc_html__( 'Created', 'seo-by-rank-math' ),
+				'last_accessed' => esc_html__( 'Last Accessed', 'seo-by-rank-math' ),
 			]
 		);
 	}
@@ -306,14 +304,14 @@ class Table extends List_Table {
 	public function get_bulk_actions() {
 		if ( $this->is_trashed_page() ) {
 			$actions = [
-				'restore' => esc_html__( 'Restore', 'rank-math' ),
-				'delete'  => esc_html__( 'Delete Permanently', 'rank-math' ),
+				'restore' => esc_html__( 'Restore', 'seo-by-rank-math' ),
+				'delete'  => esc_html__( 'Delete Permanently', 'seo-by-rank-math' ),
 			];
 		} else {
 			$actions = [
-				'activate'   => esc_html__( 'Activate', 'rank-math' ),
-				'deactivate' => esc_html__( 'Deactivate', 'rank-math' ),
-				'trash'      => esc_html__( 'Move to Trash', 'rank-math' ),
+				'activate'   => esc_html__( 'Activate', 'seo-by-rank-math' ),
+				'deactivate' => esc_html__( 'Deactivate', 'seo-by-rank-math' ),
+				'trash'      => esc_html__( 'Move to Trash', 'seo-by-rank-math' ),
 			];
 		}
 
@@ -336,10 +334,10 @@ class Table extends List_Table {
 		$current = Param::get( 'status', 'all' );
 		$counts  = DB::get_counts();
 		$labels  = [
-			'all'      => esc_html__( 'All', 'rank-math' ),
-			'active'   => esc_html__( 'Active', 'rank-math' ),
-			'inactive' => esc_html__( 'Inactive', 'rank-math' ),
-			'trashed'  => esc_html__( 'Trash', 'rank-math' ),
+			'all'      => esc_html__( 'All', 'seo-by-rank-math' ),
+			'active'   => esc_html__( 'Active', 'seo-by-rank-math' ),
+			'inactive' => esc_html__( 'Inactive', 'seo-by-rank-math' ),
+			'trashed'  => esc_html__( 'Trash', 'seo-by-rank-math' ),
 		];
 
 		$links = [];
@@ -368,6 +366,7 @@ class Table extends List_Table {
 		 * Filters the row class.
 		 *
 		 * @param string $classes The row class.
+		 * @param object $item    The current item.
 		 */
 		$classes = apply_filters( 'rank_math/redirection/row_classes', $classes, $item );
 
@@ -396,7 +395,7 @@ class Table extends List_Table {
 		}
 
 		echo '<div class="alignleft actions">';
-		submit_button( esc_html__( 'Empty Trash', 'rank-math' ), '', 'delete_all', false );
+		submit_button( esc_html__( 'Empty Trash', 'seo-by-rank-math' ), '', 'delete_all', false );
 		echo '</div>';
 	}
 

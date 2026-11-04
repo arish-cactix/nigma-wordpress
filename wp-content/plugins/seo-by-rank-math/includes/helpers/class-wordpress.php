@@ -20,6 +20,7 @@ use RankMath\Helpers\Param;
 use RankMath\Helpers\Security;
 use stdClass;
 use WP_Screen;
+use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -59,13 +60,13 @@ trait WordPress {
 	 *
 	 * @codeCoverageIgnore
 	 *
-	 * @param  string  $key     Internal key of the value to get (without prefix).
-	 * @param  integer $post_id Post ID of the post to get the value for.
-	 * @param  string  $default  Default value to use.
+	 * @param  string  $key           Internal key of the value to get (without prefix).
+	 * @param  integer $post_id       Post ID of the post to get the value for.
+	 * @param  string  $default_value Default value to use.
 	 * @return mixed
 	 */
-	public static function get_post_meta( $key, $post_id = 0, $default = '' ) {
-		return Post::get_meta( $key, $post_id, $default );
+	public static function get_post_meta( $key, $post_id = 0, $default_value = '' ) {
+		return Post::get_meta( $key, $post_id, $default_value );
 	}
 
 	/**
@@ -73,14 +74,14 @@ trait WordPress {
 	 *
 	 * @codeCoverageIgnore
 	 *
-	 * @param  string $key      Internal key of the value to get (without prefix).
-	 * @param  mixed  $term     Term to get the meta value for either (string) term name, (int) term ID or (object) term.
-	 * @param  string $taxonomy Name of the taxonomy to which the term is attached.
-	 * @param  string $default  Default value to use.
+	 * @param  string $key           Internal key of the value to get (without prefix).
+	 * @param  mixed  $term          Term to get the meta value for either (string) term name, (int) term ID or (object) term.
+	 * @param  string $taxonomy      Name of the taxonomy to which the term is attached.
+	 * @param  string $default_value Default value to use.
 	 * @return mixed
 	 */
-	public static function get_term_meta( $key, $term = 0, $taxonomy = '', $default = '' ) {
-		return Term::get_meta( $key, $term, $taxonomy, $default );
+	public static function get_term_meta( $key, $term = 0, $taxonomy = '', $default_value = '' ) {
+		return Term::get_meta( $key, $term, $taxonomy, $default_value );
 	}
 
 	/**
@@ -88,13 +89,13 @@ trait WordPress {
 	 *
 	 * @codeCoverageIgnore
 	 *
-	 * @param  string $key  Internal key of the value to get (without prefix).
-	 * @param  mixed  $user User to get the meta value for either (int) user ID or (object) user.
-	 * @param  string $default  Default value to use.
+	 * @param  string $key           Internal key of the value to get (without prefix).
+	 * @param  mixed  $user          User to get the meta value for either (int) user ID or (object) user.
+	 * @param  string $default_value Default value to use.
 	 * @return mixed
 	 */
-	public static function get_user_meta( $key, $user = 0, $default = '' ) {
-		return User::get_meta( $key, $user, $default );
+	public static function get_user_meta( $key, $user = 0, $default_value = '' ) {
+		return User::get_meta( $key, $user, $default_value );
 	}
 
 	/**
@@ -109,6 +110,20 @@ trait WordPress {
 		$args = wp_parse_args( $args, [ 'page' => $page ] );
 
 		return Security::add_query_arg_raw( $args, admin_url( 'admin.php' ) );
+	}
+
+	/**
+	 * Get settings url.
+	 *
+	 * @param string $type Setting type.
+	 * @param string $page Page id.
+	 * @return string
+	 */
+	public static function get_settings_url( $type, $page ) {
+		$type = "options-{$type}";
+		$page = Helper::is_react_enabled() ? "&view=$page" : "#setting-panel-{$page}";
+
+		return self::get_admin_url( $type . $page );
 	}
 
 	/**
@@ -128,7 +143,7 @@ trait WordPress {
 
 		// Makes sure the plugin functions are defined before trying to use them.
 		if ( ! function_exists( 'is_plugin_active_for_network' ) ) {
-			require_once ABSPATH . '/wp-admin/includes/plugin.php';
+			require_once ABSPATH . '/wp-admin/includes/plugin.php'; // @phpstan-ignore-line
 		}
 
 		return is_plugin_active_for_network( plugin_basename( RANK_MATH_FILE ) ) ?
@@ -148,7 +163,7 @@ trait WordPress {
 		$business_type = [ 'news', 'business', 'webshop', 'otherbusiness' ];
 
 		if ( in_array( $site_type, $business_type, true ) ) {
-			return self::get_admin_url( 'options-titles#setting-panel-local' );
+			return self::get_settings_url( 'titles', 'local' );
 		}
 		return admin_url( 'admin.php?page=rank-math&view=modules' );
 	}
@@ -252,6 +267,7 @@ trait WordPress {
 	 * @param  int|WP_Post  $post_id Post ID or WP_Post object.
 	 * @param  string|array $size    Image size. Accepts any valid image size, or an array of width and height values in pixels.
 	 * @return false|array Returns an array (url, width, height, is_intermediate), or false, if no image is available.
+	 *                     Width and height are 0 for a content image whose dimensions are unknown (e.g. an external image).
 	 */
 	public static function get_thumbnail_with_fallback( $post_id, $size = 'thumbnail' ) {
 		if ( has_post_thumbnail( $post_id ) ) {
@@ -264,10 +280,11 @@ trait WordPress {
 			return self::validate_image_data( $image );
 		}
 
-		preg_match_all( '/<img.+src=[\'"]([^\'"]+)[\'"].*>/i', get_the_content(), $matches );
-		$matches = array_filter( $matches );
-		if ( ! empty( $matches ) ) {
-			return [ $matches[1][0], 200, 200 ];
+		if ( preg_match( '/<img\s(?:[^>]*\s)?src=[\'"]([^\'"]+)[\'"][^>]*>/i', get_the_content(), $matches ) ) {
+			$image_url  = $matches[1];
+			$dimensions = self::get_content_image_dimensions( $matches[0], $image_url );
+
+			return [ $image_url, $dimensions[0], $dimensions[1] ];
 		}
 
 		$fb_image = Helper::get_post_meta( 'facebook_image_id', $post_id );
@@ -300,7 +317,7 @@ trait WordPress {
 
 		// Makes sure the plugin is defined before trying to use it.
 		if ( ! function_exists( 'is_plugin_active_for_network' ) ) {
-			require_once ABSPATH . '/wp-admin/includes/plugin.php';
+			require_once ABSPATH . '/wp-admin/includes/plugin.php'; // @phpstan-ignore-line
 		}
 
 		if ( ! is_plugin_active_for_network( plugin_basename( RANK_MATH_FILE ) ) ) {
@@ -465,6 +482,30 @@ trait WordPress {
 	}
 
 	/**
+	 * Get the dimensions of an image found in the post content.
+	 *
+	 * Only Media Library images are measured, using their attachment metadata.
+	 * External images are never fetched, so their dimensions are returned as 0.
+	 *
+	 * @param  string $img_tag   The <img> tag.
+	 * @param  string $image_url The image URL.
+	 * @return array Width and height, or [ 0, 0 ] if unknown.
+	 */
+	private static function get_content_image_dimensions( $img_tag, $image_url ) {
+		if ( preg_match( '/\bwp-image-(\d+)\b/', $img_tag, $id_match ) ) {
+			$attachment_id = absint( $id_match[1] );
+		} else {
+			// Skip the attachment lookup query for external images, they can't be in the Media Library.
+			$attachment_id = Url::is_external( $image_url ) ? 0 : attachment_url_to_postid( $image_url );
+		}
+
+		$image_meta = $attachment_id ? wp_get_attachment_metadata( $attachment_id ) : false;
+		$dimensions = is_array( $image_meta ) ? wp_image_src_get_dimensions( $image_url, $image_meta, $attachment_id ) : false;
+
+		return ! empty( $dimensions[0] ) && ! empty( $dimensions[1] ) ? $dimensions : [ 0, 0 ];
+	}
+
+	/**
 	 * Validate Image data. Remove empty values and add default height and width to image
 	 *
 	 * @param  array $image The Image data.
@@ -526,7 +567,7 @@ trait WordPress {
 
 		$data = array_reduce(
 			$args,
-			function( $carry, $arg ) {
+			function ( $carry, $arg ) {
 				if ( is_array( $arg ) ) {
 					return array_merge( $carry, $arg );
 				}
@@ -626,7 +667,7 @@ trait WordPress {
 		}
 
 		if ( '-1' === $_REQUEST['action'] && ! empty( $_REQUEST['action2'] ) ) {
-			$_REQUEST['action'] = $_REQUEST['action2'];
+			$_REQUEST['action'] = sanitize_key( $_REQUEST['action2'] );
 		}
 
 		return sanitize_key( $_REQUEST['action'] );
@@ -641,7 +682,8 @@ trait WordPress {
 		global $wp_filesystem;
 
 		if ( empty( $wp_filesystem ) ) {
-			require_once ABSPATH . '/wp-admin/includes/file.php';
+			global $wp_file_descriptions;
+			require_once ABSPATH . '/wp-admin/includes/file.php'; // @phpstan-ignore-line
 			WP_Filesystem();
 		}
 
@@ -738,5 +780,92 @@ trait WordPress {
 		$content = \preg_replace( '#\s*\[caption[^]]*\].*?\[/caption\]\s*#is', '', $content );
 
 		return preg_replace( '~\[\/?.*?\]~s', '', $content );
+	}
+
+	/**
+	 * Get the current time as a Unix timestamp (seconds since epoch).
+	 *
+	 * @return int The current Unix timestamp.
+	 */
+	public static function get_current_time() {
+		return strtotime( current_time( 'mysql' ) );
+	}
+
+	/**
+	 * Handles the upload process to allow .txt and .json file types in WordPress.
+	 *
+	 * This function hooks into 'upload_mimes' and 'wp_check_filetype_and_ext'
+	 * to permit the upload of plain text (.txt) and JSON (.json) files via the media uploader.
+	 * It ensures the correct MIME types and file extensions are accepted.
+	 *
+	 * @return array|WP_Error Array of upload results, including file URL, path, and type, or error information.
+	 */
+	public static function handle_file_upload() {
+		// Add upload hooks.
+		add_filter( 'upload_mimes', [ __CLASS__, 'allow_txt_upload' ] );
+		add_filter( 'wp_check_filetype_and_ext', [ __CLASS__, 'filetype_and_ext' ], 10, 3 );
+
+		if ( isset( $_FILES['import-me'] ) ) {
+			// Do the upload.
+			if ( ! function_exists( 'wp_handle_upload' ) ) {
+				$required_file = ABSPATH . 'wp-admin/includes/file.php';
+				if ( file_exists( $required_file ) ) {
+					require_once $required_file; // @phpstan-ignore-line
+				}
+			}
+			$file = wp_handle_upload( $_FILES['import-me'], [ 'test_form' => false ] );
+		} else {
+			$file = new WP_Error( 'missing_file', __( 'No file selected for upload.', 'seo-by-rank-math' ) );
+		}
+
+		// Remove upload hooks.
+		remove_filter( 'upload_mimes', [ __CLASS__, 'allow_txt_upload' ] );
+		remove_filter( 'wp_check_filetype_and_ext', [ __CLASS__, 'filetype_and_ext' ], 10 );
+
+		return $file;
+	}
+
+	/**
+	 * Allow txt & json file upload.
+	 *
+	 * @param array $types Mime types keyed by the file extension regex corresponding to those types.
+	 *
+	 * @return array
+	 */
+	public static function allow_txt_upload( $types ) {
+		$types['json'] = 'application/json';
+		$types['txt']  = 'text/plain';
+
+		return $types;
+	}
+
+	/**
+	 * Filters the "real" file type of the given file.
+	 *
+	 * @param array  $types {
+	 *     Values for the extension, mime type, and corrected filename.
+	 *
+	 *     @type string|false $ext             File extension, or false if the file doesn't match a mime type.
+	 *     @type string|false $type            File mime type, or false if the file doesn't match a mime type.
+	 *     @type string|false $proper_filename File name with its correct extension, or false if it cannot be determined.
+	 * }
+	 * @param string $file                      Full path to the file.
+	 * @param string $filename                  The name of the file (may differ from $file due to
+	 *                                                $file being in a tmp directory).
+	 *
+	 * @return array
+	 */
+	public static function filetype_and_ext( $types, $file, $filename ) {
+		// Validate the real trailing extension so names like `file.json.php` are rejected.
+		$extension = strtolower( pathinfo( $filename, PATHINFO_EXTENSION ) );
+		if ( 'json' === $extension ) {
+			$types['ext']  = 'json';
+			$types['type'] = 'application/json';
+		} elseif ( 'txt' === $extension ) {
+			$types['ext']  = 'txt';
+			$types['type'] = 'text/plain';
+		}
+
+		return $types;
 	}
 }
