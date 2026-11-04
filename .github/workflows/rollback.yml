@@ -1,66 +1,74 @@
 name: Rollback Production
 
+# Rolls production back by committing the wp-content tree of an earlier commit
+# on top of main. The normal pull-based deploy then applies it, so the rollback
+# is permanent and visible in git history (no force-push, no server access).
+# For a server-side emergency path see "Emergency rollback" in docs/deployment.md.
+
 on:
   workflow_dispatch:
     inputs:
       target_sha:
-        description: 'Commit SHA to roll back to (find it in Actions → Deploy to Production history)'
+        description: 'Commit SHA whose wp-content should be restored (see Actions -> Deploy to Production history)'
         required: true
         type: string
 
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   rollback:
-    name: Rollback via SSH
+    name: Roll back wp-content to the target commit
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
-      - name: Rollback to target commit
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Restore wp-content from the target commit and push
+        id: revert
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
           TARGET_SHA: ${{ github.event.inputs.target_sha }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts || true
+          set -euo pipefail
+          git cat-file -e "${TARGET_SHA}^{commit}" || { echo "::error::Unknown commit $TARGET_SHA"; exit 1; }
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -r --quiet --ignore-unmatch wp-content
+          git checkout "$TARGET_SHA" -- wp-content
+          if git diff --cached --quiet; then
+            echo "::error::wp-content on main already matches $TARGET_SHA; nothing to roll back."
+            exit 1
+          fi
+          git commit -q -m "Rollback: restore wp-content to ${TARGET_SHA:0:7}" -m "Triggered by ${{ github.actor }} via the Rollback Production workflow."
+          git push origin HEAD:main
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new "$EC2_USER@$EC2_HOST" <<ENDSSH
-            set -e
-
-            git config --global --add safe.directory /var/www/nigma
-            cd /var/www/nigma
-
-            echo "Fetching latest history..."
-            git fetch origin
-
-            echo "Rolling back to $TARGET_SHA..."
-            git reset --hard $TARGET_SHA
-
-            echo "Fixing file ownership..."
-            sudo chown -R ubuntu:ubuntu /var/www/nigma/wp-content
-            sudo chown -R www-data:www-data /var/www/nigma/wp-content/uploads
-            sudo chown -R www-data:www-data /var/www/nigma/wp-content/litespeed
-
-            echo "Clearing LiteSpeed cache..."
-            sudo find /var/www/nigma/wp-content/litespeed/ -mindepth 1 -delete
-
-            echo "Rollback complete. Server is now at $TARGET_SHA"
-            echo "WARNING: The next deploy from main will re-introduce the rolled-back code."
-            echo "You must push a revert commit to main to make this rollback permanent."
-          ENDSSH
+      - name: Wait until the live site runs the rollback commit
+        env:
+          SHA: ${{ steps.revert.outputs.sha }}
+        run: |
+          deadline=$((SECONDS + 600))
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            live=$(curl -fsS --max-time 15 "https://www.nigma.ae/deploy-version.txt?cb=${RANDOM}${RANDOM}" 2>/dev/null | head -1 | tr -d '[:space:]' || true)
+            if [ "$live" = "$SHA" ]; then echo "Production is running $SHA."; exit 0; fi
+            echo "live=${live:-unknown} want=$SHA — waiting..."; sleep 15
+          done
+          echo "::error::Production did not reach $SHA in time."; exit 1
 
       - name: Health check
         run: |
-          echo "Checking https://www.nigma.ae/ ..."
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://www.nigma.ae/)
           echo "HTTP status: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" != "200" ]; then
-            echo "Health check FAILED — site returned HTTP $HTTP_STATUS"
-            exit 1
-          fi
-          echo "Health check passed."
+          [ "$HTTP_STATUS" = "200" ] || { echo "Health check FAILED"; exit 1; }
 
       - name: Send notification
         if: always()
@@ -75,11 +83,8 @@ jobs:
           from: NIGMA Deployments <${{ secrets.NOTIFY_EMAIL_FROM }}>
           subject: "${{ job.status == 'success' && '✅' || '❌' }} [NIGMA] Rollback ${{ job.status }} — ${{ github.event.inputs.target_sha }}"
           body: |
-            Status:      ${{ job.status }}
+            Status:         ${{ job.status }}
             Rolled back to: ${{ github.event.inputs.target_sha }}
             Triggered by:   ${{ github.actor }}
-
-            IMPORTANT: This rollback is temporary. The next push to main will
-            re-introduce the rolled-back code. Push a revert commit to make it permanent.
 
             View run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

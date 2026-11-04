@@ -1,57 +1,56 @@
 name: Deploy to Production
 
+# Deploys are PULL-based: the production server runs nigma-deploy.timer, which
+# fetches origin/main every minute, deploys it, health-checks it (auto-rolling
+# back on failure) and publishes the deployed commit at /deploy-version.txt.
+# This workflow therefore needs no SSH access or cloud credentials: it waits
+# until the live site reports this commit, then runs a health check.
+# See docs/deployment.md and ADR-014.
+
 on:
   push:
     branches:
       - main
 
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
-  deploy:
-    name: Deploy via SSH
+  verify:
+    name: Wait for server deploy and verify
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - name: Deploy to EC2
+      - name: Checkout (history needed to compare commits)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Wait until the live site runs this commit
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
+          SHA: ${{ github.sha }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts || true
-
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new "$EC2_USER@$EC2_HOST" <<'ENDSSH'
-            set -e
-
-            git config --global --add safe.directory /var/www/nigma
-            cd /var/www/nigma
-
-            echo "Pulling latest code..."
-            git pull origin main
-
-            echo "Fixing file ownership..."
-            sudo chown -R ubuntu:ubuntu /var/www/nigma/wp-content
-
-            echo "Clearing LiteSpeed cache..."
-            sudo find /var/www/nigma/wp-content/litespeed/ -mindepth 1 -delete
-
-            echo "Configuring log rotation..."
-            sudo tee /etc/logrotate.d/wordpress-debug > /dev/null << 'LOGROTATEEOF'
-          /var/www/nigma/wp-content/debug.log {
-              weekly
-              rotate 4
-              compress
-              delaycompress
-              missingok
-              notifempty
-              create 0664 www-data ubuntu
-          }
-          LOGROTATEEOF
-
-            echo "Deploy complete."
-          ENDSSH
+          echo "Waiting for production to deploy $SHA ..."
+          deadline=$((SECONDS + 600))
+          live=""
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            live=$(curl -fsS --max-time 15 "https://www.nigma.ae/deploy-version.txt?cb=${RANDOM}${RANDOM}" 2>/dev/null | head -1 | tr -d '[:space:]' || true)
+            if [ "$live" = "$SHA" ]; then
+              echo "Production is running $SHA."
+              exit 0
+            fi
+            # A later push may already have been deployed; that also contains this commit.
+            if [ -n "$live" ] && git cat-file -e "${live}^{commit}" 2>/dev/null && git merge-base --is-ancestor "$SHA" "$live"; then
+              echo "Production is already on a newer commit ($live) that includes $SHA."
+              exit 0
+            fi
+            echo "live=${live:-unknown} want=$SHA — waiting..."
+            sleep 15
+          done
+          echo "::error::Production did not reach $SHA within 10 minutes. The server auto-rolls back a failed deploy; check /var/log/nigma-deploy.log (via SSM)."
+          exit 1
 
       - name: Health check
         run: |
