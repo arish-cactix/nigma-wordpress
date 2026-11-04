@@ -96,6 +96,22 @@ Host paths: `/etc/nigma` (config, secrets), `/opt/nigma/infra` (this repo's `doc
 
 The full stack (containers, certbot, S3) needs a real Docker host; use a throw-away instance with `--acme-staging`.
 
+### Verified on a real host (2026-11-04)
+
+Exercised on a throw-away Ubuntu 24.04 **arm64** (`t4g.medium`) instance with a private versioned S3 bucket, a bucket-scoped IAM role, a `sslip.io` hostname and Let's Encrypt **staging**; all resources were deleted afterwards.
+
+- **Build from nothing** (one command, ~2 minutes): Docker installed, `web`/`db`/`redis`/`certbot` running and healthy, placeholder certificate replaced by a real (staging) one.
+- **The conditional:** environment healthy → 0 bootstraps, straight to code; configuration drift → 1 bootstrap, then code; a stopped container → repaired, then code.
+- **Repair rate limit:** a timer-style run inside the 10-minute window refuses to deploy and says why; `--force` repairs immediately.
+- **Certificate renewal flag** reloads the web server.
+- **Edge rules and hardening on the real stack:** spam URLs 410, `.git`/`xmlrpc.php` 403, real pages 200.
+- **Disaster recovery:** media and database backed up to S3 (generated assets excluded); containers, database files and uploads destroyed; a single `nigma-deploy --force` rebuilt the environment, restored 100% of the media (checksums identical) and the database, and deployed the code in about 35 seconds.
+- **Backup timer unit** runs.
+
+Bugs this test found and fixed: the deployer ignored `GIT_BRANCH`; the WP-CLI image's entrypoint failed once core was present.
+
+**Not covered** (re-test before depending on them): the native (no marker) code path of the modified deployer on a live host (reviewed by diff only); the `placeholder-pending` state (DNS not yet pointing at the host); a real, non-staging certificate and the 12-hour renewal itself; an amd64 host; restoring a production-sized database and the full 400 MB media library; the plugins/theme behaving identically inside the container with the real database. Repeat this test after any significant change to `docker/prod` or the scripts.
+
 ## Limits and caveats
 
 - `latest`/floating tags (`certbot`, `amazon/aws-cli`) and tag-only pins mean image content can change; pin digests if you need bit-for-bit rebuilds.

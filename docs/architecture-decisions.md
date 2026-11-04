@@ -377,7 +377,7 @@ Constraints: the live server is native OpenLiteSpeed and is serving customers; `
 - The Docker host runs a root Docker daemon: keep the OS patched, and never mount the Docker socket into a container.
 - Images are referenced by tag, so a rebuild can pull newer image content; pin digests if bit-for-bit rebuilds matter.
 - A new host needs an instance role with the S3 policy (`docker/prod/iam-policy.example.json`) and a DNS record pointing at it before the real certificate is issued.
-- The web tier is covered by an automated smoke test (`docker/prod/smoke-web.sh`); the full stack (containers, certificate issuance, S3) must be exercised on a real Docker host before relying on it for recovery.
+- The web tier has an automated smoke test (`docker/prod/smoke-web.sh`, 42 assertions). The full stack was exercised on a throw-away arm64 host on 2026-11-04 (build from nothing, the environment-present conditional, drift and failure repair, SSL via Let's Encrypt staging, backup, and a full disaster restore from S3); the paths that were not covered are listed in `docker/prod/README.md`. Repeat that test after significant changes.
 - Backups to S3 are only as good as their last successful run; verify with a periodic restore.
 - Migrating the live server to Docker is not decided here.
 
