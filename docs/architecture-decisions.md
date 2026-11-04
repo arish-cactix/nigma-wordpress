@@ -321,6 +321,33 @@ The previous deploy mechanism (GitHub Actions connecting over SSH to the server)
 - Premium plugins with expired or missing licences (Gravity Forms, ACF Pro, Avada and Fusion) could not be updated and remain a risk until renewed.
 - The old host is retained temporarily and should be terminated after the soak period.
 
+# ADR-015 — Spam-URL Filtering and Canonical Host Handled at the Origin (No Cloudflare)
+
+## Context
+
+After the compromise (ADR-014) bots kept requesting thousands of spam "doorway" URLs and fake sitemaps that the site used to serve. Each request ran the full WordPress and Avada stack just to return a 404, which drove CPU use on a burstable instance. Separately, `nigma.ae` (apex) points straight at the server and relied on WordPress for the redirect to `www.nigma.ae`, which costs a PHP request per hit.
+
+The client does not want Cloudflare on the `nigma.ae` domain. `www.nigma.ae` is already fronted by the QUIC.cloud CDN; the apex is not.
+
+## Decision
+
+Handle both at the origin with OpenLiteSpeed rewrite rules in the vhost (reference copy: `scripts/deploy/vhost-edge-rules.conf`):
+
+- Return `410 Gone` for spam URL shapes (random alphanumeric token paths, long numeric paths, numbered sitemaps, `?sitemapNNN.xml`, and root-level `.php` files that do not exist) before PHP runs.
+- Redirect `nigma.ae` to `https://www.nigma.ae` in one 301 hop, preserving path and query, and excluding `/.well-known/acme-challenge/` so certificate renewal keeps working.
+
+## Rationale
+
+- No dependency on a CDN or DNS change the client has declined; works for both hosts and for direct hits on the origin IP.
+- 410 (rather than 404) tells search engines the pages are permanently gone, which speeds up de-indexing of the spam.
+- The patterns were tested against every real URL on the site (posts, pages, terms, sitemaps, static paths) with zero matches before going live.
+
+## Consequences
+
+- The rules live in the server vhost config, which is **not deployed from git**. Changing them means editing the file on the server and restarting OpenLiteSpeed; keep the reference copy in sync.
+- A future real URL that looks like a spam token (a path segment of 15+ lowercase letters and digits containing 4+ digits, after at least one other segment) would be answered with 410. Re-run the false-positive test (all real URLs) whenever new URL structures are introduced.
+- Renewal of certificates for the apex depends on the ACME path exemption; verify it after changing the redirect rule.
+
 ---
 
 ## Future ADRs

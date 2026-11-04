@@ -74,13 +74,16 @@ backups
 
 Production runs on:
 
-- AWS EC2
-- LiteSpeed
-- PHP 8.0.17
-- MariaDB 10.6.7
-- WordPress 6.7.1
+- AWS EC2 `t4g.medium` (Graviton, arm64), Ubuntu 24.04 LTS
+- OpenLiteSpeed 1.9.4
+- PHP 8.3 (runs as `www-data`; code is read-only to PHP)
+- MariaDB 10.11
+- Redis object cache
+- WordPress 7.1.4
 
 Production does not use Docker.
+
+Production is administered through AWS SSM (no inbound SSH) and deploys are **pull-based**: a timer on the server fetches `origin/main`. See `docs/deployment.md`, `docs/production-environment.md` and ADR-014. Run WP-CLI there as `ubuntu` with `WP_CLI_PHP_ARGS=-ddisable_functions=`.
 
 Docker is for local development only.
 

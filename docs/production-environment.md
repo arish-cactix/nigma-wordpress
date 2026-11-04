@@ -55,6 +55,7 @@ Hardening
 - `disable_functions` blocks `exec`, `system`, `shell_exec`, `passthru`, `proc_open`, `popen`. Run WP-CLI with `WP_CLI_PHP_ARGS=-ddisable_functions=`.
 - The vhost denies `.git`, dotfiles, `wp-config.php`, `xmlrpc.php` and PHP execution inside `uploads/`.
 - The OpenLiteSpeed WebAdmin listens on `127.0.0.1` only.
+- Edge rules in the vhost (reference: `scripts/deploy/vhost-edge-rules.conf`, ADR-015): `410 Gone` for spam-URL shapes, and `nigma.ae` → `https://www.nigma.ae` in one 301 hop. The vhost config is not deployed from git.
 
 Deploys
 
