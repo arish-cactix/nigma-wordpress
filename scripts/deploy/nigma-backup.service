@@ -1,0 +1,11 @@
+[Unit]
+Description=NIGMA backup: media library and database to the private S3 bucket
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/nigma-data backup
+TimeoutStartSec=3600
+Nice=10
+IOSchedulingClass=idle

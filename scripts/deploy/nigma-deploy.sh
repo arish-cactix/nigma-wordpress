@@ -13,6 +13,13 @@
 #   4. health-check the site; on failure roll back to the previous commit
 #   5. publish the deployed commit at /deploy-version.txt so CI can verify it
 #
+# Runtime (ADR-014 / ADR-016): /etc/nigma/runtime selects how the site is hosted.
+#   (no file) or "native"  OpenLiteSpeed installed directly on the host (the live server). Unchanged behaviour.
+#   "docker"               the Docker stack in docker/prod. Before deploying code, every run asks
+#                          "is the Docker environment present and healthy?"
+#                            yes -> go straight to deploying the code
+#                            no  -> build/repair the environment first (nigma-docker-bootstrap), then deploy
+#
 # Usage:
 #   nigma-deploy                 normal run (what the timer calls)
 #   nigma-deploy --force         redeploy even if already up to date
@@ -33,6 +40,19 @@ LOG=/var/log/nigma-deploy.log
 LOCK=/run/nigma-deploy.lock
 CACHE_DIR=/usr/local/lsws/cachedata/nigma
 VERSION_FILE="$APP/deploy-version.txt"
+HTTPS_PORT=443
+
+# No marker file means "native": hosts installed before the Docker runtime existed behave exactly as before.
+RUNTIME=native
+[ -f /etc/nigma/runtime ] && RUNTIME="$(tr -d '[:space:]' < /etc/nigma/runtime)"
+if [ "$RUNTIME" = "docker" ]; then
+  CACHE_DIR=/var/lib/nigma/lscache
+  if [ -f /etc/nigma/.env ]; then
+    _domains="$(grep -E '^SITE_DOMAINS=' /etc/nigma/.env | cut -d= -f2- | tr ',' '\n' | sed 's/ //g')"
+    SITE_HOST="$(printf '%s\n' "$_domains" | grep -m1 '^www\.' || printf '%s\n' "$_domains" | head -1)"
+    _p="$(grep -E '^HTTPS_PORT=' /etc/nigma/.env | cut -d= -f2-)"; [ -n "$_p" ] && HTTPS_PORT="$_p"
+  fi
+fi
 
 log() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$LOG" >&2; logger -t nigma-deploy -- "$*" 2>/dev/null || true; }
 git_as() { sudo -u "$CODE_USER" -H git -C "$APP" "$@"; }
@@ -57,16 +77,41 @@ fix_permissions() {
 clear_caches() {
   [ -d "$CACHE_DIR" ] && find "$CACHE_DIR" -mindepth 1 -delete 2>/dev/null
   find "$APP/wp-content/litespeed" -mindepth 1 -delete 2>/dev/null
-  command -v redis-cli >/dev/null && redis-cli flushdb >/dev/null 2>&1
+  flush_object_cache
   return 0
+}
+
+flush_object_cache() {
+  if [ "$RUNTIME" = "docker" ]; then nigma-docker-bootstrap --flush-redis >/dev/null 2>&1
+  else command -v redis-cli >/dev/null && redis-cli flushdb >/dev/null 2>&1
+  fi
+  return 0
+}
+
+# Docker runtime only: "environment present and healthy? yes -> deploy code; no -> build it first".
+# Returns non-zero (and deploys nothing) if the environment cannot be made healthy.
+ensure_runtime() {
+  [ "$RUNTIME" = "docker" ] || return 0
+  nigma-docker-bootstrap --reload-ssl >/dev/null 2>&1          # pick up a renewed certificate
+  if nigma-docker-bootstrap --check >/dev/null 2>&1; then return 0; fi
+  local now last; now=$(date +%s); last=$(cat "$STATE/bootstrap.last" 2>/dev/null || echo 0)
+  if [ "${1:-}" != "now" ] && [ $((now - last)) -lt 600 ]; then
+    log "Docker environment is not healthy; last repair attempt was under 10 minutes ago - not deploying code yet"
+    return 1
+  fi
+  echo "$now" > "$STATE/bootstrap.last"
+  log "Docker environment missing or unhealthy -> bootstrapping it before deploying code"
+  if nigma-docker-bootstrap >>"$LOG" 2>&1; then log "Docker environment is ready"; return 0; fi
+  log "ERROR: Docker bootstrap failed (see /var/log/nigma-bootstrap.log); code NOT deployed"
+  return 1
 }
 
 health_check() {
   local ok=0 attempt code1 code2
   for attempt in 1 2 3 4 5 6; do
     sleep 3
-    code1=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 25 --resolve "$SITE_HOST:443:127.0.0.1" "https://$SITE_HOST/")
-    code2=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 25 --resolve "$SITE_HOST:443:127.0.0.1" "https://$SITE_HOST/?s=healthcheck")
+    code1=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 25 --resolve "$SITE_HOST:$HTTPS_PORT:127.0.0.1" "https://$SITE_HOST:$HTTPS_PORT/")
+    code2=$(curl -sk -o /dev/null -w '%{http_code}' --max-time 25 --resolve "$SITE_HOST:$HTTPS_PORT:127.0.0.1" "https://$SITE_HOST:$HTTPS_PORT/?s=healthcheck")
     if [ "$code1" = "200" ] && [ "$code2" = "200" ]; then ok=1; break; fi
     log "health check attempt $attempt: / -> $code1, /?s= -> $code2"
   done
@@ -118,6 +163,8 @@ flock -n 9 || { echo "another nigma-deploy is running" >&2; exit 0; }
 
 case "${1:-}" in
   --status)
+    echo "runtime:     $RUNTIME"
+    [ "$RUNTIME" = "docker" ] && { echo "environment: $(nigma-docker-bootstrap --check >/dev/null 2>&1 && echo healthy || echo NOT-HEALTHY)"; }
     echo "current:     $(git_as rev-parse --short HEAD)"
     echo "live file:   $(head -1 "$VERSION_FILE" 2>/dev/null | cut -c1-7)"
     echo "pinned:      $(cat "$STATE/pinned" 2>/dev/null | cut -c1-7 || true)"
@@ -127,17 +174,20 @@ case "${1:-}" in
     rm -f "$STATE/pinned"; log "unpinned; auto-deploys resume"; exit 0 ;;
   --pin)
     sha="${2:-}"; [ -n "$sha" ] || { echo "usage: nigma-deploy --pin <sha>" >&2; exit 2; }
+    ensure_runtime now || exit 1
     fetch_remote
     full=$(git_as rev-parse --verify "$sha^{commit}" 2>/dev/null) || { echo "unknown commit $sha" >&2; exit 2; }
     deploy "$full" hard && echo "$full" > "$STATE/pinned" && log "pinned to ${full:0:7}; auto-deploys paused (run: nigma-deploy --unpin)"
     exit $? ;;
   --force)
+    ensure_runtime now || exit 1
     fetch_remote; deploy "$(git_as rev-parse "origin/$BRANCH")" hard; exit $? ;;
   "") ;;
   *) echo "unknown option: $1" >&2; exit 2 ;;
 esac
 
 # ---- normal (timer) run ----
+ensure_runtime || exit 1            # docker runtime: environment present? skip : build it first
 [ -f "$STATE/pinned" ] && exit 0
 fetch_remote || { log "fetch failed (network?); will retry"; exit 0; }
 

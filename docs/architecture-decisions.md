@@ -348,6 +348,39 @@ Handle both at the origin with OpenLiteSpeed rewrite rules in the vhost (referen
 - A future real URL that looks like a spam token (a path segment of 15+ lowercase letters and digits containing 4+ digits, after at least one other segment) would be answered with 410. Re-run the false-positive test (all real URLs) whenever new URL structures are introduced.
 - Renewal of certificates for the apex depends on the ACME path exemption; verify it after changing the redirect rule.
 
+# ADR-016 — Docker Runtime for New or Rebuilt Servers, Self-Building Environment, Media in Private S3
+
+## Context
+
+ADR-014 rebuilt production on a hardened native host, after a compromise showed how slowly a hand-built server is recreated. The project owner asked for the deployment to be able to stand up its own environment: if the required Docker environment is not present, build it first (all services running, including SSL), then deploy the code; if it is present, go straight to the code. The media library should also be recoverable on a fresh host.
+
+Constraints: the live server is native OpenLiteSpeed and is serving customers; `AGENTS.md` and ADR-014 say production does not use Docker and that uploads are not committed; the repository is public; the media library is 400+ MB, grows with every editor upload, and Gravity Forms can store visitor-submitted files in the same folder.
+
+## Decision
+
+1. **Two runtimes, chosen per host** by `/etc/nigma/runtime`. No marker (or `native`) means the live server, whose behaviour is unchanged. `docker` means the stack in `docker/prod`. The deployer never starts Docker on a host that is not marked `docker`, so it cannot collide with the live OpenLiteSpeed on ports 80/443.
+2. **Conditional environment bootstrap in the deployer.** On a `docker` host every deploy run first asks "is the environment present and healthy?" (`nigma-docker-bootstrap --check`: Docker, code, core, config in sync, `web`/`db`/`redis`/`certbot` healthy, certificate valid). Yes: deploy the code. No: run `nigma-docker-bootstrap` (idempotent: install Docker, secrets, checkouts, verified core, config, containers, restore data, SSL), verify, then deploy. If the environment cannot be made healthy, no code is deployed.
+3. **Same stack and hardening as native:** OpenLiteSpeed 1.9.4 + PHP 8.3 (the official `litespeedtech/openlitespeed` image), MariaDB 10.11, Redis 7, PHP as `www-data`, code mounted read-only, `disable_functions`, the same edge rules (one shared file), only ports 80/443 published, no Docker socket in any container.
+4. **SSL:** a placeholder certificate lets the server start; a `certbot` sidecar obtains the real certificate over HTTP-01 once a domain resolves to the host, renews it every 12 hours, and the deployer reloads the web server when it renews.
+5. **Media and database live in a private, versioned, encrypted S3 bucket, not in git.** The instance role grants list/get/put only. The bootstrap restores an empty `uploads/` and an empty database from it; a daily timer backs both up. Generated assets are excluded.
+
+## Rationale
+
+- A self-building environment turns "rebuild the server" from a manual procedure into one command, which is what a recovery after an incident needs.
+- Keeping the live server native avoids a risky migration of a working site; Docker is adopted where it is new, and can be extended to production later by a separate decision.
+- Using the official image avoids maintaining our own PHP build; the repository's existing local Docker setup (nginx + PHP 8.0) is deliberately separate, because LiteSpeed Cache and the edge rules require OpenLiteSpeed.
+- S3 rather than git for media: the repository is public (every upload would become public, including any future form attachments), `AGENTS.md` forbids committing uploads, 400+ MB of binaries bloat a repo and make every clone slow, and editor uploads would need an automated commit job. A private Git LFS repository was considered and rejected for storage/bandwidth cost and the same commit-job problem. S3 with versioning also provides the media backup that did not exist.
+
+## Consequences
+
+- Two runtimes must be maintained and documented; the deploy script and `docs/runbook.md` cover both.
+- The Docker host runs a root Docker daemon: keep the OS patched, and never mount the Docker socket into a container.
+- Images are referenced by tag, so a rebuild can pull newer image content; pin digests if bit-for-bit rebuilds matter.
+- A new host needs an instance role with the S3 policy (`docker/prod/iam-policy.example.json`) and a DNS record pointing at it before the real certificate is issued.
+- The web tier is covered by an automated smoke test (`docker/prod/smoke-web.sh`); the full stack (containers, certificate issuance, S3) must be exercised on a real Docker host before relying on it for recovery.
+- Backups to S3 are only as good as their last successful run; verify with a periodic restore.
+- Migrating the live server to Docker is not decided here.
+
 ---
 
 ## Future ADRs

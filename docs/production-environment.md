@@ -61,6 +61,11 @@ Deploys
 
 - Pull-based via `nigma-deploy.timer` (see `docs/deployment.md`).
 
+Rebuild option
+
+- A new or rebuilt host can run the Docker stack in `docker/prod` (OpenLiteSpeed 1.9.4 + PHP 8.3, MariaDB 10.11, Redis 7, certbot) instead of the native install; the deployer builds that environment itself when it is missing (ADR-016, `docker/prod/README.md`). The live server stays native.
+- The media library and database dumps for a rebuild live in a private S3 bucket, not in git.
+
 ## Technology Stack
 
 Infrastructure
