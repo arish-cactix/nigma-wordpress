@@ -121,13 +121,24 @@ Same setup (throw-away hosts, scoped test role, deleted afterwards), now on an *
 - **Production-sized restore:** 9,700 media files / 425 MB and a ~100 MB (56 MB gzip) database of random data, destroyed and restored by a single deploy run in 78 s (media) and 44 s (database); every file and every row identical (manifest and checksum comparison).
 - **Native code path of the new deployer** (no `/etc/nigma/runtime` marker, simulated on a test host): a newer commit that failed its health check was rolled back automatically, the failed commit was not retried, `--force` deployed it once the cause was removed, and `--pin`/`--unpin` behaved correctly.
 
+### Third round: real database, plugins and theme (2026-11-05)
+
+A throw-away arm64 host ran the Docker runtime against a **sanitized copy of the real production database** (built on the production host in a scratch database with a scoped throw-away user, then shredded) and the real media library (9,724 files) restored from a private bucket.
+
+Safeguards, all in place before any data was loaded: outbound HTTP blocked (`WP_HTTP_BLOCK_EXTERNAL`), WP-Cron off, `wp_mail` suppressed by a test-only mu-plugin, private bucket, every resource deleted afterwards.
+
+What the sanitizer (`docker/prod/sanitize-db.php`) keeps: posts, postmeta, terms and taxonomies, options, links, Gravity Forms *definitions*, Rank Math redirections and internal-link data, Avada forms. It empties: users, usermeta, comments, form entries, security-plugin and mail logs, cache and scheduler tables. It also drops drafts/private posts, password protection, secret-named options/meta, serialized objects, and replaces the admin email. Hard gates abort and wipe if a recorded secret still appears in the dump (`--verify`), or if users/comments/entries are not empty.
+
+Results: restore OK (49 tables); search-replace 384 values; all 14 admin screens (incl. Gravity Forms, Avada, Rank Math, LiteSpeed, Media Library) 200 with no errors; a real Gravity Forms form submitted and stored an entry; core checksums OK; Redis object cache active; 51 of 53 sitemap URLs matched production (title, h1, text size, images), the other 2 were a transient error on the comparison client and match when retried; edge rules (410/403/301) verified; logs had 0 fatals/deprecations, 7 warnings (WPMU DEV dashboard undefined keys; LiteSpeed cannot rename `debug.log` because it is a bind mount, as on the native host) and 73 blocked outbound attempts.
+
+Bugs this test found, now fixed and covered by tests: the wp-config template lacked the "stop editing" anchor WP-CLI needs; the certbot sidecar and the bootstrap raced for the certbot lock; the vhost template's own comment contained the edge-rules marker so the rules were also pasted into a comment (OpenLiteSpeed logged "Not support [rewriterule…]" on every parse; the bootstrap now refuses unresolved or duplicated markers and `smoke-web.sh` asserts a clean startup log); a config-content-only change did not restart the web server (the bootstrap now reloads it when the config hash changes).
+
 **Not covered** (re-test before depending on them):
 
 - The modified deployer has **not been installed on the live server**; its native path was exercised on a test host, not on the real native OpenLiteSpeed host.
 - The `expiring` branch (certificate within 30 days of expiry) is covered by reasoning and the forced-renewal test, not by letting a certificate age.
 - An unattended renewal at the natural 60-day mark (a forced renewal was tested).
-- **The real database and the real plugins/theme** (Avada, Gravity Forms, ACF Pro, Rank Math, Defender …) running inside the container: all tests used a fresh or synthetic site. Needs a sanitized copy of production data; see the runbook.
-- Restoring the **actual** production database and media library from S3.
+- Anything that needs outbound internet from the site: the real-data test blocked all outbound calls (see below), so licence checks, update checks, reCAPTCHA verification and real email delivery were not exercised.
 
 Repeat these tests after any significant change to `docker/prod` or the scripts.
 
