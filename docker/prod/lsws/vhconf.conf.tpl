@@ -1,7 +1,9 @@
 # NIGMA OpenLiteSpeed virtual host for the Docker web container (ADR-016).
-# Template: nigma-docker-bootstrap renders it to /etc/nigma/docker/lsws/vhconf.conf,
-# replacing @@CERT_NAME@@ and inserting the shared edge rules (@@EDGE_RULES@@, taken
-# from scripts/deploy/vhost-edge-rules.conf so there is one source of truth).
+# Template: nigma-docker-bootstrap renders it to /etc/nigma/docker/lsws/vhconf.conf.
+# It fills in the certificate name and inserts the shared edge rules from
+# scripts/deploy/vhost-edge-rules.conf (one source of truth). The two marker tokens
+# are written with doubled at-signs on their own lines below; DO NOT quote them in
+# comments, or the renderer would substitute them there as well.
 
 docRoot                   /var/www/nigma/
 vhDomain                  *

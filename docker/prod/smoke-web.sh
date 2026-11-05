@@ -95,6 +95,13 @@ up=0; for i in $(seq 1 40); do [ "$(code "https://127.0.0.1:$SP/")" != "000" ] &
 [ "$up" = 1 ] && ok "web server answers on HTTPS" || { bad "web server did not start"; $RT logs "$NAME" 2>&1 | tail -15; echo; echo "RESULT: $pass passed, $fail failed"; exit 1; }
 H=127.0.0.1; B="https://$H:$SP"
 
+echo "== rendered config is well-formed (a real-host test found rules duplicated into a comment)"
+chk "no unresolved @@MARKER@@ in the rendered configs" "$(grep -c '@@[A-Z_]*@@' "$W/conf/lsws/httpd_config.conf" "$W/conf/lsws/vhconf.conf" | awk -F: '{s+=$2} END {print s+0}')" "0"
+chk "edge rules appear exactly once in the vhost config" "$(grep -c 'Spam doorway / probe URLs' "$W/conf/lsws/vhconf.conf")" "1"
+errs="$(grep -E '\[(ERROR|CRIT)\]' "$W/logs/error.log" 2>/dev/null | grep -v 'RCS' | sed -E 's/^[0-9-]+ [0-9:.]+ //' | cut -c1-120)"
+chk "OpenLiteSpeed logged no configuration errors at startup" "$(printf '%s' "$errs" | grep -c .)" "0"
+[ -z "$errs" ] || { echo "$errs" | head -5 | sed 's/^/      /'; }
+
 echo "== PHP runtime and hardening"
 J=$(curl -sk --max-time 15 "$B/?probe=1")
 jf() { python3 -I -c "import sys,json; d=json.load(sys.stdin); v=d['$1']; print(','.join(map(str,v)) if isinstance(v,list) else v)" <<<"$J" 2>/dev/null; }

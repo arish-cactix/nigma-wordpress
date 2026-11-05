@@ -276,6 +276,9 @@ import sys
 tpl = open(sys.argv[1]).read(); rules = open(sys.argv[2]).read().rstrip("\n"); cert = sys.argv[3]
 print(tpl.replace("@@EDGE_RULES@@", rules).replace("@@CERT_NAME@@", cert), end="")
 PY
+  # A leftover marker, or the edge rules appearing more than once, means a broken template: never start with it.
+  if grep -q '@@[A-Z_]*@@' "$CONF_DIR/lsws/httpd_config.conf" "$CONF_DIR/lsws/vhconf.conf"; then die "rendered web config still contains an unresolved @@MARKER@@"; fi
+  [ "$(grep -c 'Spam doorway / probe URLs' "$CONF_DIR/lsws/vhconf.conf")" = "1" ] || die "the edge rules must appear exactly once in the rendered vhost config"
   chmod 644 "$CONF_DIR/lsws/"*.conf
 }
 
@@ -291,8 +294,16 @@ ensure_placeholder_cert() {
 }
 
 compose_up() {
+  local prev; prev="$(cat "$HASH_FILE" 2>/dev/null)"
   log "starting containers (web, db, redis, certbot)"
   dc up -d --remove-orphans --wait --wait-timeout 300 >>"$LOG" 2>&1 || { dc ps >>"$LOG" 2>&1; die "containers did not become healthy (see $LOG)"; }
+  # `up -d` does not recreate a container when only the CONTENT of a bind-mounted config file changed
+  # (edge rules, vhost template, php.ini): the running web server would keep its stale configuration.
+  if [ -n "$prev" ] && [ "$prev" != "$(env_hash)" ]; then
+    log "configuration changed; reloading the web server so it takes effect"
+    dc exec -T web /usr/local/lsws/bin/lswsctrl restart >/dev/null 2>&1 || warn "could not reload the web server"
+    sleep 5
+  fi
   echo "$(env_hash)" > "$HASH_FILE"
 }
 
