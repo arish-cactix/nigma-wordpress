@@ -110,7 +110,26 @@ Exercised on a throw-away Ubuntu 24.04 **arm64** (`t4g.medium`) instance with a 
 
 Bugs this test found and fixed: the deployer ignored `GIT_BRANCH`; the WP-CLI image's entrypoint failed once core was present.
 
-**Not covered** (re-test before depending on them): the native (no marker) code path of the modified deployer on a live host (reviewed by diff only); the `placeholder-pending` state (DNS not yet pointing at the host); a real, non-staging certificate and the 12-hour renewal itself; an amd64 host; restoring a production-sized database and the full 400 MB media library; the plugins/theme behaving identically inside the container with the real database. Repeat this test after any significant change to `docker/prod` or the scripts.
+### Second round (2026-11-05)
+
+Same setup (throw-away hosts, scoped test role, deleted afterwards), now on an **arm64 and an amd64** host:
+
+- **`placeholder-pending`** (configured domain does not point at the host): certbot made **0** issuance attempts, the placeholder certificate served HTTPS, the environment check passed, and timer-style runs did not loop.
+- **Real (non-staging) certificate:** after the domain was switched to the host's own name, drift was detected and one deploy run obtained a genuine Let's Encrypt certificate (verified from outside with full TLS validation).
+- **Renewal:** a forced renewal run exactly as the certbot sidecar does it raised the flag, the old certificate kept being served until the deployer reloaded, and afterwards the certificate serial had changed.
+- **amd64:** built from scratch in ~2.5 minutes; all four images `amd64`; site, edge rules and staging certificate as on arm64.
+- **Production-sized restore:** 9,700 media files / 425 MB and a ~100 MB (56 MB gzip) database of random data, destroyed and restored by a single deploy run in 78 s (media) and 44 s (database); every file and every row identical (manifest and checksum comparison).
+- **Native code path of the new deployer** (no `/etc/nigma/runtime` marker, simulated on a test host): a newer commit that failed its health check was rolled back automatically, the failed commit was not retried, `--force` deployed it once the cause was removed, and `--pin`/`--unpin` behaved correctly.
+
+**Not covered** (re-test before depending on them):
+
+- The modified deployer has **not been installed on the live server**; its native path was exercised on a test host, not on the real native OpenLiteSpeed host.
+- The `expiring` branch (certificate within 30 days of expiry) is covered by reasoning and the forced-renewal test, not by letting a certificate age.
+- An unattended renewal at the natural 60-day mark (a forced renewal was tested).
+- **The real database and the real plugins/theme** (Avada, Gravity Forms, ACF Pro, Rank Math, Defender …) running inside the container: all tests used a fresh or synthetic site. Needs a sanitized copy of production data; see the runbook.
+- Restoring the **actual** production database and media library from S3.
+
+Repeat these tests after any significant change to `docker/prod` or the scripts.
 
 ## Limits and caveats
 
