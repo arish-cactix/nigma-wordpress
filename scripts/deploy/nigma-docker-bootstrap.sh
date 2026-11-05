@@ -256,6 +256,9 @@ define( 'WP_DEBUG', false );
 define( 'WP_CACHE', true );
 define( 'WP_MEMORY_LIMIT', '256M' );
 define( 'DISALLOW_FILE_EDIT', true );
+
+/* That's all, stop editing! Happy publishing. */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/' );
 }
@@ -341,7 +344,15 @@ ensure_ssl() {
   if [ -n "${ACME_EMAIL:-}" ]; then args+=(--email "$ACME_EMAIL"); else args+=(--register-unsafely-without-email); fi
   # a placeholder lineage must be removed or certbot refuses to create the real one
   if [ -f "$d/.placeholder" ]; then rm -rf "$d" "$STATE/letsencrypt/archive/$CERT_NAME" "$STATE/letsencrypt/renewal/$CERT_NAME.conf"; fi
-  if dc run --rm -T --no-deps --entrypoint certbot certbot "${args[@]}" >>"$LOG" 2>&1; then
+  # The renewal sidecar holds certbot's lock while it runs: wait for it instead of failing.
+  local out ok=1 try
+  for try in 1 2 3 4 5 6; do
+    if out="$(dc run --rm -T --no-deps --entrypoint certbot certbot "${args[@]}" 2>&1)"; then ok=0; echo "$out" >>"$LOG"; break; fi
+    echo "$out" >>"$LOG"
+    if grep -q 'Another instance of Certbot is already running' <<<"$out"; then log "certbot is busy (renewal sidecar); retry $try/6 in 20s"; sleep 20; continue; fi
+    break
+  done
+  if [ "$ok" = 0 ]; then
     log "certificate issued for $CERT_NAME"
     dc exec -T web /usr/local/lsws/bin/lswsctrl restart >/dev/null 2>&1
   else

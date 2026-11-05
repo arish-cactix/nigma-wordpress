@@ -99,6 +99,7 @@ services:
     restart: unless-stopped
     entrypoint: >-
       /bin/sh -c 'trap exit TERM;
+      sleep 300 & wait $${!};
       while :; do
         certbot renew --webroot -w /var/www/acme --deploy-hook "touch /etc/letsencrypt/.renewed" --quiet;
         sleep 12h & wait $${!};
@@ -107,7 +108,7 @@ services:
       - ${NIGMA_STATE_DIR:-/var/lib/nigma}/letsencrypt:/etc/letsencrypt
       - ${NIGMA_STATE_DIR:-/var/lib/nigma}/acme:/var/www/acme
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f 'sleep 12h' >/dev/null || pgrep -f 'certbot renew' >/dev/null"]
+      test: ["CMD-SHELL", "pgrep -f 'sleep 300' >/dev/null || pgrep -f 'sleep 12h' >/dev/null || pgrep -f 'certbot renew' >/dev/null"]
       interval: 60s
       timeout: 5s
       retries: 3
